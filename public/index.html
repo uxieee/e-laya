@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>e-Laya — a case, rehabilitation and rights access module for eGovPH</title>
+<meta name="description" content="e-Laya keeps people visible through detention and after release — for families, lawyers, social workers and frontline officers.">
+<link rel="stylesheet" href="elaya.css">
+<style>
+body{background:var(--bg)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+
+/* ---------- hero ---------- */
+.hero{padding:72px 0 56px;border-bottom:1px solid var(--border)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--primary);
+  background:var(--secondary);border:1px solid var(--border);border-radius:999px;padding:6px 14px}
+.mark{font-size:clamp(44px,7vw,66px);font-weight:600;letter-spacing:-.035em;color:var(--primary);
+  line-height:1;margin:22px 0 0}
+.deck{font-size:clamp(19px,2.2vw,24px);line-height:1.45;color:var(--text);max-width:30ch;
+  margin-top:20px;font-weight:400}
+.deck b{font-weight:500}
+.sub{font-size:16px;line-height:1.6;color:var(--muted-strong);max-width:62ch;margin-top:18px}
+.fil{font-style:italic;color:var(--faint);margin-top:22px;font-size:15px}
+
+/* ---------- why strip ---------- */
+.why{padding:40px 0;border-bottom:1px solid var(--border);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:28px}
+.why .n{font-size:34px;font-weight:600;color:var(--text);letter-spacing:-.02em;line-height:1;
+  font-variant-numeric:tabular-nums}
+.why .t{font-size:14px;line-height:1.5;color:var(--muted-strong);margin-top:10px}
+.why .t b{font-weight:500;color:var(--text)}
+
+/* ---------- section ---------- */
+.sec-head{padding:56px 0 8px}
+.sec-head h2{font-size:26px;font-weight:500;letter-spacing:-.02em}
+.sec-head p{font-size:16px;color:var(--muted-strong);margin-top:10px;max-width:64ch}
+
+/* ---------- surface cards ---------- */
+.surfaces{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px;padding-bottom:16px}
+.card-s{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;text-decoration:none;color:inherit;
+  transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease}
+.card-s:hover{border-color:var(--primary);transform:translateY(-3px);
+  box-shadow:0 12px 30px rgba(0,64,231,.10)}
+.card-s:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.route{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12.5px;font-weight:500;
+  color:var(--primary);background:var(--secondary);border:1px solid var(--border);
+  padding:4px 10px;border-radius:6px}
+.state{font-size:10.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--success);background:var(--success-surface);border:1px solid var(--success-border);
+  padding:3px 9px;border-radius:999px}
+.card-s h3{font-size:21px;font-weight:500;letter-spacing:-.015em;margin-bottom:4px}
+.who{font-size:14px;color:var(--primary);font-weight:500;margin-bottom:16px}
+.blk{margin-bottom:14px}
+.blk .lbl{font-size:10.5px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:6px}
+.blk p{font-size:14.5px;line-height:1.55;color:var(--muted-strong)}
+.does{list-style:none;margin:0;padding:0}
+.does li{font-size:14px;line-height:1.5;color:var(--muted-strong);padding-left:18px;
+  position:relative;margin-bottom:6px}
+.does li::before{content:"";position:absolute;left:0;top:8px;width:6px;height:6px;
+  border-radius:50%;background:var(--border-strong)}
+.built{margin-top:auto;padding-top:16px;border-top:1px solid var(--border);
+  display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.built .lbl2{font-size:11px;color:var(--faint);margin-right:2px}
+.api{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;color:var(--muted);
+  background:var(--bg);border:1px solid var(--border);padding:3px 8px;border-radius:5px}
+.open{margin-top:14px;font-size:14px;font-weight:500;color:var(--primary);display:flex;
+  align-items:center;gap:6px}
+
+/* ---------- integration ---------- */
+.integ{padding:16px 0 72px}
+.itable{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:20px;
+  border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.itable th{text-align:left;font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);background:var(--bg);padding:12px 16px;border-bottom:1px solid var(--border)}
+.itable td{padding:13px 16px;border-bottom:1px solid var(--border);color:var(--muted-strong);
+  vertical-align:top}
+.itable tr:last-child td{border-bottom:none}
+.itable td.svc{color:var(--text);font-weight:500;white-space:nowrap}
+.note{background:var(--secondary);border:1px solid var(--border);border-left:3px solid var(--primary);
+  border-radius:var(--radius);padding:18px 20px;margin-top:22px}
+.note p{font-size:14.5px;line-height:1.6;color:var(--muted-strong)}
+.note b{color:var(--text);font-weight:500}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--border);padding:32px 0 56px}
+footer p{font-size:13.5px;color:var(--faint)}
+
+@media (max-width:640px){
+  .hero{padding:48px 0 40px}
+  .why{gap:22px;padding:32px 0}
+  .sec-head{padding:40px 0 4px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <span class="eyebrow">DICT eGovHackathon 2026 · Team Ala-Eh</span>
+    <h1 class="mark">e-Laya</h1>
+    <p class="deck">Nobody should disappear inside the justice system — <b>least of all the people waiting in it.</b></p>
+    <p class="sub">
+      e-Laya is a module for the eGovPH super app. It carries information the last few metres —
+      from the institutions that already hold it, to the people whose lives depend on it:
+      a mother who cannot visit this week, a lawyer with three hundred clients, a social worker
+      with a paper register, and a child whose age nobody can confirm.
+    </p>
+    <p class="fil">"Walang dapat mawala sa sistema."</p>
+  </header>
+
+  <!-- ============ WHY ============ -->
+  <section class="why">
+    <div>
+      <div class="n">89%</div>
+      <p class="t">of people held in our jails <b>have not been convicted of anything.</b> They are waiting — and waiting is an information problem.</p>
+    </div>
+    <div>
+      <div class="n">92,084</div>
+      <p class="t">people were released last year through the work of BJMP paralegals. <b>The system already works.</b> What fails is telling anyone in time.</p>
+    </div>
+    <div>
+      <div class="n">1 visit</div>
+      <p class="t">is the only way a family currently learns how their relative is doing. For many that is <b>four hours of travel and a day's lost wage.</b></p>
+    </div>
+    <div>
+      <div class="n">2013</div>
+      <p class="t">is when the law required a national record system for children in conflict with the law. <b>It was never built.</b></p>
+    </div>
+  </section>
+
+  <!-- ============ SURFACES ============ -->
+  <div class="sec-head">
+    <h2>Six ways in, one system</h2>
+    <p>
+      The people who need this most are the least likely to own a phone — so access is split.
+      Every surface signs in through eGovPH, and each one shows only what that person is
+      permitted and equipped to see.
+    </p>
+  </div>
+
+  <div class="surfaces">
+
+    <!-- KIOSK -->
+    <a class="card-s" href="kiosk.html">
+      <div class="top"><span class="route">/kiosk</span><span class="state">working</span></div>
+      <h3>Facility terminal</h3>
+      <div class="who">For people in custody, and those just released</div>
+      <div class="blk">
+        <div class="lbl">The problem</div>
+        <p>A person inside cannot look up their own case, and a person released this morning has no phone, no ID, and no idea which programmes they are entitled to join.</p>
+      </div>
+      <div class="blk">
+        <div class="lbl">What they can do</div>
+        <ul class="does">
+          <li>Read their case status, next hearing and credit</li>
+          <li>Find rehabilitation programmes nearby and enrol on the spot</li>
+          <li>Do all of it in nine languages, without typing a single word</li>
+        </ul>
+      </div>
+      <div class="built"><span class="lbl2">Built on</span>
+        <span class="api">eVerify</span><span class="api">Face Liveness</span><span class="api">eGov AI</span><span class="api">PSGC</span></div>
+      <div class="open">Open the terminal →</div>
+    </a>
+
+    <!-- FAMILY -->
+    <a class="card-s" href="app.html">
+      <div class="top"><span class="route">/app</span><span class="state">working</span></div>
+      <h3>Family app</h3>
+      <div class="who">For families and guardians</div>
+      <div class="blk">
+        <div class="lbl">The problem</div>
+        <p>Between visits there is silence. A relative travels for hours to hear four words, and learns nothing about hearings, programmes or milestones until the next trip.</p>
+      </div>
+      <div class="blk">
+        <div class="lbl">What they can do</div>
+        <ul class="does">
+          <li>See how their person is today — and when that was last confirmed</li>
+          <li>Follow hearings, programme sessions and attendance</li>
+          <li>Receive it by SMS, on a phone with no data plan</li>
+        </ul>
+      </div>
+      <div class="built"><span class="lbl2">Built on</span>
+        <span class="api">eGov SSO</span><span class="api">eMessage</span><span class="api">PSGC</span></div>
+      <div class="open">Open the app →</div>
+    </a>
+
+    <!-- PAO -->
+    <a class="card-s" href="cases.html">
+      <div class="top"><span class="route">/cases</span><span class="state">working</span></div>
+      <h3>Counsel's caseload</h3>
+      <div class="who">For Public Attorney's Office lawyers</div>
+      <div class="blk">
+        <div class="lbl">The problem</div>
+        <p>A PAO lawyer may carry hundreds of clients at once. The cases that go wrong are rarely the loud ones — they are the hearing that was held and never written down, and the client who became eligible for release while nobody was looking.</p>
+      </div>
+      <div class="blk">
+        <div class="lbl">What they can do</div>
+        <ul class="does">
+          <li>Open to the cases that need attention today, not an alphabetical list</li>
+          <li>See a client's full history, hearings and programme progress in one place</li>
+          <li>Record an outcome and notify the family in the same action</li>
+        </ul>
+      </div>
+      <div class="built"><span class="lbl2">Built on</span>
+        <span class="api">eGov SSO</span><span class="api">eMessage</span></div>
+      <div class="open">Open the caseload →</div>
+    </a>
+
+    <!-- SESSIONS -->
+    <a class="card-s" href="sessions.html">
+      <div class="top"><span class="route">/sessions</span><span class="state">working</span></div>
+      <h3>Programme attendance</h3>
+      <div class="who">For social workers and programme providers</div>
+      <div class="blk">
+        <div class="lbl">The problem</div>
+        <p>Diversion and rehabilitation attendance lives on paper. A child who quietly stops attending — or who is attending perfectly but has been given too few sessions to finish in time — is only discovered at a review months later.</p>
+      </div>
+      <div class="blk">
+        <div class="lbl">What they can do</div>
+        <ul class="does">
+          <li>Log a full session in seconds, on a phone, even with no signal</li>
+          <li>See who needs a follow-up — and who cannot finish on the current schedule</li>
+          <li>Issue an attendance record that anyone can independently verify</li>
+        </ul>
+      </div>
+      <div class="built"><span class="lbl2">Built on</span>
+        <span class="api">eGov SSO</span><span class="api">eMessage</span></div>
+      <div class="open">Open the register →</div>
+    </a>
+
+    <!-- VERIFY -->
+    <a class="card-s" href="verify.html">
+      <div class="top"><span class="route">/verify</span><span class="state">working</span></div>
+      <h3>Sino siya? · Identity resolution</h3>
+      <div class="who">For LSWDO, PAO, and BJMP / BuCor records officers</div>
+      <div class="blk">
+        <div class="lbl">The problem</div>
+        <p>The justice system holds people it cannot name. A child booked as an adult loses the diversion the law guarantees them. An adult booked under an alias loses everything downstream of a matched record — the family cannot find them, the court and jail files never join, release paperwork stalls.</p>
+      </div>
+      <div class="blk">
+        <div class="lbl">What they can do</div>
+        <ul class="does">
+          <li>Interview the person conversationally, in their own language, with "hindi ko alam" always a valid answer</li>
+          <li>Reconcile whatever they remember against civil registration — a human confirms, never the assistant</li>
+          <li>Derive age at the incident date, and route to RA 9344 or adult intake from one flow</li>
+          <li>Refer the unregistered to late registration or foundling recognition — a path to existing in the record</li>
+        </ul>
+      </div>
+      <div class="built"><span class="lbl2">Built on</span>
+        <span class="api">eGov AI</span><span class="api">eVerify</span><span class="api">PSGC</span><span class="api">eMessage</span></div>
+      <div class="open">Open the check →</div>
+    </a>
+
+    <!-- CUSTODY -->
+    <a class="card-s" href="custody.html">
+      <div class="top"><span class="route">/custody</span><span class="state">working</span></div>
+      <h3>Welfare check-in</h3>
+      <div class="who">For jail and prison officers</div>
+      <div class="blk">
+        <div class="lbl">The problem</div>
+        <p>Officers already see every person every day. That knowledge simply has nowhere to go — so the family outside stays in the dark, and the officer takes the phone calls.</p>
+      </div>
+      <div class="blk">
+        <div class="lbl">What they can do</div>
+        <ul class="does">
+          <li>Confirm each person's welfare in about two seconds, one at a time</li>
+          <li>See exactly what the family will read before confirming it</li>
+          <li>Let a status expire on its own, so nobody is told stale news</li>
+        </ul>
+      </div>
+      <div class="built"><span class="lbl2">Built on</span>
+        <span class="api">eGov SSO</span><span class="api">eMessage</span></div>
+      <div class="open">Open the check-in →</div>
+    </a>
+
+  </div>
+
+  <!-- ============ INTEGRATION ============ -->
+  <section class="integ">
+    <div class="sec-head">
+      <h2>How it connects to eGovPH</h2>
+      <p>
+        e-Laya holds no case file and no custody register of its own. It is a layer over services
+        that already exist — which is why it can be small, and why it does not ask any agency to
+        migrate anything.
+      </p>
+    </div>
+
+    <table class="itable">
+      <tr><th>eGovPH service</th><th>What it does here</th></tr>
+      <tr><td class="svc">eGov SSO</td><td>Establishes who is asking and what their role permits them to see. It is also the lawful basis for handling any of this information at all.</td></tr>
+      <tr><td class="svc">eVerify</td><td>Reads a National ID the person hands over, to confirm identity and — where a child's future depends on it — age.</td></tr>
+      <tr><td class="svc">Face Liveness</td><td>Confirms identity at the terminal for someone who no longer holds any ID.</td></tr>
+      <tr><td class="svc">eMessage</td><td>Delivers every notification by SMS, so a family is reached on a basic phone with no internet.</td></tr>
+      <tr><td class="svc">eGov AI</td><td>Runs the terminal in nine Philippine languages and reads any screen aloud.</td></tr>
+      <tr><td class="svc">eReport (PSGC)</td><td>Supplies the official barangay hierarchy, so "a programme near me" means a real, matchable place.</td></tr>
+      <tr><td class="svc">Compass (DBM)</td><td>Provides published national budget figures, used to ground our cost estimates in real numbers.</td></tr>
+    </table>
+
+    <div class="note">
+      <p>
+        <b>What we do not claim.</b> The courts, BJMP, BuCor, DSWD and PAO each hold data e-Laya
+        would eventually read from, and no public interface to those systems exists today. Every
+        screen here is therefore built on sources that already exist — a document in someone's hand,
+        a National ID they present, and records the module itself creates. The day those agency
+        connections open, they attach behind an interface that already works.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <p>e-Laya · Team Ala-Eh · DICT eGovHackathon 2026 · Every surface above is a working build — open any of them.</p>
+  </footer>
+
+</div>
+</body>
+</html>

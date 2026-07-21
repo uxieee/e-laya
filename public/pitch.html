@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>e-Laya — Team Ala-Eh — eGovHackathon 2026</title>
+<link rel="stylesheet" href="elaya.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
+body{font-family:var(--font);background:#E7EBF3;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;-webkit-font-smoothing:antialiased}
+#stage{position:relative;width:1280px;height:720px;transform-origin:center;background:var(--bg);
+  overflow:hidden;box-shadow:0 30px 90px rgba(16,24,60,.28);border-radius:14px}
+.s{position:absolute;inset:0;padding:54px 66px;display:none;flex-direction:column;justify-content:center;
+  opacity:0;transform:translateY(8px);transition:opacity .38s cubic-bezier(.2,.7,.3,1),transform .38s}
+.s.on{display:flex;opacity:1;transform:none}
+.s.tint{background:var(--secondary)}
+.s.blue{background:var(--primary)}
+.s.blue *{color:#fff}
+.s.blue .k{color:#BDD0FF}.s.blue .p{color:#DCE6FF}.s.blue .foot{border-color:rgba(255,255,255,.24);color:#BDD0FF}
+
+/* act ribbon */
+.act{position:absolute;top:26px;left:66px;display:flex;gap:7px;align-items:center;font-size:11px;
+  font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.act b{color:var(--primary);font-weight:500}
+.s.blue .act{color:rgba(255,255,255,.55)}.s.blue .act b{color:#fff}
+
+h1{font-size:58px;font-weight:500;line-height:1.1;letter-spacing:-.03em;color:var(--text)}
+h2{font-size:36px;font-weight:500;line-height:1.16;letter-spacing:-.025em;color:var(--text)}
+h3{font-size:18px;font-weight:500;letter-spacing:-.01em;color:var(--text)}
+.big{font-size:42px;font-weight:400;line-height:1.28;letter-spacing:-.02em;max-width:25ch;color:var(--text)}
+.big b{font-weight:500}
+.p{font-size:20px;line-height:1.55;font-weight:300;max-width:54ch;color:var(--muted-strong)}
+.p b{font-weight:500;color:var(--text)}
+.k{font-size:11.5px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--primary);margin-bottom:16px}
+.fil{font-style:italic}.beat{margin-top:20px}
+.stat{font-size:52px;font-weight:500;letter-spacing:-.03em;line-height:1;color:var(--primary);font-variant-numeric:tabular-nums}
+.sl{font-size:13.5px;line-height:1.45;color:var(--muted-strong);margin-top:9px;max-width:27ch}
+.row{display:flex;gap:16px}.grid{display:grid;gap:13px}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:17px}
+.card.t{background:var(--secondary);border-color:var(--border-strong)}
+.n{font-size:10.5px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:var(--primary);margin-bottom:7px}
+.card p{font-size:13.5px;line-height:1.5;color:var(--muted-strong)}
+
+/* ── OPEN MODULE BUTTONS ── */
+.btns{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}
+.ob{display:flex;flex-direction:column;text-decoration:none;background:var(--surface);
+  border:1.5px solid var(--border-strong);border-radius:14px;padding:20px;transition:.16s;position:relative}
+.ob:hover{border-color:var(--primary);background:var(--secondary);transform:translateY(-3px);
+  box-shadow:0 14px 32px rgba(0,64,231,.16)}
+.ob .r{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--primary);font-weight:500}
+.ob h3{margin:8px 0 5px;font-size:19px}
+.ob p{font-size:13px;line-height:1.45;color:var(--muted);flex:1}
+.ob .cta{margin-top:14px;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  background:var(--primary);color:#fff;font-size:14px;font-weight:500;padding:11px 16px;border-radius:9px}
+.ob:hover .cta{background:var(--primary-hover)}
+.ob.hero{border-color:var(--primary);border-width:2px;background:var(--secondary)}
+.pill{position:absolute;top:-9px;right:16px;background:var(--primary);color:#fff;font-size:10px;
+  font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:999px}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.mb{display:block;text-decoration:none;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:13px;transition:.15s}
+.mb:hover{border-color:var(--primary);background:var(--secondary)}
+.mb .r{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--primary);font-weight:500}
+.mb h3{font-size:15px;margin:4px 0 3px}
+.mb p{font-size:12px;line-height:1.4;color:var(--muted)}
+
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:10.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--primary);padding:8px 10px;border-bottom:1px solid var(--border-strong)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--muted-strong)}
+td.k2{color:var(--text);font-weight:500}
+tr:last-child td{border-bottom:none}
+.tag{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
+.tag.live{background:var(--success-surface);color:var(--success);border:1px solid var(--success-border)}
+.tag.pro{background:#FFF8E1;color:#8A6D00;border:1px solid #F0DFA8}
+.foot{font-size:12px;color:var(--faint);border-top:1px solid var(--border);padding-top:11px;margin-top:15px}
+
+#bar{position:fixed;top:0;left:0;height:3px;background:var(--primary);transition:width .3s;z-index:60}
+#hud{position:fixed;bottom:12px;right:14px;display:flex;gap:5px;align-items:center;z-index:60}
+#hud button{font-family:var(--font);font-size:11px;color:var(--muted);background:#fff;
+  border:1px solid var(--border-strong);border-radius:7px;padding:6px 11px;cursor:pointer}
+#hud button:hover{background:var(--primary);border-color:var(--primary);color:#fff}
+#cnt{font-size:11px;color:var(--muted);padding:0 6px;font-variant-numeric:tabular-nums}
+#nt{position:fixed;inset:auto 0 0 0;max-height:40vh;overflow:auto;background:#0B1020;
+  border-top:2px solid var(--primary);padding:15px 24px;display:none;z-index:55}
+#nt.on{display:block}
+#nt h4{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#7FA0E8;margin-bottom:7px;font-weight:500}
+#nt p{font-size:14px;line-height:1.6;color:#C6D2E8;max-width:112ch;margin-bottom:6px}
+#nt .t{color:#FFD166;font-weight:500}
+</style></head>
+<body>
+<div id="bar"></div><div id="stage"></div>
+<div id="hud"><button data-a="p">←</button><span id="cnt"></span><button data-a="n">→</button>
+<button data-a="nt">NOTES·N</button><button data-a="f">FULL·F</button></div>
+<div id="nt"><h4>Speaker notes</h4><div id="nb"></div></div>
+<script>
+const A1='<div class="act"><b>WHY</b> · how · what</div>',
+      A2='<div class="act">why · <b>HOW</b> · what</div>',
+      A3='<div class="act">why · how · <b>WHAT</b></div>';
+const D=[
+
+/* ═══ WHY — 20% ═══ */
+/*1*/{t:40,n:`<p><span class="t">0:00–0:40 · WHY. Walk on, no greeting, no team name. Let the room settle.</span></p>
+<p>Three-second pause after <b>"punong-puno ka ng pag-asa."</b> Do not fill it.</p>
+<p>Then flat: <span class="t">"And then nothing."</span> Then the protection — the social workers DO remember every name — so nobody from a Bahay Pag-asa can contradict you.</p>
+<p>Land hard on <span class="t">"hope is not a plan."</span></p>`,
+h:`<div class="s">${A1}<div class="k">Isipin mo</div>
+<div class="big">Imagine you are sixteen, walking out of <b>Bahay Pag-asa</b>. House of Hope.</div>
+<p class="p beat">You did everything they asked. Twelve sessions. You came to all of them.<br>
+And at that gate — <b class="fil">punong-puno ka ng pag-asa.</b></p>
+<p class="p beat" style="font-size:30px;color:var(--text)"><b>And then nothing.</b></p>
+<p class="p beat">Nobody checks. Nobody calls. No next session, no next person.<br>
+Same street, same house, same everything — alone, with hope. <b>And hope is not a plan.</b></p>
+<div class="foot">Not because anyone stopped caring. The social workers there can tell you every name.</div></div>`},
+
+/*2*/{t:32,n:`<p><span class="t">0:40–1:12 · The REINTERPRETATION — do not restate the problem, reframe it.</span></p>
+<p>"Every system we have moves a <b>case</b> to a verdict. None of them follows a <b>person</b>."</p>
+<p>Then the line that carries the whole pitch: <span class="t">"Entry is automatic. Exit is somebody remembering."</span></p>
+<p>The Mandaluyong man is real and documented. Beat between each number.</p>`,
+h:`<div class="s tint">${A1}<div class="k">The real problem</div>
+<h2>Every system moves a <i>case</i> to a verdict.<br>None of them follows a <i>person</i>.</h2>
+<div class="row beat" style="margin-top:26px;gap:0;border-top:1px solid var(--border-strong);border-bottom:1px solid var(--border-strong)">
+<div style="flex:1;padding:20px 20px 20px 0"><div class="stat">15</div><div class="sl">years detained</div></div>
+<div style="flex:1;padding:20px;border-left:1px solid var(--border)"><div class="stat">17</div><div class="sl">years of good-conduct credit earned</div></div>
+<div style="flex:1;padding:20px;border-left:1px solid var(--border)"><div class="stat">32</div><div class="sl">effective years served</div></div>
+<div style="flex:1.2;padding:20px 0 20px 20px;border-left:1px solid var(--border)"><div class="stat" style="color:#B45309">0</div><div class="sl">convictions. A real man, in Mandaluyong.</div></div></div>
+<p class="p beat" style="font-size:23px;margin-top:22px">No judge ordered it. No officer refused him. No prosecutor objected.<br>
+<b>Entry into the system is automatic. Exit is somebody remembering.</b></p></div>`},
+
+/*3*/{t:24,n:`<p><span class="t">1:12–1:36 · Close the WHY. The turn.</span></p>
+<p>"They were not punished for this. <b>They were left.</b>"</p>
+<p>Then the society line — it implicates <b>us</b>, never the room: <span class="t">"That is not a failure of government. That is a description of us."</span> Beat. Then the reveal.</p>`,
+h:`<div class="s blue">${A1}
+<div class="big" style="font-size:40px;max-width:27ch">They were not punished for this.<br><b>They were left.</b></div>
+<p class="p beat" style="margin-top:22px">Farmers have a federation. Seniors have a card. OFWs have a department.<br>
+These people have nobody — because most of us have quietly agreed they don't deserve one.</p>
+<p class="p beat" style="font-size:25px;color:#fff"><b>That is not a failure of government.<br>That is a description of us.</b></p>
+<div class="foot" style="margin-top:auto">So it was nobody's job to notice. &nbsp;→&nbsp; <b style="color:#fff">We built the somebody.</b></div></div>`},
+
+/* ═══ HOW — 30% ═══ */
+/*4*/{t:40,n:`<p><span class="t">1:36–2:16 · HOW it creates value. Not features — the mechanism.</span></p>
+<p>"e-Laya is one idea applied six times: <b>keep a person visible at the exact moment the system stops looking.</b>"</p>
+<p>Walk the four moments left to right. Each is a place the current system goes dark.</p>`,
+h:`<div class="s">${A2}<div class="k">e-Laya · how it works</div>
+<h2>One idea, six times: keep a person visible at the moment the system stops looking</h2>
+<div class="grid g4 beat" style="margin-top:24px">
+<div class="card"><div class="n">At intake</div><h3>Who is this?</h3><p style="margin-top:6px">A child with no papers is booked as an adult and loses diversion. We resolve identity instead of guessing.</p></div>
+<div class="card"><div class="n">Inside</div><h3>What is my status?</h3><p style="margin-top:6px">Case, hearing, credit — readable by the person it belongs to, and by their family without travelling.</p></div>
+<div class="card"><div class="n">At the gate</div><h3>What happens next?</h3><p style="margin-top:6px">Programmes findable and joinable on the spot, so release is not the end of the support.</p></div>
+<div class="card t"><div class="n">After</div><h3>Is anyone watching?</h3><p style="margin-top:6px">Attendance tracked, missed sessions flagged the same day, the child who cannot finish caught early.</p></div></div>
+<p class="p beat" style="margin-top:24px;font-size:22px"><b>We are not building recognition. We are building its portability</b> — proof the person carries, so the next worker starts where the last one stopped.</p></div>`},
+
+/*5*/{t:36,n:`<p><span class="t">2:16–2:52 · HOW — value per stakeholder. Sweep, do not read.</span></p>
+<p>Key point: this is <b>not only for PDLs and CICLs.</b> It reaches BJMP, BuCor, DSWD, barangays, PAO, families. Say that out loud — inclusion is 35% of the score.</p>`,
+h:`<div class="s tint">${A2}<div class="k">Who this reaches</div>
+<h2>Seven groups, one system</h2>
+<div class="grid g4 beat" style="margin-top:22px">
+<div class="card"><div class="n">PDLs &amp; CICLs</div><p>See their own case, find a programme, join it — in nine languages, without typing.</p></div>
+<div class="card"><div class="n">Families</div><p>Know how their person is today, from a ₱500 phone, without a day's travel.</p></div>
+<div class="card"><div class="n">PAO lawyers</div><p>The case that needs them today, surfaced instead of remembered.</p></div>
+<div class="card"><div class="n">Social workers</div><p>Who stopped coming, and who cannot finish on the schedule they were given.</p></div>
+<div class="card"><div class="n">BJMP &amp; BuCor</div><p>One tap per person confirms welfare — and answers the phone calls before they come.</p></div>
+<div class="card"><div class="n">DSWD &amp; barangay</div><p>Diversion attendance that finally leaves the paper register.</p></div>
+<div class="card"><div class="n">Bahay Pag-asa</div><p>A child's completed work travels with them instead of ending at the gate.</p></div>
+<div class="card t"><div class="n">The country</div><p>Able to answer the question nobody can answer today.</p></div></div></div>`},
+
+/*6*/{t:32,n:`<p><span class="t">2:52–3:24 · HOW it plugs into eGovPH. This is 30% of the score.</span></p>
+<p>"eGov SSO is not our login screen — <b>it is why our output has legal weight.</b>"</p>
+<p>Then name the greys yourself: <span class="t">no eCourt, BJMP, BuCor, DSWD or PAO API exists in the sandbox. Those are proposed.</span> Saying it is what makes everything else believable.</p>`,
+h:`<div class="s">${A2}<div class="k">Integration with eGovPH</div>
+<h2>Seven services doing real work</h2>
+<div class="row beat" style="margin-top:18px;gap:18px">
+<div class="card t" style="flex:.85"><div class="n">The anchor</div><h3>eGov SSO is load-bearing</h3>
+<p style="margin-top:7px">Not a login screen — the <b>lawful basis</b>. It establishes who is asking, gates what their role may see, and binds every record we produce.</p></div>
+<div style="flex:1.5"><table>
+<tr><th>Service</th><th>What it does here</th><th style="width:80px">State</th></tr>
+<tr><td class="k2">eReport · PSGC</td><td>Barangay-level programme directory</td><td><span class="tag live">live</span></td></tr>
+<tr><td class="k2">Compass · DBM</td><td>The budget figures behind our costing</td><td><span class="tag live">live</span></td></tr>
+<tr><td class="k2">eGov SSO</td><td>Identity · role gate · lawful basis</td><td><span class="tag pro">wired</span></td></tr>
+<tr><td class="k2">eVerify</td><td>National ID read, where one exists</td><td><span class="tag pro">wired</span></td></tr>
+<tr><td class="k2">eMessage</td><td>Every alert by SMS — to any phone</td><td><span class="tag pro">wired</span></td></tr>
+<tr><td class="k2">eGov AI</td><td>Nine languages · read-aloud · document reading</td><td><span class="tag pro">wired</span></td></tr>
+<tr><td class="k2">Face Liveness</td><td>Identity at the terminal with no ID</td><td><span class="tag pro">wired</span></td></tr>
+</table></div></div>
+<div class="foot"><b>What we will not claim:</b> no eCourt, BJMP, BuCor, DSWD or PAO interface exists in the sandbox — those are proposed. Every screen you are about to see runs on a source that exists today.</div></div>`},
+
+/* ═══ WHAT — 50% ═══ */
+/*7*/{t:26,n:`<p><span class="t">3:24–3:50 · WHAT. Six working builds — say "all six are running right now, you can open any of them."</span></p>
+<p>That is the tangible-thing move. Then go straight into the hero demo.</p>`,
+h:`<div class="s tint">${A3}<div class="k">What we built</div>
+<h2>Six working surfaces — open any of them</h2>
+<div class="mini" style="margin-top:20px">
+<a class="mb" href="kiosk.html" target="_blank"><span class="r">/kiosk</span><h3>Facility terminal</h3><p>Nine languages, zero typing. For people inside and just released.</p></a>
+<a class="mb" href="app.html" target="_blank"><span class="r">/app</span><h3>Family</h3><p>How your person is today, without travelling.</p></a>
+<a class="mb" href="cases.html" target="_blank"><span class="r">/cases</span><h3>Counsel</h3><p>300 clients ranked by what needs you today.</p></a>
+<a class="mb" href="sessions.html" target="_blank"><span class="r">/sessions</span><h3>Attendance</h3><p>15 logged in ~12 seconds, with a verifiable receipt.</p></a>
+<a class="mb" href="verify.html" target="_blank"><span class="r">/verify</span><h3>Kalayaan</h3><p>Identity resolution for people the system cannot name.</p></a>
+<a class="mb" href="custody.html" target="_blank"><span class="r">/custody</span><h3>Welfare check-in</h3><p>One tap per person, per shift.</p></a>
+</div>
+<div class="foot">Not mockups. Every card above opens a running build, on this laptop, right now.</div></div>`},
+
+/*8*/{t:180,n:`<p><span class="t">3:50–6:50 · LIVE DEMO — 3 minutes. ONE hero, two supports. Click the buttons on screen.</span></p>
+<p><span class="t">HERO · KALAYAAN (90s)</span> — the wow. A child with no papers. Show <b>"Hindi ko alam"</b> being a valid answer. Show the profile assembling from fragments. Say: <b>a child who knows nothing still walks out with a route to a legal identity.</b> This is your AI moment — name it.</p>
+<p><span class="t">KIOSK (50s)</span> — tap Binisaya, the entire screen becomes Cebuano. Then five taps to enrol. Read the blue line aloud.</p>
+<p><span class="t">FAMILY (40s)</span> — one officer tap → <b>"Ayos naman siya."</b> Green does not mean healthy; it means somebody looked at him this morning.</p>
+<p><span class="t">Do NOT demo login. Do NOT demo cases or sessions.</span></p>`,
+h:`<div class="s">${A3}<div class="k">Live demo</div>
+<h2 style="margin-bottom:4px">Three moments</h2>
+<div class="btns" style="margin-top:20px">
+<a class="ob hero" href="verify.html" target="_blank"><span class="pill">The one to watch</span><span class="r">/verify</span>
+<h3>Kalayaan</h3><p>A child with no birth certificate, no ID, no papers. Interviewed by an assistant that accepts <span class="fil">"hindi ko alam"</span> as an answer — and still finds a route to a legal identity.</p>
+<span class="cta">Open Kalayaan →</span></a>
+<a class="ob" href="kiosk.html" target="_blank"><span class="r">/kiosk</span>
+<h3>Nine languages, five taps</h3><p>Tap Binisaya and the whole terminal becomes Cebuano. Then a released man joins a programme without typing a word.</p>
+<span class="cta">Open the terminal →</span></a>
+<a class="ob" href="app.html" target="_blank"><span class="r">/custody → /app</span>
+<h3>One tap. Four words.</h3><p>An officer confirms welfare in two seconds; a mother 4 hours away reads <span class="fil">"Ayos naman siya."</span></p>
+<span class="cta">Open the family app →</span></a></div>
+<div class="foot">Also built, not demoed: <b>/cases</b> — 300 clients ranked so the hearing you attended but never recorded outranks tomorrow's. <b>/sessions</b> — the child with perfect attendance who still cannot finish on the schedule they were given.</div></div>`},
+
+/*9*/{t:34,n:`<p><span class="t">6:50–7:24 · WHAT it's worth. Live from DBM's own API.</span></p>
+<p>Then the honesty that earns everything: <span class="t">we do not claim to reduce recidivism. Nobody can — there is no national rate, and you need four things to compute one. The country has none of them.</span></p>`,
+h:`<div class="s tint">${A3}<div class="k">What it is worth</div>
+<h2>And what we refuse to claim</h2>
+<div class="row" style="margin:20px 0;gap:0;border-top:1px solid var(--border-strong);border-bottom:1px solid var(--border-strong)">
+<div style="flex:1;padding:18px 18px 18px 0"><div class="stat" style="font-size:40px">₱214.62</div>
+<div class="sl">one detention-day — BJMP FY2026 MOOE ÷ the population the GAA itself assumes <span class="tag live">live · Compass API</span></div></div>
+<div style="flex:1;padding:18px;border-left:1px solid var(--border)"><div class="stat" style="font-size:40px">85,000+</div>
+<div class="sl">releases in twelve months through paralegal-assisted processes. The work already happens — by hand.</div></div>
+<div style="flex:1.1;padding:18px 0 18px 18px;border-left:1px solid var(--border)"><div class="stat" style="font-size:40px">~18,000</div>
+<div class="sl">education-programme completions a year that never link to what happened next.</div></div></div>
+<p class="p" style="font-size:21px">Remove one week of information lag per release and the arithmetic returns <b>₱138M a year</b> against <b>₱13.8M</b> to run — <b>0.04%</b> of BJMP's appropriation, with no new headcount and no new database.</p>
+<div class="foot"><b>We do not claim to reduce recidivism.</b> A national rate needs a release cohort, a person-level identifier, a fixed follow-up window and a chosen event. The Philippines has none of the four. We claim only that it becomes answerable.</div></div>`},
+
+/*10*/{t:24,n:`<p><span class="t">7:24–7:48 · Feasibility. Fast.</span></p>
+<p>On JJ-MIS be generous: <b>the registry exists; the mandate was answered on paper; the capture never reached the field.</b> Never say "unbuilt."</p>`,
+h:`<div class="s">${A3}<div class="k">Can this be real</div>
+<h2>Built tonight — and where it goes</h2>
+<div class="grid g4 beat" style="margin-top:20px">
+<div class="card"><div class="n">Done</div><h3>Six surfaces</h3><p style="margin-top:6px">Nine serverless endpoints against seven eGov services. Every secret server-side.</p></div>
+<div class="card"><div class="n">0–3 months</div><h3>One facility</h3><p style="margin-top:6px">A single high-population jail and its partner LSWDO. Test the assumptions on real data.</p></div>
+<div class="card"><div class="n">3–9 months</div><h3>Agency feeds</h3><p style="margin-top:6px">Data-sharing through the DOJ-led NJIS. Privacy Impact Assessment, NPC registration.</p></div>
+<div class="card t"><div class="n">Beyond justice</div><h3>The same rails</h3><p style="margin-top:6px">Identity, notification, directory, receipt. None of it is jail-specific.</p></div></div>
+<div class="foot">JJWC's JJ-MIS registry exists — roughly 8,500 duty-bearer accounts against some 42,000 barangays. The mandate was answered on paper; the capture never reached the field. That is the gap we fill, inside eGovPH rather than beside it.</div></div>`},
+
+/*11*/{t:12,n:`<p><span class="t">7:48–8:00 · Close. Slow. Say the last line and stop — no thank-you filler.</span></p>`,
+h:`<div class="s blue">
+<div class="big" style="font-size:46px;max-width:26ch">Nobody set out to leave them there.</div>
+<p class="p beat" style="font-size:27px;color:#fff;margin-top:22px">It was only ever <b>nobody's job to notice.</b><br><br><b>Now it is somebody's.</b></p>
+<div class="foot" style="margin-top:auto">e-Laya · Team Ala-Eh · DICT eGovHackathon 2026 · <span class="fil">"Walang dapat mawala sa sistema."</span></div></div>`}
+];
+const st=document.getElementById('stage'),bar=document.getElementById('bar'),cnt=document.getElementById('cnt'),
+ nt=document.getElementById('nt'),nb=document.getElementById('nb');
+let i=0;st.innerHTML=D.map(s=>s.h).join('');const sl=[...st.querySelectorAll('.s')];
+const f=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`,cum=n=>D.slice(0,n).reduce((a,s)=>a+s.t,0);
+function go(n){i=Math.max(0,Math.min(D.length-1,n));sl.forEach((e,x)=>e.classList.toggle('on',x===i));
+ cnt.textContent=`${i+1}/${D.length}`;bar.style.width=((i+1)/D.length*100)+'%';
+ nb.innerHTML=D[i].n+`<p style="color:#5E7398;font-size:12.5px;margin-top:9px">SLIDE ${i+1} · ${D[i].t}s · ends ${f(cum(i+1))} · TOTAL ${f(cum(D.length))}</p>`;}
+function fit(){const p=44,sx=(innerWidth-p)/1280,sy=(innerHeight-(nt.classList.contains('on')?innerHeight*.4:0)-p)/720;
+ st.style.transform=`scale(${Math.min(sx,sy,1.55)})`;}
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();
+ if(['arrowright','pagedown',' '].includes(k)){e.preventDefault();go(i+1)}
+ else if(['arrowleft','pageup'].includes(k)){e.preventDefault();go(i-1)}
+ else if(k==='home')go(0);else if(k==='end')go(D.length-1);
+ else if(k==='n'){nt.classList.toggle('on');fit()}
+ else if(k==='f'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}});
+document.getElementById('hud').onclick=e=>{const a=e.target.dataset.a;if(!a)return;
+ if(a==='n')go(i+1);if(a==='p')go(i-1);
+ if(a==='nt'){nt.classList.toggle('on');fit()}
+ if(a==='f'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}};
+st.onclick=e=>{if(e.target.closest('a'))return;go(e.clientX<innerWidth*.25?i-1:i+1)};
+addEventListener('resize',fit);fit();go(0);
+</script></body></html>

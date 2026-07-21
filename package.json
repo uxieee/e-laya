@@ -1,0 +1,8 @@
+{
+  "name": "e-laya",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "e-Laya — a case, rehabilitation and rights access module for eGovPH. Team Ala-Eh, DICT eGovHackathon 2026.",
+  "engines": { "node": "22.x" }
+}

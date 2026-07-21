@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="fil">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>e-Laya · Kapamilya</title>
+<meta name="description" content="Kalagayan, kaso at programa ng iyong kapamilya — inside eGovPH.">
+<link rel="stylesheet" href="elaya.css">
+<style>
+/* ==========================================================================
+   e-Laya citizen app — module-scoped additions only.
+   Nothing here overrides a rule in elaya.css; every selector is a new class
+   or a descendant of one. Tokens per design/02-citizen-app.md §5.1.
+   ========================================================================== */
+:root{
+  --elaya-status:1.75rem;          /* 28px — the single most important string */
+  --elaya-info-surface:#EBF6FF;
+  --elaya-stale-surface:#F8FAFC;
+  --elaya-stale-ink:#64748B;
+  --elaya-slate-100:#F1F5F9;
+  --elaya-info-chip:#DBEAFE;
+  --elaya-tint-3:#F5F8FF;
+  --elaya-error-surface:#FEF2F2;
+}
+:where(button,a,input,[tabindex]):focus-visible{outline:3px solid var(--primary);outline-offset:2px;border-radius:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- bilingual pair. FIL primary; .phone.eng flips primacy ---------- */
+.bi{display:flex;flex-direction:column;gap:2px;--p-size:16px;--p-w:500;--p-c:var(--text);--s-size:13px;--s-c:var(--muted)}
+.bi>span{display:block}
+.bi>.b-fil{font-size:var(--p-size);font-weight:var(--p-w);color:var(--p-c);line-height:1.28;letter-spacing:-.01em}
+.bi>.b-eng{font-size:var(--s-size);font-weight:400;color:var(--s-c);line-height:1.38;letter-spacing:0}
+.phone.eng .bi{flex-direction:column-reverse}
+.phone.eng .bi>.b-fil{font-size:var(--s-size);font-weight:400;color:var(--s-c);line-height:1.38;letter-spacing:0}
+.phone.eng .bi>.b-eng{font-size:var(--p-size);font-weight:var(--p-w);color:var(--p-c);line-height:1.28;letter-spacing:-.01em}
+.bi.status{--p-size:var(--elaya-status);--p-c:var(--text)}
+.bi.h1{--p-size:24px}
+.bi.h2{--p-size:19px}
+.bi.t{--p-size:16px}
+.bi.s{--p-size:15px;--s-size:12px}
+.bi.ts{--p-size:14px;--s-size:12px;--s-c:var(--faint)}
+.bi.b{--p-size:14px;--p-w:400;--p-c:var(--muted-strong);--s-size:12px;--s-c:var(--faint)}
+.bi.tiny{--p-size:13px;--p-w:400;--p-c:var(--muted-strong);--s-size:11.5px;--s-c:var(--faint)}
+.bi.ctr{text-align:center;align-items:center}
+
+/* ---------- sticky footer (C17) — docks above the host tab bar ---------- */
+.foot{flex:none;background:var(--surface);border-top:1px solid var(--border);padding:14px 16px calc(14px + env(safe-area-inset-bottom))}
+.phone.withtabs .foot{margin-bottom:66px}
+.phone.withtabs .screen>.scroll{padding-bottom:88px}
+.phone:not(.withtabs) .tabs{display:none}
+
+/* ---------- eyebrow / heads ---------- */
+.eyebrow{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dayhead{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px}
+.dayhead:first-child{margin-top:4px}
+.pagehead{margin-bottom:16px}
+
+/* ---------- icons ---------- */
+.ic{display:inline-block;vertical-align:middle;flex:none;width:18px;height:18px}
+.chip .ic{width:15px;height:15px}
+.dashed .ic{width:18px;height:18px}
+.ic svg{display:block;width:100%;height:100%;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.ic.fill svg{fill:currentColor;stroke:none}
+.well{border-radius:999px;background:var(--secondary);color:var(--primary);display:grid;place-items:center;flex:none}
+
+/* ---------- avatar ---------- */
+.av{width:48px;height:48px;border-radius:999px;background:var(--secondary);color:var(--primary);
+  display:grid;place-items:center;font-size:16px;font-weight:500;flex:none;letter-spacing:.02em}
+.av.lg{width:56px;height:56px;font-size:18px}
+.av.sm{width:36px;height:36px;font-size:13px}
+
+/* ---------- welfare card internals (C1) ---------- */
+.wfbox{position:relative}
+.welfare.info{background:var(--elaya-info-surface);border-color:var(--border)}
+.welfare.info.attn{background:var(--elaya-info-surface);border:2px solid var(--border-strong)}
+.welfare.none{background:var(--elaya-slate-100);border-color:#E2E8F0}
+.welfare.err{background:var(--elaya-stale-surface);border-color:#E2E8F0}
+.welfare.load{background:var(--secondary);border-color:var(--border)}
+.wf-in{width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;text-align:left;gap:10px;overflow:hidden}
+.wf-main{display:flex;align-items:center;gap:14px;min-width:0}
+.wf-glyph{width:52px;height:52px;border-radius:999px;background:rgba(255,255,255,.7);display:grid;place-items:center;flex:none}
+.wf-glyph .ic{width:26px;height:26px}
+.welfare .bi.status>.b-fil,.phone.eng .welfare .bi.status>.b-eng{line-height:1.16}
+.welfare.stale .wf-glyph{color:var(--elaya-stale-ink)}
+.welfare.none .wf-glyph{color:var(--elaya-stale-ink);background:rgba(255,255,255,.75)}
+.welfare.none .bi.status{--p-size:22px;--p-c:var(--muted-strong)}
+.wf-fade{animation:wfin .24s cubic-bezier(.4,0,.2,1) both}
+@keyframes wfin{from{opacity:0}to{opacity:1}}
+.wf-tint{animation:wftint .3s linear both}
+@keyframes wftint{from{background:#fff}}
+.wf-draw path,.wf-draw circle{stroke-dasharray:120;stroke-dashoffset:120;animation:wfdraw .32s cubic-bezier(.4,0,.2,1) .12s forwards}
+@keyframes wfdraw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){
+  .wf-fade,.wf-tint,.wf-draw path,.wf-draw circle{animation:none!important;stroke-dashoffset:0!important}
+}
+/* skeleton inside the 172px box — mirrors the real geometry exactly (C19) */
+.wf-sk{display:flex;align-items:center;gap:14px;width:100%}
+.wf-sk .skc{width:52px;height:52px;border-radius:999px;background:rgba(255,255,255,.6);animation:sk 1.2s linear infinite}
+.wf-sk .skbars{flex:1}
+.wf-sk .skbar{background:rgba(255,255,255,.6);border-radius:6px;animation:sk 1.2s linear infinite}
+
+/* ---------- source pill (C3) ---------- */
+.src{display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:4px 10px;border-radius:999px;
+  background:var(--elaya-slate-100);color:var(--muted);font-size:11.5px;line-height:1.3;max-width:100%}
+.src .ic{width:12px;height:12px}
+.src span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- inset explainer (C18) ---------- */
+.inset{background:rgba(255,255,255,.72);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:10px}
+.inset.solid{background:var(--surface)}
+.inset .bi{--p-size:13px;--p-w:400;--p-c:var(--muted-strong);--s-size:12px;--s-c:var(--faint)}
+
+/* ---------- action chip row (C9) ---------- */
+.chiprow{display:flex;gap:8px;overflow-x:auto;padding:2px 0;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.chiprow::-webkit-scrollbar{display:none}
+.achip{min-height:44px;display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:999px;
+  background:var(--elaya-info-chip);border:1px solid transparent;color:var(--primary);font-family:var(--font);
+  font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;flex:none;text-decoration:none}
+.achip:active{background:var(--secondary)}
+.achip .ic{width:15px;height:15px}
+.achip:disabled{opacity:.45;cursor:default}
+
+/* ---------- underline tabs (C8) ---------- */
+.utabs{display:flex;gap:22px;border-bottom:1px solid var(--border);margin:0 -16px 14px;padding:0 16px}
+.utab{background:none;border:none;font-family:var(--font);font-size:16px;font-weight:500;color:var(--muted);
+  padding:12px 0 11px;min-height:48px;cursor:pointer;position:relative;transition:color .15s cubic-bezier(.4,0,.2,1)}
+.utab.on{color:var(--primary)}
+.utab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--primary);border-radius:2px 2px 0 0}
+.utabs.flush{margin-left:0;margin-right:0;padding:0}
+
+/* ---------- session dots (C7) ---------- */
+.dots{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 8px}
+.dot{width:10px;height:10px;border-radius:999px;background:var(--border);flex:none}
+.dot.att{background:var(--success)}
+.dot.miss{background:transparent;border:2px solid var(--faint)}
+
+/* ---------- toggle switch ---------- */
+.swrow{display:flex;align-items:center;gap:12px;min-height:44px}
+.sw{width:44px;height:24px;border-radius:999px;background:#CBCED4;border:none;position:relative;flex:none;cursor:pointer;transition:background .15s}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:999px;background:#fff;transition:transform .15s cubic-bezier(.4,0,.2,1)}
+.sw[aria-checked="true"]{background:var(--primary)}
+.sw[aria-checked="true"]::after{transform:translateX(20px)}
+
+/* ---------- notification card (C12) ---------- */
+.notif{display:flex;gap:12px;width:100%;text-align:left;font-family:var(--font);cursor:pointer;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.notif.unread{background:var(--secondary)}
+.notif .nw{width:36px;height:36px;border-radius:999px;display:grid;place-items:center;background:var(--secondary);color:var(--primary);flex:none}
+.notif.unread .nw{background:var(--surface)}
+.notif .nw .ic{width:18px;height:18px}
+.notif .time{font-size:12px;color:var(--faint);flex:none;margin-left:auto;padding-left:8px}
+.smsecho{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--faint);margin-top:8px;
+  padding-top:8px;border-top:1px solid var(--border)}
+.smsecho .ic{width:12px;height:12px}
+
+/* ---------- role card (C6) ---------- */
+.rolecard{position:relative;display:flex;gap:12px;width:100%;text-align:left;font-family:var(--font);cursor:pointer;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;min-height:84px;align-items:flex-start}
+.rolecard.sel{border:2px solid var(--border-strong);background:#F8FAFF;padding:15px}
+.rolecard .tick{position:absolute;top:14px;right:14px;width:20px;height:20px;border-radius:999px;background:var(--primary);color:#fff;display:none;place-items:center}
+.rolecard.sel .tick{display:grid}
+.rolecard .tick .ic{width:12px;height:12px}
+.rolecard .w{width:44px;height:44px}
+.rolecard .w .ic{width:22px;height:22px}
+.vchip{display:inline-flex;align-items:center;min-height:22px;padding:3px 8px;border-radius:999px;background:var(--elaya-info-chip);color:var(--primary-ink);font-size:11px;font-weight:500;margin-top:8px}
+
+/* ---------- misc ---------- */
+.dashed{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:48px;border-radius:var(--radius);
+  border:1px dashed var(--border-strong);background:transparent;color:var(--primary);font-family:var(--font);font-size:15px;font-weight:500;cursor:pointer;padding:12px}
+.dashed:disabled{opacity:.5;cursor:default}
+.numstep{display:flex;align-items:flex-start;gap:12px;min-height:40px;padding:6px 0}
+.numstep .n{width:24px;height:24px;border-radius:999px;background:var(--secondary);color:var(--primary);
+  font-size:13px;font-weight:500;display:grid;place-items:center;flex:none}
+.numstep .l{font-size:14px;color:var(--muted-strong);line-height:1.4;padding-top:2px}
+.badge{position:absolute;top:-3px;right:-5px;min-width:16px;height:16px;border-radius:999px;background:var(--destructive);
+  color:#fff;font-size:10px;font-weight:500;display:grid;place-items:center;padding:0 4px}
+.iconbtn{position:relative;width:44px;height:44px;display:grid;place-items:center;background:none;border:none;color:var(--primary);cursor:pointer;flex:none}
+.iconbtn .ic{width:22px;height:22px}
+.textbtn{min-width:44px;min-height:44px;background:none;border:none;color:var(--primary);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;padding:0 6px}
+.linkrow{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;background:none;border:none;padding:0;
+  font-family:var(--font);font-size:14px;font-weight:500;color:var(--primary);cursor:pointer;text-align:left;text-decoration:none}
+.linkrow .ic{width:16px;height:16px}
+.linkrow .chev{margin-left:auto;color:var(--faint)}
+.row .t,.row .s{display:block}
+.row{min-height:56px}
+.hairline{height:1px;background:var(--border);margin:12px 0;border:none}
+.mono11{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--faint)}
+.access{border-radius:12px;padding:14px 16px;background:var(--elaya-error-surface);border:1px solid #F5C6C6;border-left:3px solid var(--destructive)}
+.newpill{position:absolute;left:50%;top:8px;transform:translate(-50%,-60px);z-index:30;min-height:36px;display:flex;align-items:center;gap:8px;
+  padding:8px 16px;border-radius:999px;background:var(--primary);color:#fff;font-size:13px;font-weight:500;border:none;
+  font-family:var(--font);cursor:pointer;box-shadow:0 6px 18px rgba(0,64,231,.28);transition:transform .24s cubic-bezier(.4,0,.2,1),opacity .24s;opacity:0}
+.newpill.on{transform:translate(-50%,0);opacity:1}
+.stepper{display:flex;align-items:center;margin-bottom:14px}
+.stepper .nd{width:8px;height:8px;border-radius:999px;background:var(--border-strong);flex:none;transition:background .2s}
+.stepper .nd.done{background:var(--primary)}
+.stepper .nd.cur{background:var(--primary);animation:ndp 1.4s ease-in-out infinite}
+@keyframes ndp{0%,100%{opacity:1}50%{opacity:.55}}
+.stepper .rl{height:2px;flex:1;background:var(--border-strong)}
+.stepper .rl.done{background:var(--primary)}
+.ssoslot{min-height:48px;display:flex;align-items:stretch}
+.ssoslot>*{width:100%}
+.tabs .ic{width:22px;height:22px}
+.tab.fab .ic{width:46px;height:46px}
+.tab.fab .ic .ic{width:21px;height:21px;color:#fff}
+.tab[aria-current="page"]{color:var(--primary)}
+
+/* ---------- bottom sheet (C16) ---------- */
+.scrim{position:absolute;inset:0;background:rgba(26,26,46,.4);z-index:45;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:46;background:var(--surface);border-radius:24px 24px 0 0;
+  max-height:80%;display:flex;flex-direction:column;transform:translateY(102%);transition:transform .24s cubic-bezier(.4,0,.2,1)}
+.sheet.on{transform:none}
+.grab{width:36px;height:4px;border-radius:2px;background:#CBD5E1;margin:10px auto 4px;flex:none}
+.sheet-body{padding:8px 16px 24px;overflow-y:auto}
+.crumbs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.crumb{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:5px 10px;border-radius:999px;background:var(--secondary);
+  border:1px solid var(--border);color:var(--primary-ink);font-family:var(--font);font-size:12.5px;font-weight:500;cursor:pointer}
+.chk{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;font-family:var(--font);cursor:pointer;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:14px;color:var(--text)}
+.chk .bx{width:22px;height:22px;border-radius:6px;border:2px solid var(--border-strong);flex:none;display:grid;place-items:center;color:transparent}
+.chk[aria-checked="true"] .bx{background:var(--primary);border-color:var(--primary);color:#fff}
+.chk .bx .ic{width:13px;height:13px}
+.ticklist{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--muted-strong);line-height:1.45;margin-bottom:10px}
+.ticklist .ic{width:16px;height:16px;color:var(--success);margin-top:3px}
+
+/* ---------- demo affordance — quiet, out of the way ---------- */
+.demofab{position:absolute;right:10px;bottom:78px;z-index:35;width:36px;height:36px;border-radius:999px;
+  background:rgba(255,255,255,.92);border:1px solid var(--border-strong);color:var(--muted);display:none;place-items:center;cursor:pointer;
+  backdrop-filter:blur(6px)}
+.demofab.on{display:grid}
+.demofab .ic{width:16px;height:16px}
+.demogrid{display:flex;flex-wrap:wrap;gap:8px}
+.demogrid button{min-height:38px;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);
+  font-family:var(--font);font-size:13px;color:var(--muted-strong);cursor:pointer}
+.demogrid button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* ---------- program row (C13) ---------- */
+.prow{display:flex;gap:12px;width:100%;text-align:left;font-family:var(--font);cursor:pointer;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.prow .w{width:40px;height:40px}
+.prow .w .ic{width:19px;height:19px}
+.pbadge{display:inline-flex;align-items:center;min-height:22px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap}
+.pbadge.gov{background:var(--elaya-info-chip);color:var(--primary-ink)}
+.pbadge.ngo{background:var(--secondary);color:var(--primary)}
+.avail{display:inline-flex;align-items:center;min-height:24px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:500;margin-top:10px}
+.avail.open{background:var(--success-surface);color:var(--success)}
+.avail.wait{background:var(--elaya-slate-100);color:var(--muted)}
+.meta{font-size:13px;color:var(--muted);line-height:1.45}
+.meta.dim{color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="phone-wrap">
+<div class="phone" id="phone">
+
+  <!-- ============ A-1 · Mag-sign in gamit ang eGovPH ============ -->
+  <section class="screen on" id="s-signin" aria-labelledby="t-signin">
+    <header class="bar">
+      <span class="back" aria-hidden="true"></span>
+      <h1 class="title" id="t-signin">e-Laya</h1>
+      <span class="right"></span>
+    </header>
+    <div class="offline" id="off-signin" hidden>
+      <span>Naka-offline ka. Kailangan ng internet para mag-sign in.</span>
+    </div>
+    <div class="scroll" style="display:flex;flex-direction:column">
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px 0 8px">
+        <div class="well" style="width:64px;height:64px" aria-hidden="true"><span class="ic" style="width:32px;height:32px" data-ico="heart"></span></div>
+        <p style="font-size:24px;font-weight:500;margin-top:20px;letter-spacing:-.01em;color:var(--text)">e-Laya</p>
+        <div class="bi ctr" style="max-width:290px;margin-top:8px;--p-size:16px;--p-w:400">
+          <span class="b-fil">Kalagayan, kaso at programa ng iyong kapamilya</span>
+          <span class="b-eng">Welfare, case and programme updates for your family</span>
+        </div>
+      </div>
+      <div class="card" style="display:flex;gap:12px;margin-top:24px">
+        <div class="well" style="width:36px;height:36px" aria-hidden="true"><span class="ic" style="width:18px;height:18px" data-ico="lock"></span></div>
+        <div class="grow">
+          <div class="bi t"><span class="b-fil">Bakit kailangan mag-sign in?</span><span class="b-eng">Why sign in?</span></div>
+          <div class="bi b" style="margin-top:8px">
+            <span class="b-fil">Para masiguro naming ikaw nga ang kadugo o guardian. Walang ibang makakakita ng impormasyon niya.</span>
+            <span class="b-eng">We verify you are family before showing anything.</span>
+          </div>
+        </div>
+      </div>
+      <div id="sso-state"></div>
+    </div>
+    <div class="foot" id="foot-signin">
+      <div class="ssoslot" id="egov-sso-widget-button">
+        <button class="btn" id="btnSSO">Mag-sign in gamit ang eGovPH</button>
+      </div>
+      <div class="bi tiny ctr" style="margin-top:12px">
+        <span class="b-fil">Hindi kami humihingi ng OTP o password sa text.</span>
+        <span class="b-eng">We will never ask for your OTP or password by SMS.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ A-2 · Sino ka? ============ -->
+  <section class="screen" id="s-role" aria-labelledby="t-role">
+    <header class="bar">
+      <button class="back" data-back aria-label="Bumalik">‹</button>
+      <h1 class="title" id="t-role">Sino ka?</h1>
+      <span class="right"></span>
+    </header>
+    <div class="scroll">
+      <div class="pagehead">
+        <div class="bi h1"><span class="b-fil">Sino ka sa taong ito?</span><span class="b-eng">What is your role?</span></div>
+        <p class="meta" style="margin-top:10px">Ito ang magtatakda ng makikita mo. Mababago mo rin ito mamaya.<br><span class="meta dim">This decides what you see. You can change it later.</span></p>
+      </div>
+      <div id="roleList" role="radiogroup" aria-label="Papel"></div>
+    </div>
+    <div class="foot">
+      <button class="btn" id="btnRoleGo" disabled>Magpatuloy</button>
+    </div>
+  </section>
+
+  <!-- ============ Institutional-role handoff ============ -->
+  <section class="screen" id="s-handoff" aria-labelledby="t-handoff">
+    <header class="bar">
+      <button class="back" data-back aria-label="Bumalik">‹</button>
+      <h1 class="title" id="t-handoff">Kailangan ng patunay</h1>
+      <span class="right"></span>
+    </header>
+    <div class="scroll" id="handoffBody"></div>
+    <div class="foot">
+      <button class="btn ghost" data-back>Bumalik sa pagpili ng papel</button>
+    </div>
+  </section>
+
+  <!-- ============ A-3 · Kamusta sila ============ -->
+  <section class="screen" id="s-list" aria-labelledby="t-list">
+    <header class="bar">
+      <span class="back" aria-hidden="true"></span>
+      <h1 class="title" id="t-list">Kamusta sila</h1>
+      <span class="right" style="width:auto;display:flex;align-items:center">
+        <button class="iconbtn" id="btnBell" aria-label="Mga abiso, 2 hindi pa nabasa">
+          <span class="ic" data-ico="bell"></span><span class="badge" id="bellBadge">2</span>
+        </button>
+        <button class="textbtn" id="btnLang" aria-label="Palitan ang wika">FIL</button>
+      </span>
+    </header>
+    <div id="off-list"></div>
+    <div class="scroll" id="listBody"></div>
+  </section>
+
+  <!-- ============ A-4 · Person detail ============ -->
+  <section class="screen" id="s-person" aria-labelledby="t-person">
+    <header class="bar">
+      <button class="back" data-back aria-label="Bumalik sa listahan">‹</button>
+      <h1 class="title" id="t-person">&nbsp;</h1>
+      <button class="iconbtn" id="btnMore" aria-label="Iba pang aksyon"><span class="ic fill" data-ico="dots"></span></button>
+    </header>
+    <div id="off-person"></div>
+    <div class="scroll" id="personBody"></div>
+    <button class="newpill" id="newPill">
+      <span class="ic" style="width:15px;height:15px" data-ico="refresh"></span>
+      May bagong update. Pindutin para makita.
+    </button>
+  </section>
+
+  <!-- ============ A-5 · Mga programa ============ -->
+  <section class="screen" id="s-programs" aria-labelledby="t-programs">
+    <header class="bar">
+      <button class="back" data-back aria-label="Bumalik">‹</button>
+      <h1 class="title" id="t-programs">Mga programa</h1>
+      <span class="right"></span>
+    </header>
+    <div class="scroll" id="programsBody"></div>
+  </section>
+
+  <!-- ============ Program detail ============ -->
+  <section class="screen" id="s-progdetail" aria-labelledby="t-progdetail">
+    <header class="bar">
+      <button class="back" data-back aria-label="Bumalik">‹</button>
+      <h1 class="title" id="t-progdetail">&nbsp;</h1>
+      <span class="right"></span>
+    </header>
+    <div class="scroll" id="progdetailBody"></div>
+    <div class="foot" id="progdetailFoot"></div>
+  </section>
+
+  <!-- ============ Enrolment success ============ -->
+  <section class="screen" id="s-enrolled" aria-labelledby="t-enrolled">
+    <header class="bar">
+      <span class="back" aria-hidden="true"></span>
+      <h1 class="title" id="t-enrolled">Naka-enroll na</h1>
+      <span class="right"></span>
+    </header>
+    <div class="scroll" id="enrolledBody"></div>
+  </section>
+
+  <!-- ============ A-6 · Mga abiso ============ -->
+  <section class="screen" id="s-notifs" aria-labelledby="t-notifs">
+    <header class="bar">
+      <button class="back" data-back aria-label="Bumalik">‹</button>
+      <h1 class="title" id="t-notifs">Mga abiso</h1>
+      <button class="iconbtn" id="btnReadAll" aria-label="Markahan lahat bilang nabasa"><span class="ic" data-ico="check"></span></button>
+    </header>
+    <div id="off-notifs"></div>
+    <div class="scroll" id="notifsBody"></div>
+  </section>
+
+  <!-- ============ Scan (host shell) ============ -->
+  <section class="screen" id="s-scan" aria-labelledby="t-scan">
+    <header class="bar">
+      <span class="back" aria-hidden="true"></span>
+      <h1 class="title" id="t-scan">I-scan</h1>
+      <span class="right"></span>
+    </header>
+    <div class="scroll" id="scanBody"></div>
+  </section>
+
+  <!-- ============ Digital ID (host shell) ============ -->
+  <section class="screen" id="s-id" aria-labelledby="t-id">
+    <header class="bar">
+      <span class="back" aria-hidden="true"></span>
+      <h1 class="title" id="t-id">Digital ID</h1>
+      <span class="right"></span>
+    </header>
+    <div class="scroll" id="idBody"></div>
+  </section>
+
+  <!-- ============ Account ============ -->
+  <section class="screen" id="s-account" aria-labelledby="t-account">
+    <header class="bar">
+      <span class="back" aria-hidden="true"></span>
+      <h1 class="title" id="t-account">Account</h1>
+      <span class="right"></span>
+    </header>
+    <div class="scroll" id="accountBody"></div>
+  </section>
+
+  <!-- ============ host eGovPH tab bar ============ -->
+  <nav class="tabs" id="tabs" aria-label="eGovPH">
+    <button class="tab" data-tab="s-list"><span class="ic" data-ico="home"></span>Home</button>
+    <button class="tab" data-tab="s-scan"><span class="ic" data-ico="scan"></span>Scan</button>
+    <button class="tab fab" data-tab="s-id"><span class="ic"><span class="ic" data-ico="idcard"></span></span>Digital ID</button>
+    <button class="tab" data-tab="s-notifs"><span class="ic" data-ico="clock"></span>History</button>
+    <button class="tab" data-tab="s-account"><span class="ic" data-ico="user"></span>Account</button>
+  </nav>
+
+  <button class="demofab" id="demoFab" aria-label="Demo: ipakita ang ibang estado ng kalagayan" title="Demo states">
+    <span class="ic" data-ico="sliders"></span>
+  </button>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span></div>
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Sheet">
+    <div class="grab" aria-hidden="true"></div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+</div>
+<div id="egov-sso-widget-portal" style="width:0;height:0;overflow:hidden" aria-hidden="true"></div>
+<script>
+"use strict";
+/* ==========================================================================
+   e-Laya · citizen app (A-1 … A-6)
+   Colour encodes the FRESHNESS of a human confirmation, never severity.
+   ========================================================================== */
+
+/* ---------------- icons (Lucide geometry, inlined — no dependencies) ------ */
+const ICONS = {
+  heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"/>',
+  lock:'<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  circlecheck:'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  circledashed:'<path d="M10.1 2.18a9.93 9.93 0 0 1 3.8 0"/><path d="M17.6 3.71a9.95 9.95 0 0 1 2.69 2.7"/><path d="M21.82 10.1a9.93 9.93 0 0 1 0 3.8"/><path d="M20.29 17.6a9.95 9.95 0 0 1-2.7 2.69"/><path d="M13.9 21.82a9.94 9.94 0 0 1-3.8 0"/><path d="M6.4 20.29a9.95 9.95 0 0 1-2.69-2.7"/><path d="M2.18 13.9a9.93 9.93 0 0 1 0-3.8"/><path d="M3.71 6.4a9.95 9.95 0 0 1 2.7-2.69"/>',
+  circleslash:'<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+  steth:'<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 4v7a3 3 0 0 0 6 0V4"/><path d="M8 14v3a4 4 0 0 0 8 0v-1"/><circle cx="18" cy="14" r="2"/>',
+  hospital:'<path d="M12 7v4"/><path d="M14 9h-4"/><path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h2"/><path d="M18 22V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v18"/>',
+  gavel:'<path d="m14.5 12.5-8 8a2.12 2.12 0 1 1-3-3l8-8"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/>',
+  users:'<path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/>',
+  swap:'<path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/>',
+  door:'<path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 2.5 6 5v16l7-2.5"/>',
+  refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+  bell:'<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>',
+  calendar:'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+  landmark:'<path d="M10 18v-7"/><path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  pin:'<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+  chev:'<path d="m9 18 6-6-6-6"/>',
+  caret:'<path d="m6 9 6 6 6-6"/>',
+  plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+  award:'<path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/>',
+  cloudoff:'<path d="m2 2 20 20"/><path d="M5.782 5.782A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.307-.193"/><path d="M21.532 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7.008 7.008 0 0 0 10 5.07"/>',
+  scale:'<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+  shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  idcard:'<path d="M16 10h2"/><path d="M16 14h2"/><path d="M6.17 15a3 3 0 0 1 5.66 0"/><circle cx="9" cy="11" r="2"/><rect x="2" y="5" width="20" height="14" rx="2"/>',
+  handshake:'<path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87"/><path d="M21 3v9"/><path d="M3 4h8"/><path d="m9 21-4-4"/>',
+  home:'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+  user:'<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  copy:'<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  ext:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  mail:'<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  dots:'<circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/><circle cx="5" cy="12" r="1.6"/>',
+  sliders:'<path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/>',
+  hourglass:'<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  book:'<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>',
+  hammer:'<path d="m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"/>'
+};
+function ico(name,cls){ return '<span class="ic '+(cls||'')+'" aria-hidden="true"><svg viewBox="0 0 24 24">'+(ICONS[name]||'')+'</svg></span>'; }
+
+/* ---------------- seeded demo data ---------------------------------------- */
+/* "Today" for the demo is Miyerkules, Hul 22, 2026. */
+const PROFILE = {
+  name:'Rosa Andres Reyes', first:'Rosa', initials:'RR',
+  mobileMasked:'+63 917 ••• 4567', mobile:null,   // real number only ever comes from a live SSO profile
+  locality:'Batangas City, Batangas'
+};
+
+const WELFARE = {
+  ok:        {fil:'Ayos naman siya',            eng:n=>n+' is doing OK',                 ico:'circlecheck',   tone:'ok'},
+  clinic:    {fil:'Nasa klinika siya',          eng:n=>n+' is in the facility clinic',   ico:'steth',         tone:'info',
+              note:['Nasa klinika ng pasilidad, binabantayan ng nurse. Karaniwan itong nangyayari at hindi ibig sabihin ay malubha.',
+                    'In the facility clinic, being monitored by a nurse. This is routine and does not mean it is serious.']},
+  hospital:  {fil:'Nasa ospital siya',          eng:n=>n+' is in hospital',              ico:'hospital',      tone:'info', attn:true,
+              note:['Dinala siya sa ospital para sa mas mabuting pag-aalaga. Tawagan ang pasilidad para sa detalye — sila lang ang pwedeng magbigay nito.',
+                    'He was taken to hospital for better care. Call the facility for details — only they can give them.']},
+  hearing:   {fil:'Nasa hearing siya ngayon',   eng:n=>n+' is at a hearing',             ico:'gavel',         tone:'info'},
+  program:   {fil:'Nasa session siya ngayon',   eng:n=>n+' is in a programme session',   ico:'users',         tone:'info'},
+  transferred:{fil:'Inilipat siya ng pasilidad',eng:n=>n+' was transferred',             ico:'swap',          tone:'info',
+              note:['Inilipat siya noong Hul 21, 2:40 PM. Bago ang address at oras ng dalaw — tingnan sa ibaba bago bumiyahe.',
+                    'Transferred Jul 21, 2:40 PM. The address and visiting hours have changed — check below before travelling.']},
+  released:  {fil:'Nakalaya na siya',           eng:n=>n+' has been released',           ico:'door',          tone:'ok',
+              note:['Naitala ng pasilidad ang paglaya niya. Maghanap na ng programa malapit sa inyo — libre ang lahat ng nakalista.',
+                    'The facility recorded his release. Look for a programme near you — everything listed is free.']},
+  none:      {fil:'Wala pang update',           eng:()=>'No update yet',                 ico:'circledashed',  tone:'none'},
+  noupdate:  {fil:'Walang update ngayong araw', eng:()=>'No update today',               ico:'circledashed',  tone:'none'}
+};
+
+const PEOPLE = [
+  {
+    id:'miguel', name:'Miguel Andres R.', full:'Miguel Andres Reyes', initials:'MA',
+    relation:'Anak', ageLine:null,
+    facility:'Batangas City District Jail', agency:'BJMP', officer:'SO3 M. Bautista',
+    hotline:'(043) 723-4242', hotlineTel:'+63437234242',
+    medical:'(043) 723-4250', medicalTel:'+63437234250',
+    visiting:['Sabado at Linggo, 8:00 AM – 11:00 AM','Saturday and Sunday, 8:00–11:00 AM'],
+    ref:'WS-4482-0914',
+    welfare:{key:'ok', ageHours:2.4, at:'9:14 AM', day:'ngayong araw'},
+    caseState:{fil:'Naghihintay ng hearing', eng:'Awaiting hearing', src:'PAO', sync:'8:02 AM'},
+    hearing:{date:'Ago 14, 2026', dayName:'Biyernes', time:'8:30 AM', court:'RTC Branch 4, Batangas City', vc:true, remind:true, src:'PAO', sync:'8:02 AM'},
+    gcta:{count:3, src:'BJMP', sync:'kahapon, 6:40 PM',
+          items:[['Hul 2, 2026','Good conduct — Hunyo 2026','Batangas City District Jail'],
+                 ['Hun 3, 2026','Good conduct — Mayo 2026','Batangas City District Jail'],
+                 ['May 4, 2026','Study and teaching credit','Batangas City District Jail']]},
+    programme:{
+      name:'Therapeutic Community Program', provider:'BJMP Batangas City', kind:'gov', status:'Aktibo',
+      schedule:'Tuwing Martes at Huwebes, 2:00 PM', total:24, attended:9, missed:0,
+      next:['Bukas, Hul 23, 2:00 PM','Multi-purpose hall, Batangas City District Jail'],
+      contactName:'Ms. Delos Reyes, Rehabilitation Officer', contactTel:'+63437234242',
+      receipt:'a3f1…8c02', receiptFull:'a3f1c07d5b9e4412ff6a0d3e91b7c45a2e88d10f6c3b7a9d2e4f10b7c65d8c02',
+      src:'BJMP Batangas City', sync:'7:55 AM', note:null
+    }
+  },
+  {
+    id:'jomar', name:'Jomar C.', full:'Jomar Cruz', initials:'JC',
+    relation:'Pamangkin', ageLine:'16 taong gulang',
+    facility:'Bahay Pag-asa, Batangas City', agency:'LSWDO', officer:'Ms. A. Ramos',
+    hotline:'(043) 702-8988', hotlineTel:'+63437028988',
+    medical:null, medicalTel:null,
+    visiting:['Sabado, 9:00 AM – 12:00 NN','Saturday, 9:00 AM – 12:00 NN'],
+    ref:'WS-4517-0716',
+    welfare:{key:'ok', ageHours:138, at:'4:02 PM', day:'Hul 16'},
+    caseState:{fil:'Nasa diversion, walang kasong nakabinbin', eng:'In diversion, no pending court case', src:'LSWDO Batangas City', sync:'kahapon, 5:10 PM'},
+    hearing:null,
+    gcta:null,
+    programme:{
+      name:'Diversion Program B', provider:'LSWDO Batangas City', kind:'gov', status:'Aktibo',
+      schedule:'Tuwing Lunes at Huwebes, 9:00 AM', total:12, attended:4, missed:1,
+      next:['Bukas, Hul 23, 9:00 AM','Brgy. Alangilan Hall, Batangas City'],
+      contactName:'Ms. Ramos, LSWDO', contactTel:'+63437028988',
+      receipt:'a3f1…8c02', receiptFull:'a3f19b40c1de77025aa4b8c3f0d61e9a7c25f83b40de91cc7a6b5f2109d38c02',
+      src:'LSWDO Batangas City', sync:'7:55 AM',
+      note:['Hindi siya nakadalo noong Hul 13. Kung problema ang pamasahe o oras, sabihin kay Ms. Ramos, LSWDO.',
+            'He missed Jul 13. If fare or timing is the problem, tell Ms. Ramos at the LSWDO.']
+    }
+  }
+];
+
+const PROGRAMS = [
+  {id:'div-b', name:'Diversion Program B', provider:'LSWDO Batangas City', kind:'gov', ini:'DB',
+   sched:'Tuwing Lunes at Huwebes, 9:00 AM', sessions:12, brgy:'Brgy. Alangilan Hall', km:'2.1',
+   slots:6, ico:'users',
+   about:['Community-based diversion para sa kabataang may kaso, alinsunod sa RA 9344. Counselling, life skills at pakikipag-usap sa pamilya.',
+          'Community-based diversion for children in conflict with the law under RA 9344. Counselling, life skills and family sessions.'],
+   start:'Hul 27, 2026'},
+  {id:'weld', name:'Skills Training: Welding NC II', provider:'TESDA x Caritas Batangas', kind:'ngo', ini:'ST',
+   sched:'Martes hanggang Huwebes, 1:00 PM', sessions:40, brgy:'Brgy. Balagtas', km:'4.8',
+   slots:0, ico:'hammer',
+   about:['40-session na training na may National Certificate II sa welding. May libreng PPE at baon sa bawat session.',
+          '40 sessions leading to National Certificate II in welding. Free PPE and a daily meal allowance.'],
+   start:'Ago 3, 2026'},
+  {id:'als', name:'Balik-Eskwela: ALS Junior High', provider:'DepEd Batangas City', kind:'gov', ini:'AL',
+   sched:'Sabado, 8:00 AM', sessions:36, brgy:'Brgy. Kumintang Ibaba', km:'1.4',
+   slots:11, ico:'book',
+   about:['Alternative Learning System para makatapos ng junior high habang nasa programa. May libreng module at pagsusulit.',
+          'Alternative Learning System to finish junior high while in a programme. Free modules and assessment.'],
+   start:'Ago 1, 2026'},
+  {id:'cbdrp', name:'Community-Based Drug Rehabilitation', provider:'City Health Office Batangas', kind:'gov', ini:'CB',
+   sched:'Tuwing Miyerkules, 3:00 PM', sessions:18, brgy:'Brgy. Poblacion Health Center', km:'3.2',
+   slots:4, ico:'steth',
+   about:['18 session na after-care at counselling na pinamumunuan ng City Health Office. Kumpidensyal at libre.',
+          'An 18-session after-care and counselling programme run by the City Health Office. Confidential and free.'],
+   start:'Hul 29, 2026'},
+  {id:'baking', name:'Panday Kabuhayan: Baking NC II', provider:'Caritas Batangas', kind:'ngo', ini:'PK',
+   sched:'Lunes at Biyernes, 10:00 AM', sessions:24, brgy:'Brgy. Sta. Rita Karsada', km:'5.6',
+   slots:3, ico:'award'},
+  {id:'gabay', name:'Gabay Kabataan Counselling', provider:'LSWDO Batangas City', kind:'gov', ini:'GK',
+   sched:'Tuwing Sabado, 1:00 PM', sessions:10, brgy:'Brgy. Gulod Labac', km:'3.9',
+   slots:8, ico:'handshake'}
+];
+
+const NOTIFS = [
+  {id:'n1', day:'NGAYONG ARAW', time:'9:14 AM', unread:true, ico:'circlecheck',
+   fil:'Ayos naman si Miguel', eng:'Miguel is doing OK',
+   body:'Na-update ng Batangas City District Jail.', sms:'Ipinadala rin sa +63 917 ••• 4567, 9:14 AM'},
+  {id:'n2', day:'NGAYONG ARAW', time:'8:00 AM', unread:true, ico:'calendar',
+   fil:'May session bukas si Jomar', eng:'Jomar has a session tomorrow',
+   body:'Hul 23, 9:00 AM · Diversion Program B, Brgy. Alangilan Hall.', sms:'Ipinadala rin sa +63 917 ••• 4567, 8:00 AM'},
+  {id:'n3', day:'KAHAPON', time:'6:40 PM', unread:false, ico:'gavel',
+   fil:'Bagong hearing date si Miguel', eng:'New hearing date for Miguel',
+   body:'Ago 14, 8:30 AM · RTC Br 4 Batangas City · Videoconference.', src:'Galing sa: PAO',
+   sms:'Ipinadala rin sa +63 917 ••• 4567, 6:40 PM'},
+  {id:'n4', day:'KAHAPON', time:'5:55 PM', unread:false, ico:'award',
+   fil:'Bagong good conduct credit si Miguel', eng:'New good conduct credit for Miguel',
+   body:'Naitala ng BJMP noong Hul 20. Ipaalam ito sa abogado niya sa PAO.', src:'Galing sa: BJMP'},
+  {id:'n5', day:'HUL 13', time:'5:12 PM', unread:false, ico:'circleslash',
+   fil:'Hindi nakadalo si Jomar', eng:'Jomar missed a session',
+   body:'Kung problema ang pamasahe o oras, tawagan si Ms. Ramos.',
+   action:{label:'Tawagan si Ms. Ramos', tel:'+63437028988'}}
+];
+
+const ROLES = [
+  {id:'relative', ico:'users',  fil:'Kadugo o guardian', eng:'Relative or guardian', sub:'Kalagayan, kaso, programa at abiso', verify:false},
+  {id:'pao',      ico:'scale',  fil:'Abogado sa PAO',    eng:'PAO lawyer',           sub:'Caseload, case detail, hearing calendar', verify:true},
+  {id:'sw',       ico:'handshake', fil:'Social worker',  eng:'Social worker',        sub:'Caseload, enrolment, attendance logging', verify:true},
+  {id:'officer',  ico:'shield', fil:'Opisyal ng BJMP o BuCor', eng:'BJMP / BuCor officer', sub:'Custody roster, welfare status entry', verify:true},
+  {id:'dswd',     ico:'idcard', fil:'DSWD o PNP',        eng:'DSWD / PNP',           sub:'Age and identity verification', verify:true}
+];
+
+/* PSGC fallback — the user's own locality, cached permanently on first fetch. */
+const PSGC_SEED = {
+  regions:[{code:'040000000',name:'Region IV-A (CALABARZON)'},{code:'130000000',name:'National Capital Region'},
+           {code:'030000000',name:'Region III (Central Luzon)'},{code:'050000000',name:'Region V (Bicol Region)'},
+           {code:'070000000',name:'Region VII (Central Visayas)'},{code:'110000000',name:'Region XI (Davao Region)'}],
+  '040000000':[{code:'041000000',name:'Batangas'},{code:'042100000',name:'Cavite'},{code:'043400000',name:'Laguna'},
+               {code:'045600000',name:'Quezon'},{code:'045800000',name:'Rizal'}],
+  '041000000':[{code:'041006000',name:'Batangas City'},{code:'041005000',name:'Balayan'},{code:'041019000',name:'Lipa City'},
+               {code:'041028000',name:'Tanauan City'},{code:'041024000',name:'San Juan'}],
+  '041006000':[{code:'041006002',name:'Alangilan'},{code:'041006005',name:'Balagtas'},{code:'041006010',name:'Bolbok'},
+               {code:'041006014',name:'Cuta'},{code:'041006021',name:'Gulod Labac'},{code:'041006028',name:'Kumintang Ibaba'},
+               {code:'041006039',name:'Pallocan Kanluran'},{code:'041006045',name:'Poblacion'},{code:'041006052',name:'Sta. Rita Karsada'}]
+};
+
+/* ---------------- app state ---------------------------------------------- */
+const S = {
+  screen:'s-signin', stack:[], lang:'FIL', role:null, personId:'miguel',
+  tab:'kaso', online:true, demo:'auto', signedIn:false, wfResolved:false,
+  notifTab:'all', progTab:'lahat', progQuery:'', locality:'Batangas City, Batangas', demoBase:'auto',
+  enrolFor:'jomar', enrolProgram:null, agree:false, smsDetail:false, live:false
+};
+
+/* ---------------- tiny helpers -------------------------------------------- */
+const $  = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function bi(fil,eng,cls){
+  return '<div class="bi '+(cls||'')+'"><span class="b-fil">'+esc(fil)+'</span><span class="b-eng">'+esc(eng)+'</span></div>';
+}
+function src(agency,sync){
+  return '<div class="src">'+ico('landmark')+'<span>Galing sa: '+esc(agency)+' · Huling sync '+esc(sync)+'</span></div>';
+}
+let toastT;
+function toast(msg,ms){
+  $('toastMsg').textContent = msg; $('toast').classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(()=>$('toast').classList.remove('on'), ms||3200);
+}
+
+/* ---------------- the API, with silent fallback to seeded data ------------ */
+async function api(path, body){
+  try{
+    const r = await fetch(path, body ? {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)} : {});
+    if(!r.ok) throw 0;
+    return await r.json();
+  }catch(e){ return null; }   // fall back to seeded demo data
+}
+</script>
+<script>
+"use strict";
+/* ==========================================================================
+   C1 · the welfare card — 15 states, §5.8
+   ========================================================================== */
+const DEMO_STATES = [
+  ['auto','Totoong datos'],['fresh','Ayos · ngayong araw'],['aging','Ayos · 3 araw'],['stale','Ayos · 6 na araw'],
+  ['clinic','Nasa klinika'],['hospital','Nasa ospital'],['hearing','Nasa hearing'],['program','Nasa session'],
+  ['transferred','Inilipat'],['released','Nakalaya'],['noupdate','Walang update ngayong araw'],['none','Wala pang update'],
+  ['loading','Loading'],['slow','Mabagal ang koneksyon'],['error','Error'],['offline','Offline'],['revoked','Walang access']
+];
+
+/* The freshness ladder, §5.6 — three different kinds of "old", never conflated. */
+function wfAuto(p){
+  const w = p.welfare, h = w.ageHours, base = {key:w.key, at:w.at, stale:false, aging:null, offline:false, mode:'card'};
+  if(h < 24)  return {...base, ts:{fil:'Na-update ngayong araw, '+w.at, eng:'Updated today, '+w.at}};
+  if(h < 48)  return {...base, ts:{fil:'Na-update kahapon, '+w.at, eng:'Updated yesterday, '+w.at}};
+  if(h < 120) return {...base, ts:{fil:'Na-update noong '+w.day+', '+w.at, eng:'Updated '+w.day+', '+w.at},
+                      aging:['Hindi pa ito na-a-update mula noong '+w.day+'.','This has not been updated since '+w.day+'.']};
+  const days = Math.round(h/24);
+  return {...base, stale:true,
+          ts:{fil:'Huling na-update noong '+w.day+' — '+days+' na araw na.', eng:'Last updated '+w.day+' — '+days+' days ago.'}};
+}
+
+function wfView(p){
+  /* the demo control only ever overrides the person currently on screen */
+  const d = (S.demo==='auto' || p.id!==S.personId) ? 'auto' : S.demo;
+  const base = {key:p.welfare.key, at:p.welfare.at, stale:false, aging:null, offline:false, mode:'card'};
+  const fresh = at => ({fil:'Na-update ngayong araw, '+at, eng:'Updated today, '+at});
+  if(d==='auto') return wfAuto(p);
+  switch(d){
+    case 'fresh':   return {...base, key:'ok', ts:fresh('9:14 AM')};
+    case 'aging':   return {...base, key:'ok', ts:{fil:'Na-update noong Linggo, 4:02 PM', eng:'Updated Sunday, 4:02 PM'},
+                            aging:['Hindi pa ito na-a-update mula noong Linggo.','This has not been updated since Sunday.']};
+    case 'stale':   return {...base, key:'ok', stale:true,
+                            ts:{fil:'Huling na-update noong Hul 16 — 6 na araw na.', eng:'Last updated Jul 16 — 6 days ago.'}};
+    case 'clinic':  return {...base, key:'clinic', ts:fresh('9:14 AM')};
+    case 'hospital':return {...base, key:'hospital', ts:fresh('9:14 AM')};
+    case 'hearing': return {...base, key:'hearing', ts:fresh('8:30 AM')};
+    case 'program': return {...base, key:'program', ts:fresh('2:00 PM')};
+    case 'transferred':return {...base, key:'transferred', ts:{fil:'Na-update kahapon, 2:40 PM', eng:'Updated yesterday, 2:40 PM'}};
+    case 'released':return {...base, key:'released', ts:{fil:'Na-update ngayong araw, 10:02 AM', eng:'Updated today, 10:02 AM'}};
+    case 'noupdate':return {...base, key:'noupdate', ts:{fil:'Huling na-update kahapon, 6:40 PM', eng:'Last updated yesterday, 6:40 PM'}};
+    case 'none':    return {...base, key:'none', ts:null};
+    case 'offline': return {...base, key:'ok', offline:true, ts:fresh('9:14 AM')};
+    case 'loading': return {...base, mode:'loading'};
+    case 'slow':    return {...base, mode:'slow'};
+    case 'error':   return {...base, mode:'error'};
+    case 'revoked': return {...base, mode:'revoked'};
+  }
+  return {...base, key:'ok', ts:fresh('9:14 AM')};
+}
+
+function welfareHTML(p){
+  const v = wfView(p);
+  const first = p.full.split(' ')[0];
+
+  if(v.mode==='loading'){
+    return '<div class="wfbox"><section class="welfare load" aria-label="Kinukuha ang kalagayan" aria-busy="true">'
+      + '<div class="wf-in"><div class="wf-sk"><div class="skc"></div><div class="skbars">'
+      + '<div class="skbar" style="width:200px;height:26px;margin-bottom:12px"></div>'
+      + '<div class="skbar" style="width:126px;height:14px;margin-bottom:16px"></div>'
+      + '<div class="skbar" style="width:170px;height:12px"></div></div></div></div>'
+      + '</section></div>';
+  }
+  if(v.mode==='slow'){
+    return '<div class="wfbox"><section class="welfare err"><div class="wf-in">'
+      + '<div class="wf-main"><div class="wf-glyph" style="color:var(--muted)">'+ico('circledashed')+'</div><div class="grow">'
+      + bi('Mabagal ang koneksyon ngayon.','Slow connection right now.','h2')
+      + '<p class="meta" style="margin-top:4px">Sinusubukan pa rin namin. / Still trying.</p></div></div>'
+      + '</div></section>'
+      + '<button class="btn ghost" style="margin-top:10px" data-act="showcache">Ipakita ang huling nakita ko</button>'
+      + '<p class="meta dim" style="margin-top:6px">Show what I last saw</p></div>';
+  }
+  if(v.mode==='error'){
+    return '<div class="wfbox"><section class="welfare err" role="alert"><div class="wf-in">'
+      + '<div class="wf-main"><div class="wf-glyph" style="color:var(--muted)">'+ico('refresh')+'</div><div class="grow">'
+      + '<p style="font-size:18px;font-weight:500;color:var(--text);line-height:1.25;letter-spacing:-.01em">Hindi namin makuha ang update ngayon.</p></div></div>'
+      + '<p style="font-size:15px;font-weight:500;color:var(--text);line-height:1.38">Hindi ito nangangahulugang may nangyari kay '+esc(first)+'. Problema ito sa koneksyon, hindi sa kanya.</p>'
+      + '</div></section>'
+      + '<p class="meta dim" style="margin-top:8px">We could not fetch the update right now. This does not mean anything happened to '+esc(first)+'. This is a connection problem, not his.</p>'
+      + '<div class="chiprow" style="margin-top:10px"><button class="achip" data-act="retry">'+ico('refresh')+'Subukan ulit</button>'
+      + '<button class="achip" data-act="lastseen">Huling nakita: kahapon, 6:40 PM</button></div></div>';
+  }
+  if(v.mode==='revoked'){
+    return '<div class="wfbox"><div class="access" role="alert">'
+      + bi('Wala ka nang access sa impormasyon ni '+first+'.','Your access to '+first+"'s information has ended.",'s')
+      + '<p class="meta" style="margin-top:8px">Natapos ito noong Ago 1. Kung may pagkakamali, tawagan ang LSWDO Batangas City sa (043) 702-8988.</p>'
+      + '<a class="linkrow" style="margin-top:6px" href="tel:+63437028988">'+ico('phone')+'Tawagan ang LSWDO</a></div>'
+      + '<p class="meta dim" style="margin-top:10px">Binura na sa telepono mo ang huling nakita mong kalagayan niya.<br>His last known welfare status has been erased from this phone.</p></div>';
+  }
+
+  const w = WELFARE[v.key];
+  let cls = 'welfare';
+  if(v.stale) cls += ' stale';
+  else if(w.tone==='info') cls += ' info';
+  else if(w.tone==='none') cls += ' none';
+  if(w.attn && !v.stale) cls += ' attn';
+  const glyph = v.stale ? 'circledashed' : w.ico;
+
+  let out = '<div class="wfbox"><section class="'+cls+'" aria-live="polite" aria-atomic="true">'
+    + '<div class="wf-in'+(S.wfResolved?' wf-fade':'')+'">'
+    + '<p class="eyebrow">Kalagayan niya ngayon</p>'
+    + '<div class="wf-main"><div class="wf-glyph'+(S.wfResolved?' wf-draw':'')+'">'+ico(glyph)+'</div>'
+    + '<div class="grow">'+bi(w.fil, w.eng(first), 'status')+'</div></div>';
+  if(v.ts) out += '<div class="bi ts">'
+      + '<span class="b-fil">'+(v.offline?ico('cloudoff','',''):'')+' '+esc(v.ts.fil)+'</span>'
+      + '<span class="b-eng">'+esc(v.ts.eng)+'</span></div>';
+  else out += bi('Bago pa lang ito sa pasilidad nila.','This is new for their facility.','ts');
+  out += '</div></section>';
+
+  /* attribution — the update is accountable to a named person at a named place */
+  out += '<div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div class="src">'+ico('landmark')
+      + '<span>'+esc(p.facility)+' · '+esc(p.officer)+'</span></div>'
+      + '<button class="textbtn" style="font-size:11.5px;font-weight:400;color:var(--faint);padding:4px" data-act="ref">Sanggunian Blg. '+esc(p.ref)+'</button></div>';
+
+  if(v.aging) out += '<p class="meta" style="margin-top:2px">'+esc(v.aging[0])+'<br><span class="meta dim">'+esc(v.aging[1])+'</span></p>';
+
+  if(v.stale) out += '<div class="inset solid" style="margin-top:10px">'
+      + bi('Hindi ibig sabihin nito na may masama. Madalas ay abala lang ang pasilidad. Pero hindi ito bago.',
+           'This does not mean something is wrong. Usually the facility is just busy. But this is not current.')+'</div>';
+  else if(v.key==='none') out += '<div class="inset solid" style="margin-top:10px">'
+      + bi('Sinisimulan pa lang ng '+p.facility+' na gamitin ito. Ipapaalam namin sa text mo agad kapag may unang update.',
+           p.facility+' is starting to use this. We will text you as soon as there is a first update.')+'</div>';
+  else if(v.key==='noupdate') out += '<div class="inset solid" style="margin-top:10px">'
+      + bi('Walang naitala ang pasilidad ngayong araw. Nananatili ang huling nakita mo hanggang may bago silang ilagay.',
+           'The facility has recorded nothing today. Your last update stands until they enter a new one.')+'</div>';
+  else if(w.note) out += '<div class="inset solid" style="margin-top:10px">'+bi(w.note[0], w.note[1])+'</div>';
+
+  if(v.key==='hospital'){
+    out += '<div class="inset solid" style="margin-top:10px">'
+      + '<p class="eyebrow" style="margin-bottom:6px">Tawagan sila</p>'
+      + '<a class="linkrow" href="tel:'+esc(p.hotlineTel)+'">'+ico('phone')+esc(p.facility)+' · '+esc(p.hotline)+'</a>'
+      + (p.medical?'<a class="linkrow" href="tel:'+esc(p.medicalTel)+'">'+ico('phone')+'Medical liaison · '+esc(p.medical)+'</a>':'')
+      + '</div>';
+  }
+  if(v.key==='transferred'){
+    out += '<div class="inset solid" style="margin-top:10px">'
+      + '<p class="eyebrow" style="margin-bottom:6px">Bagong pasilidad</p>'
+      + '<p class="meta" style="color:var(--text)">BJMP Camp Bagong Diwa, Taguig City</p>'
+      + '<p class="meta" style="margin-top:4px">Dalaw: Sabado at Linggo, 8:00 AM – 11:00 AM</p></div>';
+  }
+
+  /* affordances. Severity earns more of these, never more alarm. */
+  const chips = ['<button class="achip" data-act="request">'+ico('refresh')+'Humiling ng update</button>',
+                 '<a class="achip" href="tel:'+esc(p.hotlineTel)+'">'+ico('phone')+'Tawagan ang pasilidad</a>',
+                 '<button class="achip" data-act="visit">'+ico('calendar')+'Oras ng dalaw</button>'];
+  if(v.key==='released') chips.push('<button class="achip" data-act="programs">'+ico('search')+'Maghanap ng programa</button>');
+  out += '<div class="chiprow" style="margin-top:12px">'+chips.join('')+'</div>';
+  return out + '</div>';
+}
+
+/* compact welfare chip (C2) for A-3 — never appears without a timestamp */
+function welfareChip(p){
+  const v = wfView(p);
+  if(['loading','slow','error','revoked'].indexOf(v.mode)>=0)
+    return {chip:'<span class="chip stale">'+ico('circledashed')+'Hindi makuha ngayon</span>', ts:'Huli: kahapon, 6:40 PM'};
+  const w = WELFARE[v.key] || WELFARE.none;
+  let c = 'chip';
+  if(v.stale || w.tone==='none') c += ' stale';
+  else if(w.tone==='ok') c += ' ok';
+  const glyph = v.stale ? 'circledashed' : w.ico;
+  /* the chip never appears without a timestamp — a status without a time is a rumour */
+  let ts = 'Wala pang naitala';
+  if(v.key!=='none' && v.ts) ts = v.stale ? ('Huli: '+p.welfare.day+', '+p.welfare.at)
+        : (p.welfare.ageHours<24 ? 'Ngayong araw, '+p.welfare.at
+        : (p.welfare.ageHours<48 ? 'Kahapon, '+p.welfare.at : p.welfare.day+', '+p.welfare.at));
+  return {chip:'<span class="'+c+'">'+ico(glyph)+esc(w.fil)+'</span>', ts:ts};
+}
+
+/* ==========================================================================
+   A-3 · Kamusta sila
+   ========================================================================== */
+let listLoading = true;
+function renderList(){
+  const b = $('listBody');
+  $('bellBadge').textContent = NOTIFS.filter(n=>n.unread).length;
+  $('bellBadge').style.display = NOTIFS.some(n=>n.unread) ? 'grid' : 'none';
+  $('btnBell').setAttribute('aria-label','Mga abiso, '+NOTIFS.filter(n=>n.unread).length+' hindi pa nabasa');
+  $('btnLang').textContent = S.lang==='FIL' ? 'FIL' : 'ENG';
+
+  let h = '<div class="pagehead">'+bi('Kamusta sila','How are they','h1')
+    + '<p class="meta" style="margin-top:8px">Ang mga taong pinahintulutan kang makita.<br><span class="meta dim">The people you are permitted to see.</span></p></div>';
+
+  if(listLoading){
+    for(let i=0;i<2;i++) h += '<div class="card" style="min-height:152px">'
+      + '<div style="display:flex;gap:12px;align-items:center"><div class="sk" style="width:48px;height:48px;border-radius:999px"></div>'
+      + '<div style="flex:1"><div class="sk line" style="width:60%"></div><div class="sk line" style="width:45%;margin-bottom:0"></div></div></div>'
+      + '<div class="sk" style="height:32px;border-radius:999px;width:190px;margin-top:14px"></div>'
+      + '<div class="hairline"></div><div class="sk line" style="width:80%;margin-bottom:0"></div></div>';
+    b.innerHTML = h; return;
+  }
+
+  PEOPLE.forEach(p=>{
+    const wc = welfareChip(p);
+    const next = p.programme && p.programme.next ? p.programme.next[0] : null;
+    const dated = p.hearing
+      ? {i:'gavel', t:'Hearing · '+p.hearing.date+', '+p.hearing.time+' · '+p.hearing.court}
+      : {i:'calendar', t:'Session · '+next+' · '+p.programme.name};
+    h += '<button class="card" data-person="'+p.id+'" style="display:block;width:100%;text-align:left;font-family:var(--font);cursor:pointer;min-height:152px" aria-label="Buksan ang detalye ni '+esc(p.full)+'">'
+      + '<div style="display:flex;gap:12px;align-items:center">'
+      + '<span class="av">'+esc(p.initials)+'</span>'
+      + '<span class="grow"><span style="display:block;font-size:16px;font-weight:500;color:var(--text)">'+esc(p.name)+'</span>'
+      + '<span class="meta" style="display:block">'+esc(p.relation)+' · '+esc(p.facility)+'</span></span>'
+      + '<span class="ic" style="width:20px;height:20px;color:var(--primary)" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.chev+'</svg></span></div>'
+      + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px">'+wc.chip
+      + '<span class="meta dim" style="font-size:12px">'+esc(wc.ts)+'</span></div>'
+      + '<div class="hairline"></div>'
+      + '<div style="display:flex;gap:8px;align-items:flex-start"><span class="ic" style="width:16px;height:16px;color:var(--primary);margin-top:2px" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS[dated.i]+'</svg></span>'
+      + '<span style="font-size:13px;color:var(--text);line-height:1.45">'+esc(dated.t)+'</span></div>'
+      + '</button>';
+  });
+
+  h += '<button class="dashed" data-act="addperson"'+(S.online?'':' disabled')+'>'
+    + ico(S.online?'plus':'lock')+'<span>Magdagdag ng kapamilya</span></button>'
+    + '<p class="meta dim" style="text-align:center;margin-top:8px;font-size:12px">Add a family member</p>';
+  b.innerHTML = h;
+}
+
+/* A-3 empty state — kept as a demo route from Account */
+function renderListEmpty(){
+  $('listBody').innerHTML =
+    '<div style="text-align:center;padding:24px 0 8px"><div class="well" style="width:72px;height:72px;margin:0 auto">'
+    + ico('users','')+'</div>'
+    + '<div class="bi ctr h2" style="margin-top:16px"><span class="b-fil">Wala ka pang naidadagdag na kapamilya.</span>'
+    + '<span class="b-eng">You have not added a family member yet.</span></div></div>'
+    + '<div class="card" style="margin-top:20px">'+bi('Kailangan naming kumpirmahin na kadugo o guardian ka bago namin ipakita ang kalagayan ng isang tao. Tumatagal ito ng 1–3 araw.','We confirm you are family before showing anyone’s welfare. This takes 1–3 days.','b')+'</div>'
+    + '<div class="card">'
+    + '<div class="numstep"><span class="n">1</span><span class="l">Ilagay ang pangalan at kaarawan niya</span></div>'
+    + '<div class="numstep"><span class="n">2</span><span class="l">Sabihin kung ano siya sa iyo</span></div>'
+    + '<div class="numstep"><span class="n">3</span><span class="l">Kukumpirmahin ito ng pasilidad o LSWDO</span></div></div>'
+    + '<button class="btn" data-act="addperson">Magsimula</button>'
+    + '<p class="meta dim" style="text-align:center;margin-top:10px;font-size:12px">Walang bayad. Hindi namin sasabihin sa kanya na ikaw ang naghanap.</p>';
+}
+</script>
+<script>
+"use strict";
+/* ==========================================================================
+   A-4 · Person detail — the screen
+   ========================================================================== */
+function person(){ return PEOPLE.find(p=>p.id===S.personId); }
+
+function renderPerson(){
+  const p = person();
+  $('t-person').textContent = p.name;
+  const first = p.full.split(' ')[0];
+
+  let h = '<div style="display:flex;gap:12px;align-items:center;margin-bottom:16px">'
+    + '<span class="av lg">'+esc(p.initials)+'</span><span class="grow">'
+    + '<span style="display:block;font-size:18px;font-weight:500;letter-spacing:-.01em">'+esc(p.full)+'</span>'
+    + '<span class="meta" style="display:block">'+esc(p.relation)+(p.ageLine?' · '+esc(p.ageLine):'')+'</span>'
+    + '<span class="meta" style="display:block">'+esc(p.facility)+'</span></span></div>';
+
+  h += welfareHTML(p);
+
+  h += '<div class="utabs" style="margin-top:20px" role="tablist" aria-label="Kaso at programa">'
+    + '<button class="utab'+(S.tab==='kaso'?' on':'')+'" role="tab" aria-selected="'+(S.tab==='kaso')+'" data-ptab="kaso">Kaso</button>'
+    + '<button class="utab'+(S.tab==='programa'?' on':'')+'" role="tab" aria-selected="'+(S.tab==='programa')+'" data-ptab="programa">Programa</button></div>';
+
+  h += '<div role="tabpanel">'+(S.tab==='kaso'?caseTab(p,first):progTab(p,first))+'</div>';
+  $('personBody').innerHTML = h;
+  $('demoFab').classList.add('on');
+  fitWelfare();
+}
+
+/* The card is 172px in every state. If a two-line status would burst the box,
+   the SECONDARY language line drops first — §5.4. The words never truncate. */
+function fitWelfare(){
+  /* Measure AFTER layout + webfont settle. Called synchronously the card still
+     measured at fallback-font metrics, dropped nothing, and the real Lexend
+     render then overflowed by ~7px — clipping the kicker and the English
+     timestamp on the stale state. rAF + fonts.ready fixes both. */
+  requestAnimationFrame(()=>_fitWelfareNow());
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(_fitWelfareNow);
+}
+function _fitWelfareNow(){
+  const inn = document.querySelector('#s-person .welfare .wf-in');
+  if(!inn) return;
+  const sec = S.lang==='FIL' ? '.b-eng' : '.b-fil';
+  /* Secondary TIMESTAMP goes first, then secondary STATUS. The status words
+     themselves are never truncated — §5.4. */
+  const drop = [inn.querySelector('.bi.ts>'+sec), inn.querySelector('.bi.status>'+sec)];
+  drop.forEach(n=>{ if(n) n.style.display=''; });
+  const over = ()=> inn.scrollHeight > inn.clientHeight + 1;
+  for(const n of drop){ if(!over()) break; if(n) n.style.display='none'; }
+  /* Last resort: a very long localised timestamp (e.g. "Huling na-update
+     noong Hul 16 — 6 na araw na.") can still wrap to two lines on its own.
+     Tighten the timestamp only — never the status. */
+  const ts = inn.querySelector('.bi.ts');
+  if(ts) ts.style.fontSize = over() ? '12.5px' : '';
+}
+
+function caseTab(p,first){
+  let h = '<div class="card"><p class="eyebrow">Katayuan ng kaso</p>'
+    + bi(p.caseState.fil, p.caseState.eng, 'h2')
+    + '<div class="hairline"></div>'+src(p.caseState.src, p.caseState.sync)+'</div>';
+
+  if(p.hearing){
+    const hr = p.hearing;
+    h += '<div class="card"><p class="eyebrow">Susunod na hearing</p>'
+      + '<div style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between;margin-top:6px">'
+      + '<span style="font-size:18px;font-weight:500;letter-spacing:-.01em">'+esc(hr.date)+' · '+esc(hr.time)+'</span>'
+      + (hr.vc?'<span class="pbadge gov">Videoconference</span>':'')+'</div>'
+      + '<p style="font-size:14px;color:var(--muted-strong);margin-top:4px">'+esc(hr.court)+' · '+esc(hr.dayName)+'</p>'
+      + '<div class="hairline"></div>'
+      + '<div class="swrow"><span class="ic" style="width:16px;height:16px;color:var(--primary)" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.bell+'</svg></span>'
+      + '<span class="grow" style="font-size:13.5px;color:var(--text);line-height:1.4">Papaalalahanan ka namin 1 araw bago.</span>'
+      + '<button class="sw" role="switch" aria-checked="'+hr.remind+'" aria-label="Paalala bago ang hearing" data-act="remind"></button></div>'
+      + '<div class="hairline"></div>'+src(hr.src, hr.sync)+'</div>';
+  }else{
+    h += '<div class="card"><p class="eyebrow">Susunod na hearing</p>'
+      + bi('Walang nakatakdang hearing.','No hearing scheduled.','h2')
+      + '<p class="meta" style="margin-top:6px">Nasa diversion siya, kaya walang kasong dinidinig sa korte. Ang LSWDO ang humahawak ng progreso niya.<br><span class="meta dim">He is in diversion, so there is no case being heard. The LSWDO tracks his progress.</span></p>'
+      + '<div class="hairline"></div>'+src('LSWDO Batangas City','kahapon, 5:10 PM')+'</div>';
+  }
+
+  if(p.gcta){
+    h += '<button class="card" data-act="gcta" style="display:block;width:100%;text-align:left;font-family:var(--font);cursor:pointer">'
+      + '<p class="eyebrow">Credit sa good conduct (GCTA)</p>'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-top:6px">'
+      + '<span class="grow">'+bi(p.gcta.count+' milestone ang naitala ng BJMP', p.gcta.count+' milestones recorded by BJMP','h2')+'</span>'
+      + '<span class="ic" style="width:20px;height:20px;color:var(--primary)" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.chev+'</svg></span></div>'
+      + '<div class="hairline"></div>'
+      + '<p class="meta" style="font-size:12px">Hindi kami nagkukwenta ng petsa ng paglaya. Ang computation ay nasa Laya Calculator ng CHR at UNODC.</p>'
+      + '<span class="linkrow" style="margin-top:6px">'+ico('ext')+'Buksan ang Laya Calculator</span>'
+      + '<div class="hairline"></div>'+src(p.gcta.src, p.gcta.sync)+'</button>';
+  }
+  return h;
+}
+
+function progTab(p,first){
+  const pr = p.programme;
+  let dots = '';
+  for(let i=0;i<pr.total;i++){
+    let c = 'dot';
+    if(i < pr.attended) c += ' att';
+    else if(i === pr.attended && pr.missed) c += ' miss';
+    dots += '<span class="'+c+'"></span>';
+  }
+  let h = '<div class="card">'
+    + '<div class="card-h"><span style="font-size:18px;font-weight:500;letter-spacing:-.01em">'+esc(pr.name)+'</span>'
+    + '<span class="chip ok">'+esc(pr.status)+'</span></div>'
+    + '<p class="meta">'+esc(pr.provider)+' · '+esc(pr.schedule)+'</p>'
+    + '<div class="dots" role="img" aria-label="'+pr.attended+' sa '+pr.total+' na session ang nadaluhan, '+pr.missed+' hindi nadaluhan">'+dots+'</div>'
+    + bi(pr.attended+' sa '+pr.total+' na session · '+pr.missed+' hindi nadaluhan',
+         pr.attended+' of '+pr.total+' sessions · '+pr.missed+' missed','tiny')
+    + '<div class="inset" style="background:var(--secondary);border-color:var(--border-strong)">'
+    + '<div style="display:flex;gap:8px;align-items:flex-start">'+ico('calendar','')
+    + '<div><p style="font-size:14px;font-weight:500;color:var(--text);line-height:1.35">Susunod: '+esc(pr.next[0])+'</p>'
+    + '<p class="meta" style="font-size:12.5px;margin-top:2px">'+esc(pr.next[1])+'</p></div></div></div>';
+
+  if(pr.note){
+    h += '<div class="hairline"></div>'+bi(pr.note[0], pr.note[1],'tiny')
+      + '<a class="linkrow" href="tel:'+esc(pr.contactTel)+'" style="margin-top:4px">'+ico('phone')+esc(pr.contactName)
+      + '<span class="ic chev" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.chev+'</svg></span></a>';
+  }
+  h += '<div class="hairline"></div>'
+    + '<div style="display:flex;align-items:center;gap:8px">'+ico('link','')
+    + '<span class="mono11 grow">Resibo ng attendance · '+esc(pr.receipt)+'</span>'
+    + '<button class="textbtn" style="font-size:12px" data-act="copyhash" data-hash="'+esc(pr.receiptFull)+'">Kopyahin</button></div>'
+    + '<div style="margin-top:10px">'+src(pr.src, pr.sync)+'</div></div>';
+
+  h += '<button class="row" data-act="programs" style="min-height:64px">'
+    + '<span class="well" style="width:40px;height:40px">'+ico('search')+'</span>'
+    + '<span class="grow"><span class="t">Maghanap ng iba pang programa</span><span class="s">Find other programmes near you</span></span>'
+    + '<span class="ic chev" style="width:20px;height:20px;color:var(--primary)" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.chev+'</svg></span></button>';
+  return h;
+}
+
+/* ==========================================================================
+   A-5 · Mga programa
+   ========================================================================== */
+function renderPrograms(){
+  const q = S.progQuery.toLowerCase();
+  let list = PROGRAMS.filter(p=>{
+    if(S.progTab==='gov' && p.kind!=='gov') return false;
+    if(S.progTab==='ngo' && p.kind!=='ngo') return false;
+    if(q && (p.name+' '+p.provider+' '+p.brgy).toLowerCase().indexOf(q)<0) return false;
+    return true;
+  });
+
+  let h = '<div class="pagehead">'+bi('Mga programa malapit sa inyo','Rehabilitation and diversion programmes near you','h1')+'</div>'
+    + '<button class="row" data-act="psgc" style="background:var(--secondary);border-color:var(--border-strong);min-height:48px" aria-label="Palitan ang lugar">'
+    + ico('pin')+'<span class="grow"><span class="t" style="font-weight:400">'+esc(S.locality)+'</span></span>'
+    + '<span class="ic" style="width:18px;height:18px;color:var(--primary)" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.caret+'</svg></span></button>'
+    + '<div style="position:relative;margin-bottom:14px"><label class="sr" for="progSearch">Maghanap ng programa</label>'
+    + '<input class="input" id="progSearch" type="search" placeholder="Maghanap ng programa" value="'+esc(S.progQuery)+'" style="font-weight:400;padding-right:44px">'
+    + '<span class="ic" style="position:absolute;right:14px;top:14px;width:20px;height:20px;color:var(--muted)" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.search+'</svg></span></div>'
+    + '<div class="utabs flush" role="tablist" aria-label="Salain ang programa">'
+    + ['lahat','gov','ngo'].map((k,i)=>'<button class="utab'+(S.progTab===k?' on':'')+'" role="tab" aria-selected="'+(S.progTab===k)+'" data-gtab="'+k+'">'+['Lahat','Gobyerno','NGO'][i]+'</button>').join('')
+    + '</div>';
+
+  if(!list.length){
+    h += '<div class="empty"><div class="well" style="width:60px;height:60px;margin:0 auto 12px">'+ico('search')+'</div>'
+      + '<p style="font-size:16px;font-weight:500;color:var(--text)">Walang programang tumugma.</p>'
+      + '<p class="meta" style="margin-top:6px">No programme matched. Subukan ang ibang salita o palitan ang lugar.</p></div>';
+  }else{
+    h += '<p class="meta" style="margin-bottom:12px">'+list.length+' programa sa '+esc(S.locality.split(',')[0])+'</p>';
+    list.forEach(p=>{
+      h += '<button class="prow" data-prog="'+p.id+'" aria-label="Buksan ang '+esc(p.name)+'">'
+        + '<span class="well w">'+ico(p.ico)+'</span><span class="grow">'
+        + '<span style="display:flex;align-items:flex-start;gap:8px"><span class="grow" style="font-size:16px;font-weight:500;color:var(--text);line-height:1.3">'+esc(p.name)+'</span>'
+        + '<span class="ic" style="width:20px;height:20px;color:var(--primary);flex:none" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.chev+'</svg></span></span>'
+        + '<span style="display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap"><span class="meta">'+esc(p.provider)+'</span>'
+        + '<span class="pbadge '+p.kind+'">'+(p.kind==='gov'?'Gobyerno':'NGO')+'</span></span>'
+        + '<span class="meta" style="display:block;margin-top:4px">'+esc(p.sched)+' · '+p.sessions+' session</span>'
+        + '<span class="meta dim" style="display:block">'+esc(p.brgy)+' · tinatayang '+p.km+' km</span>'
+        + '<span class="avail '+(p.slots?'open':'wait')+'">'+(p.slots? p.slots+' na slot ang bukas':'Puno na · may waitlist')+'</span>'
+        + '</span></button>';
+    });
+  }
+  $('programsBody').innerHTML = h;
+}
+
+function renderProgDetail(){
+  const p = PROGRAMS.find(x=>x.id===S.enrolProgram) || PROGRAMS[0];
+  const who = PEOPLE.find(x=>x.id===S.enrolFor);
+  $('t-progdetail').textContent = p.name;
+  $('progdetailBody').innerHTML =
+      '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px">'
+    + '<span class="well" style="width:48px;height:48px">'+ico(p.ico)+'</span><span class="grow">'
+    + '<span style="display:block;font-size:19px;font-weight:500;letter-spacing:-.01em;line-height:1.25">'+esc(p.name)+'</span>'
+    + '<span class="meta" style="display:block;margin-top:4px">'+esc(p.provider)+'</span>'
+    + '<span class="pbadge '+p.kind+'" style="margin-top:8px">'+(p.kind==='gov'?'Gobyerno':'NGO')+'</span></span></div>'
+    + '<div class="card">'
+    + '<div class="linkrow" style="cursor:default">'+ico('calendar')+esc(p.sched)+'</div>'
+    + '<div class="linkrow" style="cursor:default">'+ico('clock')+p.sessions+' session · simula '+esc(p.start||'Ago 3, 2026')+'</div>'
+    + '<div class="linkrow" style="cursor:default">'+ico('pin')+esc(p.brgy)+' · tinatayang '+p.km+' km</div>'
+    + '<div class="hairline"></div>'
+    + '<span class="avail '+(p.slots?'open':'wait')+'" style="margin-top:0">'+(p.slots? p.slots+' na slot ang bukas':'Puno na · may waitlist')+'</span></div>'
+    + (p.about?'<div class="card">'+bi(p.about[0],p.about[1],'b')+'</div>':'')
+    + '<div class="card tint">'+bi('Libre ang programa. Walang bayad kahit kanino.','The programme is free. No payment to anyone.','s')+'</div>'
+    + '<div class="card">'+src(p.provider,'7:40 AM')+'</div>';
+  $('progdetailFoot').innerHTML =
+      '<button class="btn" data-act="enrol">'+(p.slots?'Mag-enroll para kay '+esc(who.full.split(' ')[0]):'Ilagay sa waitlist si '+esc(who.full.split(' ')[0]))+'</button>';
+}
+
+/* ==========================================================================
+   A-6 · Mga abiso
+   ========================================================================== */
+function renderNotifs(){
+  const list = NOTIFS.filter(n=> S.notifTab==='unread' ? n.unread : true);
+  const unread = NOTIFS.filter(n=>n.unread).length;
+  let h = '<div class="utabs flush" role="tablist" aria-label="Salain ang abiso">'
+    + '<button class="utab'+(S.notifTab==='all'?' on':'')+'" role="tab" aria-selected="'+(S.notifTab==='all')+'" data-ntab="all">Lahat</button>'
+    + '<button class="utab'+(S.notifTab==='unread'?' on':'')+'" role="tab" aria-selected="'+(S.notifTab==='unread')+'" data-ntab="unread">Hindi pa nabasa ('+unread+')</button></div>';
+
+  if(!list.length){
+    h += '<div class="empty" style="padding-top:44px"><div class="well" style="width:72px;height:72px;margin:0 auto 16px">'+ico('bell')+'</div>'
+      + '<div class="bi ctr h2"><span class="b-fil">Wala pang abiso.</span><span class="b-eng">No notifications yet.</span></div>'
+      + '<p class="meta" style="margin-top:10px;max-width:300px;margin-left:auto;margin-right:auto">Dito lalabas ang mga update sa kalagayan, hearing at session. Ipapadala rin namin ito sa text mo.</p></div>';
+    $('notifsBody').innerHTML = h; return;
+  }
+  let day = null;
+  list.forEach(n=>{
+    if(n.day!==day){ day = n.day; h += '<p class="dayhead">'+esc(day)+'</p>'; }
+    h += '<button class="notif'+(n.unread?' unread':'')+'" data-notif="'+n.id+'">'
+      + '<span class="nw">'+ico(n.ico)+'</span><span class="grow">'
+      + '<span style="display:flex;align-items:flex-start"><span class="grow">'+bi(n.fil,n.eng,'s')+'</span>'
+      + '<span class="time">'+esc(n.time)+'</span></span>'
+      + '<span style="display:block;font-size:13px;color:var(--text);line-height:1.45;margin-top:6px">'+esc(n.body)+'</span>'
+      + (n.src?'<span class="src" style="margin-top:8px">'+ico('landmark')+'<span>'+esc(n.src)+'</span></span>':'')
+      + (n.action?'<span class="linkrow" style="margin-top:4px">'+ico('phone')+esc(n.action.label)+'<span class="ic chev" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.chev+'</svg></span></span>':'')
+      + (n.sms?'<span class="smsecho">'+ico('mail')+esc(n.sms)+'</span>':'')
+      + '</span></button>';
+  });
+  $('notifsBody').innerHTML = h;
+}
+</script>
+<script>
+"use strict";
+/* ==========================================================================
+   A-2 · roles, and the institutional handoff
+   ========================================================================== */
+function renderRoles(){
+  $('roleList').innerHTML = ROLES.map(r=>
+      '<button class="rolecard'+(S.role===r.id?' sel':'')+'" role="radio" aria-checked="'+(S.role===r.id)+'" data-role="'+r.id+'">'
+    + '<span class="well w">'+ico(r.ico)+'</span><span class="grow">'
+    + bi(r.fil, r.eng, 't')
+    + '<span class="meta dim" style="display:block;margin-top:4px;font-size:13px">'+esc(r.sub)+'</span>'
+    + (r.verify?'<span class="vchip">Kailangan ng patunay</span>':'')
+    + '</span><span class="tick">'+ico('check')+'</span></button>').join('');
+  $('btnRoleGo').disabled = !S.role;
+}
+
+function renderHandoff(){
+  const r = ROLES.find(x=>x.id===S.role) || ROLES[1];
+  $('handoffBody').innerHTML =
+      '<div class="card"><div style="display:flex;gap:12px"><span class="well" style="width:44px;height:44px">'+ico('hourglass')+'</span>'
+    + '<span class="grow">'+bi('Ipapadala namin ito sa opisina mo.','We will send this to your office for confirmation.','t')
+    + '<p class="meta" style="margin-top:8px">Habang naghihintay, makikita mo lang ang sarili mong impormasyon.<br><span class="meta dim">While you wait, you can only see your own information.</span></p></span></div></div>'
+    + '<div class="card"><p class="eyebrow">Kapag na-aprubahan</p>'
+    + bi('Bubuksan nito ang /cases surface','This opens the /cases surface','h2')
+    + '<p class="meta" style="margin-top:8px">Doon nakalagay ang caseload, hearing calendar, attendance logging at custody roster para sa '+esc(r.eng)+'. Hindi ito ang view ng pamilya.<br><span class="meta dim">Caseload, hearing calendar, attendance logging and custody roster live there. It is not the family view.</span></p>'
+    + '<div class="hairline"></div>'
+    + '<button class="linkrow" data-act="cases">'+ico('ext')+'Buksan ang /cases'
+    + '<span class="ic chev" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.chev+'</svg></span></button></div>'
+    + '<div class="card tint">'+bi('Ang pagpili ng papel ay hindi nagbibigay nito. Ang opisina mo ang magkukumpirma.','Choosing a role does not grant it. Your office confirms it.','s')+'</div>';
+}
+
+/* ==========================================================================
+   host shell screens
+   ========================================================================== */
+function renderScan(){
+  $('scanBody').innerHTML =
+      '<div class="pagehead">'+bi('I-scan ang QR','Scan a QR code','h1')
+    + '<p class="meta" style="margin-top:8px">Para sa e-Verify: tsekin kung totoo ang isang dokumento o ID na may QR.<br><span class="meta dim">e-Verify: check whether a QR-bearing document or ID is genuine.</span></p></div>'
+    + '<div class="card" style="height:220px;display:grid;place-items:center;background:var(--secondary);border-color:var(--border-strong)">'
+    + '<div style="text-align:center;color:var(--primary)">'+ico('scan','')
+    + '<p class="meta" style="margin-top:10px">Ituro ang camera sa QR code</p></div></div>'
+    + '<button class="btn" data-act="scan">Tsekin ang halimbawang QR</button>'
+    + '<div id="scanOut"></div>';
+}
+
+function renderId(){
+  $('idBody').innerHTML =
+      '<div class="card" style="background:var(--primary);border-color:var(--primary);color:#fff;padding:20px">'
+    + '<p class="eyebrow" style="color:#C3D4FF">eGovPH Digital ID</p>'
+    + '<p style="font-size:24px;font-weight:500;margin-top:10px;letter-spacing:-.01em">'+esc(PROFILE.name)+'</p>'
+    + '<p style="font-size:13px;color:#C3D4FF;margin-top:6px">'+esc(PROFILE.locality)+'</p>'
+    + '<div style="height:1px;background:rgba(255,255,255,.25);margin:16px 0"></div>'
+    + '<p style="font-size:12px;color:#C3D4FF">Sanggunian Blg.</p>'
+    + '<p class="mono11" style="color:#fff;font-size:13px;letter-spacing:.08em">EGOV-4482-0914-RR</p></div>'
+    + '<div class="card">'+bi('Ipakita ito sa pasilidad kapag dumalaw ka. Ito rin ang ginagamit para kumpirmahin na kadugo ka.','Show this at the facility when you visit. It is also what confirms you are family.','b')+'</div>'
+    + '<div class="card">'+src('eGovPH','ngayong araw, 6:02 AM')+'</div>';
+}
+
+function renderAccount(){
+  $('accountBody').innerHTML =
+      '<div style="display:flex;gap:12px;align-items:center;margin-bottom:18px"><span class="av lg">'+esc(PROFILE.initials)+'</span>'
+    + '<span class="grow"><span style="display:block;font-size:18px;font-weight:500">'+esc(PROFILE.name)+'</span>'
+    + '<span class="meta" style="display:block">'+esc(PROFILE.mobileMasked)+'</span></span></div>'
+    + '<div class="sec"><h3>Papel at wika</h3></div>'
+    + '<div class="row" style="cursor:default"><span class="rail pri"></span><span class="grow"><span class="t">Papel</span><span class="s">Kadugo o guardian · Relative or guardian</span></span></div>'
+    + '<button class="row" data-act="lang"><span class="rail pri"></span><span class="grow"><span class="t">Wika · Language</span><span class="s" id="acctLang">Filipino muna, tapos English</span></span><span class="chev">›</span></button>'
+    + '<div class="sec"><h3>Mga abiso sa text</h3></div>'
+    + '<button class="row" data-act="smsset"><span class="rail pri"></span><span class="grow"><span class="t">SMS settings</span><span class="s" id="acctSms">Diskreto — walang detalye ng kalagayan</span></span><span class="chev">›</span></button>'
+    + '<div class="sec"><h3>Demo</h3></div>'
+    + '<button class="row" data-act="demo"><span class="rail warn"></span><span class="grow"><span class="t">Estado ng welfare card</span><span class="s">Para sa demo: 16 na estado</span></span><span class="chev">›</span></button>'
+    + '<button class="row" data-act="toggleoff"><span class="rail warn"></span><span class="grow"><span class="t">Offline mode</span><span class="s" id="acctOff">Naka-off</span></span><span class="chev">›</span></button>'
+    + '<button class="row" data-act="emptylist"><span class="rail warn"></span><span class="grow"><span class="t">Walang naka-link na kapamilya</span><span class="s">Ipakita ang empty state ng A-3</span></span><span class="chev">›</span></button>'
+    + '<div class="sec"><h3>Seguridad</h3></div>'
+    + '<div class="card">'+bi('Hindi kami humihingi ng OTP, password o bayad sa text o tawag. Kung may humingi, hindi kami iyon.','We never ask for an OTP, password or payment by text or call. If someone does, it is not us.','b')+'</div>'
+    + '<button class="btn quiet" data-act="signout">Mag-sign out</button>';
+}
+
+/* ==========================================================================
+   sheets
+   ========================================================================== */
+function openSheet(html,label){
+  $('sheetBody').innerHTML = html;
+  $('sheet').setAttribute('aria-label',label||'Sheet');
+  $('sheet').classList.add('on'); $('scrim').classList.add('on');
+  const f = $('sheet').querySelector('button,a,input'); if(f) f.focus();
+}
+function closeSheet(){ $('sheet').classList.remove('on'); $('scrim').classList.remove('on'); }
+
+function sheetVisiting(){
+  const p = person();
+  openSheet('<div class="bi h2" style="margin-bottom:12px"><span class="b-fil">Oras ng dalaw</span><span class="b-eng">Visiting hours</span></div>'
+    + '<div class="card"><p style="font-size:16px;font-weight:500">'+esc(p.facility)+'</p>'
+    + '<p class="meta" style="margin-top:6px">'+esc(p.visiting[0])+'<br><span class="meta dim">'+esc(p.visiting[1])+'</span></p>'
+    + '<div class="hairline"></div>'
+    + '<p class="meta">Magdala ng valid ID. Tumawag muna bago bumiyahe — pwedeng magbago ang schedule.</p>'
+    + '<a class="linkrow" href="tel:'+esc(p.hotlineTel)+'" style="margin-top:6px">'+ico('phone')+'Tawagan ang pasilidad · '+esc(p.hotline)+'</a></div>'
+    + '<button class="btn ghost" data-act="closesheet">Isara</button>','Oras ng dalaw');
+}
+
+function sheetGcta(){
+  const p = person();
+  openSheet('<div class="bi h2" style="margin-bottom:4px"><span class="b-fil">Mga milestone na naitala ng BJMP</span><span class="b-eng">Milestones recorded by BJMP</span></div>'
+    + '<p class="meta" style="margin-bottom:12px">Datos ito, hindi konklusyon. Walang petsa ng paglaya na kinakalkula dito.</p>'
+    + p.gcta.items.map(it=>'<div class="card"><p style="font-size:15px;font-weight:500">'+esc(it[1])+'</p>'
+        + '<p class="meta" style="margin-top:4px">'+esc(it[0])+' · '+esc(it[2])+'</p></div>').join('')
+    + '<div class="card tint">'+bi('Ang computation ng GCTA ay nasa Laya Calculator ng CHR at UNODC.','GCTA computation lives in the CHR and UNODC Laya Calculator.','b')+'</div>'
+    + '<button class="btn ghost" data-act="closesheet">Isara</button>','GCTA milestones');
+}
+
+function sheetMore(){
+  openSheet('<div class="bi h2" style="margin-bottom:12px"><span class="b-fil">Iba pang aksyon</span><span class="b-eng">More actions</span></div>'
+    + '<button class="row" data-act="smsset"><span class="grow"><span class="t">SMS settings</span></span><span class="chev">›</span></button>'
+    + '<button class="row" data-act="report"><span class="grow"><span class="t">Iulat ang mali</span></span><span class="chev">›</span></button>'
+    + '<button class="row" data-act="unlink"><span class="grow"><span class="t" style="color:var(--destructive)">Alisin ang link</span><span class="s">Hindi mo na makikita ang kalagayan niya</span></span><span class="chev">›</span></button>'
+    + '<button class="btn ghost" data-act="closesheet">Kanselahin</button>','Iba pang aksyon');
+}
+
+function sheetSms(){
+  openSheet('<div class="bi h2" style="margin-bottom:12px"><span class="b-fil">Isama ang detalye ng kalagayan sa text</span><span class="b-eng">Include welfare detail in SMS</span></div>'
+    + '<div class="card"><div class="swrow"><span class="grow" style="font-size:14px;color:var(--text)">Detalyadong text</span>'
+    + '<button class="sw" role="switch" aria-checked="'+S.smsDetail+'" aria-label="Isama ang detalye ng kalagayan sa text" data-act="smstoggle"></button></div>'
+    + '<div class="hairline"></div>'
+    + '<p class="meta">Kapag naka-on: <strong>“Ayos naman si Miguel.”</strong><br>Kapag naka-off: <strong>“May bagong update kay Miguel.”</strong></p>'
+    + '<div class="hairline"></div>'
+    + '<p class="meta dim" style="font-size:12px">Makikita ito ng kahit sinong humawak ng telepono mo.<br>Anyone holding your phone can read this.</p></div>'
+    + '<button class="btn ghost" data-act="closesheet">Tapos na</button>','SMS settings');
+}
+
+function sheetDemo(){
+  openSheet('<div class="bi h2" style="margin-bottom:4px"><span class="b-fil">Estado ng welfare card</span><span class="b-eng">Welfare card states</span></div>'
+    + '<p class="meta" style="margin-bottom:12px">Para sa demo lang. Kulay = sariwa ang kumpirmasyon, hindi kalubhaan.</p>'
+    + '<div class="demogrid">'+DEMO_STATES.map(d=>'<button data-demo="'+d[0]+'" class="'+(S.demo===d[0]?'on':'')+'">'+esc(d[1])+'</button>').join('')+'</div>'
+    + '<div class="hairline"></div>'
+    + '<button class="row" data-act="newupdate"><span class="grow"><span class="t">Ipakita ang “may bagong update” pill</span></span><span class="chev">›</span></button>'
+    + '<button class="row" data-act="replay"><span class="grow"><span class="t">Ulitin ang skeleton → resolve</span><span class="s">Ang frame na kukunan</span></span><span class="chev">›</span></button>'
+    + '<button class="btn ghost" data-act="closesheet">Isara</button>','Demo states');
+}
+
+/* ---- PSGC drill (four levels, cached) ---- */
+const psgcCache = {};
+let psgcPath = [];
+async function psgcFetch(level, code){
+  const key = code || 'regions';
+  if(psgcCache[key]) return psgcCache[key];
+  const qs = {provinces:'region_code', municipalities:'province_code', barangays:'municipality_code'}[level];
+  const r = await api('/api/psgc'+(qs?('?'+qs+'='+encodeURIComponent(code)):''));
+  const items = (r && r.items && r.items.length) ? r.items : (PSGC_SEED[key] || []);
+  psgcCache[key] = items;
+  return items;
+}
+function sheetPsgcShell(loading){
+  const labels = ['Rehiyon','Probinsya','Bayan o Lungsod','Barangay'];
+  let h = '<div class="bi h2" style="margin-bottom:4px"><span class="b-fil">Piliin ang lugar</span><span class="b-eng">Choose a location</span></div>'
+    + '<p class="meta" style="margin-bottom:12px">'+esc(labels[psgcPath.length]||'Barangay')+'</p>';
+  if(psgcPath.length) h += '<div class="crumbs">'+psgcPath.map((c,i)=>'<button class="crumb" data-crumb="'+i+'">'+esc(c.name)+' ✕</button>').join('')+'</div>';
+  h += '<div id="psgcList">';
+  if(loading) h += '<div class="sk line" style="height:44px"></div><div class="sk line" style="height:44px"></div><div class="sk line" style="height:44px;margin-bottom:0"></div>';
+  h += '</div>';
+  if(psgcPath.length>=3) h += '<button class="btn" data-act="psgcdone" style="margin-top:12px">Gamitin ang lugar na ito</button>';
+  else if(psgcPath.length===2) h += '<p class="meta dim" style="margin:12px 0 8px;text-align:center">Pwede nang huminto dito. / You can stop here.</p><button class="btn" data-act="psgcdone">Gamitin ang lugar na ito</button>';
+  return h;
+}
+async function openPsgc(){
+  openSheet(sheetPsgcShell(true),'Piliin ang lugar');
+  await psgcStep();
+}
+async function psgcStep(){
+  const levels = ['regions','provinces','municipalities','barangays'];
+  const level = levels[psgcPath.length] || 'barangays';
+  const code = psgcPath.length ? psgcPath[psgcPath.length-1].code : null;
+  $('sheetBody').innerHTML = sheetPsgcShell(true);
+  const items = await psgcFetch(level, code);
+  const list = $('psgcList'); if(!list) return;
+  $('sheetBody').innerHTML = sheetPsgcShell(false);
+  $('psgcList').innerHTML = items.map(it=>
+    '<button class="row" data-psgc="'+esc(it.code)+'" data-name="'+esc(it.name)+'"><span class="grow"><span class="t">'+esc(it.name)+'</span></span><span class="chev">›</span></button>').join('')
+    || '<p class="meta">Walang nakuhang listahan.</p>';
+}
+
+/* ---- enrolment ---- */
+function sheetEnrol(){
+  const p = PROGRAMS.find(x=>x.id===S.enrolProgram);
+  const who = PEOPLE.find(x=>x.id===S.enrolFor).full.split(' ')[0];
+  S.agree = false;
+  openSheet('<div class="bi h2" style="margin-bottom:14px"><span class="b-fil">Bago ka mag-enroll</span><span class="b-eng">Before you enrol</span></div>'
+    + '<div class="ticklist">'+ico('check')+'<span>Kailangan ng valid ID ni '+esc(who)+' sa unang session.</span></div>'
+    + '<div class="ticklist">'+ico('check')+'<span>Libre ang programa. Walang bayad kahit kanino.</span></div>'
+    + '<div class="ticklist">'+ico('check')+'<span>'+p.sessions+' session, '+esc(p.sched)+'.</span></div>'
+    + '<div class="ticklist">'+ico('check')+'<span>Kung may 3 sunod-sunod na absent, tatawagan ang LSWDO.</span></div>'
+    + '<button class="chk" id="chkAgree" role="checkbox" aria-checked="false" data-act="agree" style="margin:14px 0 12px">'
+    + '<span class="bx">'+ico('check')+'</span><span>Naiintindihan ko at pumapayag ako para kay '+esc(who)+'.</span></button>'
+    + '<button class="btn" id="btnEnrol" data-act="confirmenrol" disabled>Kumpirmahin</button>'
+    + '<button class="btn quiet" data-act="closesheet" style="border:none;margin-top:6px">Kanselahin</button>','Bago ka mag-enroll');
+}
+
+async function doEnrol(){
+  const p = PROGRAMS.find(x=>x.id===S.enrolProgram);
+  const who = PEOPLE.find(x=>x.id===S.enrolFor).full.split(' ')[0];
+  closeSheet();
+  /* fire-and-forget; only ever to a number a live SSO profile gave us */
+  if(PROFILE.mobile){
+    api('/api/sms',{numbers:[PROFILE.mobile],
+      message:'e-Laya: Naka-enroll na si '+who+' sa '+p.name+', '+p.provider+'. Simula '+p.start+'. Detalye sa eGovPH app.'});
+  }
+  $('enrolledBody').innerHTML =
+      '<div style="text-align:center;padding:28px 0 4px">'
+    + '<div style="width:72px;height:72px;border-radius:999px;background:var(--success-surface);color:var(--success);display:grid;place-items:center;margin:0 auto">'
+    + '<span class="ic wf-draw" style="width:34px;height:34px" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.check+'</svg></span></div>'
+    + '<div class="bi ctr h2" style="margin-top:18px"><span class="b-fil">Naka-enroll na si '+esc(who)+'.</span><span class="b-eng">'+esc(who)+' is enrolled.</span></div>'
+    + '<p class="meta" style="margin-top:12px">Simula '+esc(p.start)+', '+esc(p.sched)+'<br>'+esc(p.brgy)+'</p></div>'
+    + '<div class="card" style="background:var(--secondary);border-color:var(--border-strong);margin-top:20px">'
+    + '<div style="display:flex;gap:10px">'+ico('mail','')+'<span class="grow">'
+    + bi('Ipinadala rin namin ito sa text mo at sa social worker niya.','We also sent this to your phone and to his social worker.','tiny')+'</span></div></div>'
+    + '<button class="btn ghost" data-act="cal">Idagdag sa kalendaryo</button>'
+    + '<button class="textbtn" data-act="backperson" style="display:block;margin:12px auto 0;font-size:15px">Bumalik kay '+esc(who)+'</button>';
+  go('s-enrolled');
+}
+</script>
+<script>
+"use strict";
+/* ==========================================================================
+   offline · router · sign-in · events
+   ========================================================================== */
+function isOffline(){ return !S.online || S.demo==='offline'; }
+function offStrip(host, text){
+  const el = $(host); if(!el) return;
+  el.innerHTML = isOffline()
+    ? '<div class="offline">'+ico('cloudoff','')+' '+esc(text)+'</div>' : '';
+}
+function paintOffline(){
+  offStrip('off-list','Naka-offline ka. Ito ang huling nakita mo, 2:31 PM.');
+  offStrip('off-person','Naka-offline ka. Ito ang huling nakita mo, 2:31 PM.');
+  offStrip('off-notifs','Naka-offline ka. Buo pa rin ang listahan mo.');
+  const os = $('off-signin');
+  os.hidden = S.online;
+  $('btnSSO').disabled = !S.online;
+}
+
+const TABBED = ['s-list','s-scan','s-id','s-notifs','s-account','s-person','s-programs','s-progdetail','s-enrolled','s-handoff'];
+const TABOF  = {'s-list':'s-list','s-scan':'s-scan','s-id':'s-id','s-notifs':'s-notifs','s-account':'s-account',
+                's-person':'s-list','s-programs':'s-list','s-progdetail':'s-list','s-enrolled':'s-list'};
+
+function go(id, push){
+  if(push!==false && S.screen!==id) S.stack.push(S.screen);
+  S.screen = id;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id));
+  $('phone').classList.toggle('withtabs', TABBED.indexOf(id)>=0);
+  document.querySelectorAll('.tab').forEach(t=>{
+    const on = t.dataset.tab===TABOF[id];
+    t.classList.toggle('on', on);
+    if(on) t.setAttribute('aria-current','page'); else t.removeAttribute('aria-current');
+  });
+  $('demoFab').classList.toggle('on', id==='s-person');
+  const sc = document.querySelector('#'+id+' .scroll'); if(sc) sc.scrollTop = 0;
+  paintOffline();
+  if(id==='s-list')      renderList();
+  if(id==='s-person')    renderPerson();
+  if(id==='s-programs')  renderPrograms();
+  if(id==='s-progdetail')renderProgDetail();
+  if(id==='s-notifs')    renderNotifs();
+  if(id==='s-account')   renderAccount();
+  if(id==='s-scan')      renderScan();
+  if(id==='s-id')        renderId();
+  if(id==='s-role')      renderRoles();
+  if(id==='s-handoff')   renderHandoff();
+}
+function back(){
+  const prev = S.stack.pop() || 's-list';
+  go(prev, false);
+}
+
+/* ---- the resolve: skeleton, then the answer. §5.7 ---- */
+let wfTimer;
+function playResolve(){
+  if(['loading','slow','error','revoked'].indexOf(S.demo)>=0){ S.wfResolved=false; renderPerson(); return; }
+  const keep = S.demo;
+  S.wfResolved = false; S.demo = 'loading'; renderPerson();
+  clearTimeout(wfTimer);
+  wfTimer = setTimeout(()=>{ S.demo = keep; S.wfResolved = true; renderPerson(); }, 900);
+}
+
+/* ---- new-update pill (C22) — the card never mutates under the reader ---- */
+let pillT;
+function showPill(){
+  $('newPill').classList.add('on');
+  clearTimeout(pillT); pillT = setTimeout(()=>$('newPill').classList.remove('on'), 12000);
+}
+
+/* ---- A-1 sign-in: a stepped rail, because the round trip is four hops ---- */
+const SSO_STEPS = ['Binubuksan ang eGovPH','Kinukumpirma ang account','Kinukuha ang profile mo','Halos tapos na'];
+const SSO_ENG   = ['Opening eGovPH','Verifying with eGovPH','Fetching your profile','Almost done'];
+function ssoRail(i){
+  let rail = '';
+  for(let n=0;n<4;n++){
+    rail += '<span class="nd '+(n<i?'done':(n===i?'cur':''))+'"></span>';
+    if(n<3) rail += '<span class="rl '+(n<i?'done':'')+'"></span>';
+  }
+  $('sso-state').innerHTML = '<div class="card" style="margin-top:16px"><div class="stepper">'+rail+'</div>'
+    + '<p style="font-size:15px;font-weight:500">'+esc(SSO_STEPS[i])+'…</p>'
+    + '<p class="meta dim" style="margin-top:4px;font-size:12px">Step '+(i+1)+' of 4 · '+esc(SSO_ENG[i])+'</p></div>';
+}
+function ssoError(){
+  $('sso-state').innerHTML = '<div class="card" style="margin-top:16px" role="alert">'
+    + bi('Hindi natuloy ang pag-sign in.','Sign-in did not complete.','h2')
+    + '<p class="meta" style="margin-top:8px">Subukan ulit. Kung paulit-ulit, mahina lang ang signal — hindi problema ang account mo.<br>'
+    + '<span class="meta dim">Try again. If it keeps happening the signal is weak — it is not your account.</span></p></div>';
+  $('btnSSO').textContent = 'Subukan ulit';
+  $('btnSSO').disabled = false;
+}
+async function signIn(){
+  if(!S.online) return;
+  $('btnSSO').disabled = true;
+  let i = 0; ssoRail(0);
+  const tick = setInterval(()=>{ i++; if(i<4) ssoRail(i); }, 420);
+  const r = await api('/api/sso', {exchange_code:'demo-exchange-code'});
+  await new Promise(res=>setTimeout(res, 1750));
+  clearInterval(tick);
+  if(r && r.ok && r.profile){
+    PROFILE.name = r.profile.name || PROFILE.name;
+    if(r.profile.mobile){ PROFILE.mobile = r.profile.mobile; PROFILE.mobileMasked = r.profile.mobile; }
+  }
+  $('sso-state').innerHTML = '';
+  $('btnSSO').disabled = false; $('btnSSO').textContent = 'Mag-sign in gamit ang eGovPH';
+  S.signedIn = true;
+  /* The kapamilya surface serves ONE audience: relatives and guardians.
+     PAO, social workers and officers have their own surfaces (/cases,
+     /sessions, /custody, /verify) — so there is no role question to ask.
+     Sign-in lands directly on your family. */
+  S.role = 'relative';
+  S.stack = [];
+  go('s-list'); loadList();
+}
+
+/* ---- A-3 first load ---- */
+async function loadList(){
+  listLoading = true; renderList();
+  await new Promise(r=>setTimeout(r, 750));
+  listLoading = false; renderList();
+}
+
+/* ==========================================================================
+   events
+   ========================================================================== */
+document.addEventListener('click', async e=>{
+  const t = e.target.closest('[data-act],[data-person],[data-role],[data-ptab],[data-ntab],[data-gtab],[data-prog],[data-demo],[data-psgc],[data-crumb],[data-notif],[data-tab],[data-back]');
+  if(!t) return;
+  const d = t.dataset;
+
+  if(t.hasAttribute('data-back')){ back(); return; }
+  if(d.tab){ S.stack=[]; go(d.tab); return; }
+  if(d.person){ S.personId = d.person; S.tab='kaso'; S.demo='auto'; go('s-person'); playResolve(); return; }
+  if(d.role){ S.role = d.role; renderRoles(); return; }
+  if(d.ptab){ S.tab = d.ptab; renderPerson(); return; }
+  if(d.ntab){ S.notifTab = d.ntab; renderNotifs(); return; }
+  if(d.gtab){ S.progTab = d.gtab; renderPrograms(); return; }
+  if(d.prog){ S.enrolProgram = d.prog; go('s-progdetail'); return; }
+  if(d.demo){ S.demo = d.demo; S.wfResolved = true; closeSheet(); paintOffline(); renderPerson(); return; }
+  if(d.notif){
+    const n = NOTIFS.find(x=>x.id===d.notif);
+    if(n.action){ location.href = 'tel:'+n.action.tel; }
+    n.unread = false; renderNotifs();
+    return;
+  }
+  if(d.psgc){ psgcPath.push({code:d.psgc, name:d.name}); psgcStep(); return; }
+  if(d.crumb!==undefined){ psgcPath = psgcPath.slice(0, +d.crumb); psgcStep(); return; }
+
+  switch(d.act){
+    case 'closesheet': closeSheet(); break;
+    case 'ref': toast('Sanggunian Blg. '+person().ref); break;
+    case 'request':
+      toast('Naipadala. Walang garantiya ng oras — depende sa pasilidad.', 4200); break;
+    case 'visit': sheetVisiting(); break;
+    case 'gcta': sheetGcta(); break;
+    case 'programs': S.enrolFor = S.personId; go('s-programs'); break;
+    case 'retry': S.demo='auto'; playResolve(); break;
+    case 'showcache': case 'lastseen': S.demo='auto'; S.wfResolved=true; renderPerson(); break;
+    case 'remind': {
+      const p = person(); p.hearing.remind = !p.hearing.remind; renderPerson();
+      toast(p.hearing.remind ? 'Papaalalahanan ka namin 1 araw bago.' : 'Hindi ka na paaalalahanan.');
+      break; }
+    case 'copyhash': {
+      const h = d.hash;
+      if(navigator.clipboard) navigator.clipboard.write ? navigator.clipboard.writeText(h) : null;
+      toast('Nakopya ang buong SHA-256.'); break; }
+    case 'psgc': psgcPath = []; openPsgc(); break;
+    case 'psgcdone': {
+      const muni = psgcPath[2] ? psgcPath[2].name : (psgcPath[1] ? psgcPath[1].name : 'Batangas City');
+      const prov = psgcPath[1] ? psgcPath[1].name : 'Batangas';
+      S.locality = muni + ', ' + prov; closeSheet(); renderPrograms(); break; }
+    case 'enrol': sheetEnrol(); break;
+    case 'agree': {
+      S.agree = !S.agree;
+      $('chkAgree').setAttribute('aria-checked', S.agree);
+      $('btnEnrol').disabled = !S.agree; break; }
+    case 'confirmenrol': doEnrol(); break;
+    case 'backperson': S.stack=[]; go('s-person'); playResolve(); break;
+    case 'cal': toast('Naidagdag sa kalendaryo ng telepono mo.'); break;
+    case 'addperson': toast('Ipapadala ang kahilingan sa LSWDO. Karaniwang 1–3 araw.', 4000); break;
+    case 'changerole': closeSheet(); go('s-role'); break;
+    case 'lang': toggleLang(); toast(S.lang==='FIL'?'Filipino muna.':'English first.'); break;
+    case 'smsset': closeSheet(); sheetSms(); break;
+    case 'smstoggle': S.smsDetail = !S.smsDetail; sheetSms(); break;
+    case 'report': closeSheet(); toast('Salamat. Titingnan ito ng ahensyang nag-record.'); break;
+    case 'unlink': closeSheet(); toast('Kailangan ng kumpirmasyon ng LSWDO bago maalis ang link.', 4000); break;
+    case 'demo': closeSheet(); sheetDemo(); break;
+    case 'toggleoff': S.online = !S.online; paintOffline(); renderAccount();
+      $('acctOff') && ($('acctOff').textContent = S.online?'Naka-off':'Naka-on');
+      toast(S.online?'Online ulit.':'Offline mode. Cache lang ang makikita.'); break;
+    case 'emptylist': S.stack=[]; go('s-list'); renderListEmpty(); break;
+    case 'signout': S.signedIn=false; S.stack=[]; go('s-signin'); break;
+    case 'cases': toast('Papunta sa /cases — ang propesyonal na surface.', 3600); break;
+    case 'newupdate': closeSheet(); showPill(); break;
+    case 'replay': closeSheet(); playResolve(); break;
+    case 'scan': {
+      const r = await api('/api/everify', {action:'qr-check', value:'ELAYA-DEMO-QR-4482'});
+      const ok = !r || r.ok !== false;
+      $('scanOut').innerHTML = '<div class="card" style="margin-top:14px">'
+        + (ok ? '<div class="chip ok">'+ico('circlecheck')+'Totoo ang dokumento</div>'
+              : '<div class="chip stale">'+ico('circledashed')+'Hindi ma-verify ngayon</div>')
+        + '<p class="meta" style="margin-top:10px">Sertipiko ng paglaya · Batangas City District Jail · Hul 20, 2026</p>'
+        + '<div class="hairline"></div>'+src('e-Verify','ngayon lang')+'</div>';
+      break; }
+  }
+});
+
+document.addEventListener('input', e=>{
+  if(e.target.id==='progSearch'){
+    S.progQuery = e.target.value;
+    const v = e.target.value, pos = e.target.selectionStart;
+    renderPrograms();
+    const n = $('progSearch'); if(n){ n.focus(); n.setSelectionRange(pos,pos); }
+  }
+});
+
+$('btnSSO').addEventListener('click', signIn);
+$('btnRoleGo').addEventListener('click', ()=>{
+  if(!S.role) return;
+  if(S.role==='relative'){ S.stack=[]; go('s-list'); loadList(); }
+  else go('s-handoff');
+});
+$('btnBell').addEventListener('click', ()=>go('s-notifs'));
+$('btnMore').addEventListener('click', sheetMore);
+$('btnReadAll').addEventListener('click', ()=>{ NOTIFS.forEach(n=>n.unread=false); renderNotifs(); renderList(); toast('Nabasa na lahat.'); });
+$('btnLang').addEventListener('click', toggleLang);
+$('demoFab').addEventListener('click', sheetDemo);
+$('scrim').addEventListener('click', closeSheet);
+$('newPill').addEventListener('click', ()=>{
+  $('newPill').classList.remove('on'); clearTimeout(pillT);
+  S.demo='program'; S.wfResolved=true; renderPerson();
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSheet(); });
+
+function toggleLang(){
+  S.lang = S.lang==='FIL' ? 'ENG' : 'FIL';
+  $('phone').classList.toggle('eng', S.lang==='ENG');
+  $('btnLang').textContent = S.lang;
+  document.documentElement.lang = S.lang==='FIL' ? 'fil' : 'en';
+  const a = $('acctLang'); if(a) a.textContent = S.lang==='FIL' ? 'Filipino muna, tapos English' : 'English first, then Filipino';
+}
+
+/* ==========================================================================
+   init
+   ========================================================================== */
+document.querySelectorAll('[data-ico]').forEach(n=>{
+  n.innerHTML = '<svg viewBox="0 0 24 24">'+(ICONS[n.dataset.ico]||'')+'</svg>';
+  n.setAttribute('aria-hidden','true');
+});
+renderRoles(); renderList(); renderNotifs(); renderAccount(); renderScan(); renderId(); renderPrograms();
+
+/* Deep link, for a presenter who wants to open straight into a state:
+   #/person/stale · #/person/hospital · #/programs · #/notifs · #/list        */
+const SCREEN_ALIAS = {list:'s-list', person:'s-person', programs:'s-programs', notifs:'s-notifs',
+                      account:'s-account', signin:'s-signin', id:'s-id', scan:'s-scan'};
+function applyHash(){
+  const parts = (location.hash||'').replace(/^#\/?/,'').split('/').filter(Boolean);
+  if(!parts.length) return false;
+  const target = SCREEN_ALIAS[parts[0]];
+  if(!target) return false;
+  S.signedIn = true; S.role = 'relative'; listLoading = false; S.stack = [];
+  if(parts[1] && DEMO_STATES.some(d=>d[0]===parts[1])) S.demo = parts[1];
+  if(parts[1] && ['kaso','programa'].indexOf(parts[1])>=0) S.tab = parts[1];
+  S.wfResolved = true;
+  go(target, false);
+  return true;
+}
+if(!applyHash()){
+  go('s-signin', false);
+  paintOffline();
+  loadList();
+}
+window.addEventListener('hashchange', applyHash);
+</script>
+</body>
+</html>

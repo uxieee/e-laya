@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>e-Laya · Sessions & Attendance</title>
+<link rel="stylesheet" href="elaya.css">
+<style>
+/* =========================================================================
+   Professional surface components (S-1…S-4).
+   Extends elaya.css with additive modifiers only.
+   ========================================================================= */
+[hidden]{display:none!important}
+a.btn,a.opt{text-decoration:none}
+/* Three-column grid: the two side tracks resolve to the SAME width, so the
+   title is optically centred no matter how many icons each side carries. */
+.bar.pro{padding:6px 8px;gap:0;display:grid;align-items:center;
+  grid-template-columns:minmax(44px,1fr) auto minmax(44px,1fr)}
+.bar.pro .side{display:flex;align-items:center;min-width:0}
+.bar.pro .side.end{justify-content:flex-end}
+.bar.pro .title{grid-column:2;font-size:17px;text-align:center;padding:0 8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{min-width:44px;height:44px;display:grid;place-items:center;background:none;border:none;
+  color:var(--primary);font-size:20px;line-height:1;cursor:pointer;border-radius:10px;
+  font-family:var(--font);padding:0 6px;position:relative}
+.iconbtn:active{background:var(--secondary)}
+.iconbtn svg{display:block}
+.iconbtn .bdg{position:absolute;top:2px;right:0;min-width:19px;height:19px;border-radius:10px;
+  background:var(--accent);color:var(--text);font-size:10.5px;font-weight:500;display:grid;place-items:center;
+  padding:0 5px;border:2px solid var(--surface);font-variant-numeric:tabular-nums;line-height:1}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+
+.ctx{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px;flex:none;
+  padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)}
+.ctx .who{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.offline{display:block;width:100%;border:none;border-bottom:1px solid var(--warn-border);
+  font-family:var(--font);font-weight:500;cursor:pointer;min-height:36px}
+
+/* ---- list column: 8-point grid, 20px gutters ---- */
+#s1 .scroll{padding:0 20px 88px}
+#s1Scroll>.sk:first-child{margin-top:20px}
+
+/* ---- TODAY strip — typography on the page background, hairline below ---- */
+.today{padding:20px 0 24px;margin-bottom:24px;border-bottom:1px solid var(--border)}
+.today .kick{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);font-variant-numeric:tabular-nums}
+.today .pname{font-size:18px;font-weight:500;line-height:1.3;margin-top:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.today .vline{display:flex;align-items:baseline;gap:10px;margin-top:2px}
+.today .vline .ps{flex:1;min-width:0;font-size:13px;line-height:1.5}
+.today .vlink{flex:none;background:none;border:none;font-family:var(--font);font-size:13px;
+  font-weight:500;color:var(--primary);cursor:pointer;padding:8px 0 8px 8px;margin:-8px 0;text-align:right}
+.today .btn{margin-top:16px}
+.seclabel{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+
+/* ---- inline search (expands from the app-bar icon) ---- */
+.search{position:relative;margin:16px 0 8px}
+.search input{width:100%;min-height:48px;border:1px solid transparent;border-radius:var(--radius);
+  background:var(--secondary);padding:12px 44px 12px 14px;font-family:var(--font);font-size:16px;color:var(--text)}
+.search input::placeholder{color:var(--muted)}
+.search input:focus{background:var(--surface);outline:2px solid var(--primary);outline-offset:-2px}
+.search .mag{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+.fchips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 20px;padding:0 16px 2px;scrollbar-width:none}
+.fchips::-webkit-scrollbar{display:none}
+.fchip{flex:none;min-height:32px;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:500;
+  background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:var(--font);cursor:pointer;white-space:nowrap}
+.fchip[aria-pressed="true"]{background:#0040E714;border-color:var(--primary);color:var(--primary)}
+
+/* ---- bands + dense rows ---- */
+.band{margin-bottom:28px}
+.bandh{display:flex;align-items:center;gap:8px;width:100%;min-height:32px;
+  padding:6px 2px;background:none;border:none;font-family:var(--font);font-size:12px;font-weight:500;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;text-align:left}
+.bandh>span:only-child,.bandh .bt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bandh.tap{min-height:44px}
+.bandh .cpill{flex:none;min-width:22px;height:20px;padding:0 7px;border-radius:999px;background:var(--secondary);
+  color:var(--primary);font-size:12px;letter-spacing:0;display:inline-grid;place-items:center;
+  font-variant-numeric:tabular-nums;line-height:1}
+.bandh .cv{flex:none;font-size:15px;color:var(--primary);letter-spacing:0;line-height:1;
+  transition:transform .18s ease}
+.bandh[aria-expanded="true"] .cv{transform:rotate(180deg)}
+/* ---- S-1 alert bands: section header + person-row cards, no wrapper card ---- */
+.bandh2{display:flex;align-items:center;gap:10px;min-height:32px;padding:0 2px}
+.bandh2 .bt{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-strong)}
+.bandh2 .warnico{flex:none;width:20px;height:20px;border-radius:6px;display:inline-grid;place-items:center;
+  background:var(--warn-surface);border:1px solid var(--warn-border);color:var(--warn);font-size:11px;line-height:1}
+.bandh2 .cpill2{flex:none;min-width:22px;height:20px;padding:0 7px;border-radius:999px;background:var(--secondary);
+  color:var(--primary);font-size:12px;font-weight:500;display:inline-grid;place-items:center;
+  font-variant-numeric:tabular-nums;line-height:1}
+.infobtn{flex:none;background:none;border:none;color:var(--primary);font-family:var(--font);
+  font-size:14px;line-height:1;cursor:pointer;min-width:32px;height:28px;padding:0;border-radius:8px}
+.bandsub1{font-size:13px;color:var(--muted);line-height:1.5;margin:4px 2px 12px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bandxp{font-size:13px;color:var(--muted);line-height:1.5;margin:0 2px 12px;padding-left:10px;
+  border-left:2px solid var(--border-strong)}
+/* person rows as individual cards on S-1 */
+.row.pro.card1{margin:0 0 10px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.row.pro.card1+.row.pro.card1::before{display:none}
+/* quiet collapsed one-liner + next-session row */
+.quietrow{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;background:none;border:none;
+  border-top:1px solid var(--border);font-family:var(--font);font-size:14px;font-weight:500;line-height:1.5;
+  color:var(--muted-strong);cursor:pointer;padding:12px 2px;text-align:left}
+.quietrow .cpill2{margin-left:0}
+.quietrow .pchev{padding-left:0;margin-left:auto}
+.nextsec{margin-top:28px}
+.nextrow{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;background:none;border:none;
+  border-top:1px solid var(--border);font-family:var(--font);font-size:14px;line-height:1.5;color:var(--muted-strong);
+  cursor:pointer;padding:12px 2px;text-align:left}
+.nextrow .nt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nextrow .pchev{padding-left:0}
+.bandcard{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.row.pro{margin:0;border:0;border-radius:0;padding:16px 16px 16px 0;gap:0;align-items:stretch;
+  position:relative;background:var(--surface);min-height:72px}
+.row.pro+.row.pro::before{content:"";position:absolute;left:16px;right:0;top:0;height:1px;background:var(--border)}
+.row.pro:active{background:#0040E70D}
+.row.pro .rail{border-radius:0 2px 2px 0;margin-right:12px}
+.row.pro .rail.quiet{background:#CBD5E1}
+.pbody{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;container-type:inline-size}
+.pt{font-size:16px;font-weight:500;line-height:1.4;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt .age{font-size:14px;font-weight:400;color:var(--muted)}
+.ps{font-size:14px;line-height:1.5;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm{display:flex;gap:8px;margin-top:8px;overflow:hidden;align-items:center;min-width:0}
+.mchip{display:inline-block;max-width:100%;line-height:1.4;padding:6px 12px;border-radius:999px;
+  font-size:12px;font-weight:500;background:transparent;border:1px solid var(--border-strong);
+  color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+.mchip svg{vertical-align:-2px;margin-right:3px}
+/* two chips must never collide — collapse to one chip + "+1" in a narrow row */
+.mchip.plus{display:none;flex:none;font-variant-numeric:tabular-nums}
+@container (max-width:300px){
+  .pm.multi>.mchip:not(:first-child):not(.plus){display:none}
+  .pm.multi>.mchip.plus{display:inline-block}
+}
+.mchip.blue{background:var(--secondary);border-color:var(--border);color:var(--primary)}
+.mchip.amber{background:var(--warn-surface);border-color:var(--warn-border);color:var(--text)}
+.mchip.slate{background:#F1F5F9;border-color:#E2E8F0;color:#334155}
+.mchip.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}
+.pchev{align-self:center;color:var(--primary);font-size:19px;flex:none;padding-left:8px;line-height:1}
+.more{display:block;width:100%;background:none;border:none;border-top:1px solid var(--border);
+  padding:13px 16px;font-family:var(--font);font-size:14px;color:var(--primary);text-align:left;cursor:pointer;min-height:44px}
+.bar2{height:6px;border-radius:3px;background:var(--secondary);overflow:hidden;flex:none}
+.bar2 i{display:block;height:100%;background:var(--primary);border-radius:3px}
+.bar2.w72{width:72px}
+.pct{font-size:12px;font-weight:500;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted-strong)}
+
+/* ---- notices ---- */
+.note{display:flex;gap:8px;align-items:flex-start;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.5}
+.note.amber{background:var(--warn-surface);border:1px solid var(--warn-border);color:var(--text)}
+.note.info{background:#EBF6FF;border:1px solid var(--border-strong);color:#334155}
+.note.err{background:#FEF2F2;border:1px solid #CE112633;color:var(--text)}
+.note .g{flex:none;line-height:1.35}
+.linkbtn{background:none;border:none;color:var(--primary);font-family:var(--font);font-size:14px;
+  font-weight:500;cursor:pointer;padding:6px 0;min-height:36px;text-align:left}
+
+/* ---- underline tabs (house rule 7) ---- */
+.utabs{display:flex;border-bottom:1px solid var(--border);flex:none;background:var(--surface)}
+.utab{flex:1;min-height:44px;background:none;border:none;border-bottom:3px solid transparent;
+  font-family:var(--font);font-size:16px;font-weight:500;color:var(--muted);cursor:pointer;padding:10px 4px}
+.utab[aria-selected="true"]{color:var(--primary);border-bottom-color:var(--primary)}
+
+/* ---- S-2 header ---- */
+.hcard{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
+.hcard h2{font-size:20px;font-weight:500}
+.hcard .ord{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--muted-strong);margin-top:6px}
+.prog{display:flex;align-items:center;gap:10px;margin-top:14px}
+.prog .bar2{flex:1;height:8px;border-radius:4px}
+
+/* ---- S-3 ---- */
+.shead{flex:none;background:var(--bg);border-bottom:1px solid var(--border);padding:8px 16px}
+.shead .l1{font-size:14px;font-weight:500}
+.shead .l2{font-size:12px;color:var(--muted);margin-top:2px}
+.counter{text-align:center;padding:14px 16px 12px}
+.counter .n{font-size:36px;font-weight:300;color:var(--primary);line-height:1.05;font-variant-numeric:tabular-nums}
+.counter .n span{color:var(--faint)}
+.counter .cbar{height:6px;border-radius:3px;background:var(--secondary);margin-top:10px;overflow:hidden}
+.counter .cbar i{display:block;height:100%;background:var(--primary);border-radius:3px;transition:width .2s ease}
+.bulkrow{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:56px;
+  background:var(--secondary);border:none;border-bottom:1px solid var(--border);cursor:pointer;
+  font-family:var(--font);font-size:12.5px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--primary);padding:10px 16px;text-align:left}
+.bulkrow>span:first-child{white-space:nowrap}
+.bulkrow .x{font-size:12px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:400}
+.srow{position:relative;overflow:hidden;background:var(--surface);border-top:1px solid var(--border);touch-action:pan-y}
+.srow:first-of-type{border-top:none}
+.swbg{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;font-size:14px;font-weight:500;opacity:0}
+.srow[data-drag="r"] .swbg{opacity:1;background:var(--primary);color:#fff}
+.srow[data-drag="l"] .swbg{opacity:1;background:var(--warn-surface);color:var(--text)}
+.srow[data-drag="r"] .swbg .r,.srow[data-drag="l"] .swbg .l{visibility:hidden}
+.srowin{position:relative;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;
+  min-height:64px;background:var(--surface);will-change:transform}
+.srow[data-mark="missed"] .srowin{box-shadow:inset 4px 0 0 var(--accent)}
+.av{width:40px;height:40px;border-radius:50%;background:var(--secondary);color:var(--primary);
+  display:grid;place-items:center;font-size:14px;font-weight:500;flex:none}
+.tg{display:flex;gap:8px;flex:none}
+.tgb{width:44px;height:44px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+  color:var(--faint);font-size:18px;font-family:var(--font);cursor:pointer;display:grid;place-items:center;position:relative}
+.tgb[aria-checked="true"][data-set="present"]{background:var(--primary);border:2px solid var(--primary);color:#fff}
+.tgb[aria-checked="true"][data-set="missed"]{background:var(--warn-surface);border:2px solid var(--accent);color:var(--text)}
+.tgb .cdot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--accent);border:1px solid #fff}
+.walkin{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;background:var(--surface);
+  border:none;border-top:1px solid var(--border);font-family:var(--font);font-size:15px;font-weight:500;
+  color:var(--primary);cursor:pointer;padding:10px 16px;text-align:left}
+.foot{flex:none;background:var(--surface);border-top:1px solid var(--border);padding:12px 16px 16px}
+.foot .sum{font-size:12px;color:var(--muted);text-align:center;margin-bottom:8px}
+.btn.off{background:#F1F5F9;border-color:#F1F5F9;color:var(--faint)}
+
+/* ---- confirmation / receipt ---- */
+.okmark{width:72px;height:72px;border-radius:50%;background:var(--success-surface);color:var(--success);
+  display:grid;place-items:center;margin:8px auto 14px;animation:pop .24s ease-out}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.okmark{animation:none}}
+.figs{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  min-height:88px;margin:16px 0 20px;overflow:hidden}
+.fig{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:14px 6px;
+  border-left:1px solid var(--border)}
+.fig:first-child{border-left:none}
+.fig .n{font-size:28px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.fig .l{font-size:12px;color:var(--muted)}
+.fu{padding:12px 12px 12px 0;display:flex;gap:0;align-items:stretch;position:relative;background:var(--surface)}
+.fu+.fu::before{content:"";position:absolute;left:16px;right:0;top:0;height:1px;background:var(--border)}
+.fu .rail{width:4px;background:var(--accent);border-radius:0 2px 2px 0;margin-right:12px;flex:none}
+.fu .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.fu .acts .btn{width:auto;min-height:36px;font-size:14px;padding:6px 12px}
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
+.hash{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:16px;line-height:1.5;
+  word-break:break-all;color:var(--text)}
+.hashline{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.copy{background:none;border:none;color:var(--primary);font-size:16px;cursor:pointer;width:44px;height:44px;
+  display:grid;place-items:center;flex:none}
+.rcard p{font-size:13px;color:var(--muted);line-height:1.55;margin-top:10px}
+.tert{display:flex;gap:8px;margin-top:14px}
+.tert .btn{width:auto;min-height:36px;font-size:14px;padding:6px 12px}
+
+/* ---- flags ---- */
+.flagcard{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:12px}
+.flagbody{display:flex;gap:0;align-items:stretch;padding:14px 14px 14px 0}
+.flagbody .rail{width:4px;background:var(--accent);border-radius:0 2px 2px 0;margin-right:12px;flex:none}
+.plog{margin-top:12px}
+.plog .h{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.plog .e{font-size:13px;color:#334155;line-height:1.6}
+.plog .e i{color:var(--success);font-style:normal}
+.facts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.facts .btn{width:auto;min-height:40px;font-size:14px;padding:8px 14px}
+
+/* ---- sheet / scrim / toast ---- */
+.scrim{position:absolute;inset:0;background:rgba(26,26,46,.42);opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:24px 24px 0 0;
+  padding:8px 16px 24px;z-index:60;transform:translateY(101%);max-height:88%;overflow-y:auto;
+  visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s}
+.sheet.on{transform:none;visibility:visible;transition:transform .22s ease}
+.grab{width:36px;height:4px;border-radius:2px;background:#CBD5E1;margin:6px auto 14px}
+.sheet h3{margin-bottom:4px}
+.sheet .lead{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:10px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;background:none;border:none;
+  border-top:1px solid var(--border);font-family:var(--font);font-size:16px;color:var(--text);
+  text-align:left;cursor:pointer;padding:8px 2px}
+.opt:first-of-type{border-top:none}
+.opt .sub{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5}
+.opt .g{width:24px;flex:none;color:var(--primary);text-align:center}
+.opt.dz{color:var(--destructive)}
+.sheet .grouplbl{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:16px 0 4px}
+.qitem{display:flex;gap:12px;padding:14px 2px;border-top:1px solid var(--border);align-items:flex-start}
+.qitem:first-of-type{border-top:none}
+.qitem .g{flex:none;color:var(--muted);margin-top:2px}
+.qitem .t{display:block;font-size:15px;font-weight:500}
+.qitem .s{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.5}
+.qitem .s .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.qitem.bad{background:#FEF2F2;border-radius:10px;padding:12px}
+.qitem.bad .g{color:var(--destructive)}
+.qitem.okk .g{color:var(--success)}
+.toast{overflow:hidden;padding-bottom:15px}
+.toast .rule{position:absolute;left:0;bottom:0;height:2px;background:#7FA5FF;width:100%;transform-origin:left}
+@keyframes deplete{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.toast.on .rule{animation:deplete 12s linear forwards}
+@media (prefers-reduced-motion:reduce){.toast.on .rule{animation:deplete 12s steps(12) forwards}}
+
+/* ---- bottom tab bar (extends .tabs in elaya.css) ---- */
+.tabs{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.tab{min-height:52px;justify-content:center}
+.tab .ic{display:grid;place-items:center;height:20px}
+.tab .ic svg{display:block}
+.tab .bdg2{position:absolute;top:-2px;right:50%;margin-right:-20px;min-width:17px;height:17px;
+  border-radius:9px;background:var(--accent);color:var(--text);font-size:10px;font-weight:500;
+  display:grid;place-items:center;padding:0 4px;font-variant-numeric:tabular-nums;line-height:1}
+
+/* ---- account screen ---- */
+.mecard{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:16px;margin-bottom:16px}
+.meav{width:52px;height:52px;border-radius:50%;background:var(--secondary);color:var(--primary);
+  display:grid;place-items:center;font-size:17px;font-weight:500;flex:none}
+.mecard .mn{font-size:17px;font-weight:500;line-height:1.3}
+.mecard .mr{font-size:13.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;
+  border-bottom:1px solid var(--border);font-size:14px}
+.kv:last-child{border-bottom:none}
+.kv .k{color:var(--muted)}
+.kv .v{font-weight:500;text-align:right}
+
+/* ---- scroll containers ----
+   One layout only: 390x844 phone. Every screen is a flex column whose middle
+   child owns the scroll. min-height:0 stops the flex item from refusing to
+   shrink below its content and pushing the overflow outside the frame. */
+.screen>.scroll{min-height:0}
+</style>
+</head>
+<body>
+<div class="phone-wrap">
+<div class="phone" id="phone">
+
+  <!-- ============================== S-1 caseload ============================== -->
+  <section class="screen on" id="s1" aria-label="My caseload">
+    <header class="bar pro">
+      <div class="side"><button class="iconbtn" aria-label="Back">&lsaquo;</button></div>
+      <div class="title">My caseload</div>
+      <div class="side end">
+        <button class="iconbtn" id="s1Search" aria-label="Search" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+        </button>
+        <button class="iconbtn" id="toFlags" aria-label="Flags">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4h13l-2.5 4L18 12H5"/></svg>
+          <span class="bdg" id="flagBdg">6</span>
+        </button>
+        <button class="iconbtn" id="s1Menu" aria-label="More options">&#8942;</button>
+      </div>
+    </header>
+    <button class="offline" id="s1Off" hidden></button>
+    <div class="ctx">
+      <span class="who" id="s1Who">&#128100; Ms. A. Villanueva &middot; LSWDO Quezon City</span>
+      <span class="mono" id="s1Date">Miy &middot; 22 Hul</span>
+    </div>
+    <div class="scroll" id="s1Scroll"></div>
+  </section>
+
+  <!-- ============================ S-2 programme roster ======================== -->
+  <section class="screen" id="s2" aria-label="Programme roster">
+    <header class="bar pro">
+      <div class="side"><button class="iconbtn" data-go="s1" aria-label="Back">&lsaquo;</button></div>
+      <div class="title" id="s2Title">Anger management</div>
+      <div class="side end"><button class="iconbtn" id="s2Menu" aria-label="More options">&#8942;</button></div>
+    </header>
+    <div class="offline" id="s2Off" hidden>&#9888; Naka-offline &mdash; logged sessions and their receipts are readable. Export and print need a connection.</div>
+    <div class="utabs" role="tablist">
+      <button class="utab" role="tab" data-tab="sessions" aria-selected="true">Mga sesyon</button>
+      <button class="utab" role="tab" data-tab="people" aria-selected="false">Mga kalahok</button>
+    </div>
+    <div class="scroll" id="s2Scroll"></div>
+  </section>
+
+  <!-- ============================= S-3 log attendance ========================= -->
+  <section class="screen" id="s3" aria-label="Log attendance">
+    <header class="bar pro">
+      <div class="side"><button class="iconbtn" id="s3Close" aria-label="Close without saving">&#10005;</button></div>
+      <div class="title">Log attendance</div>
+      <div class="side end"><button class="iconbtn" id="s3Menu" aria-label="More options">&#8942;</button></div>
+    </header>
+    <button class="offline" id="s3Off" hidden></button>
+    <div class="shead">
+      <div class="l1" id="s3L1">Anger management &middot; Group B &middot; Session 9</div>
+      <div class="l2" id="s3L2">Miy 22 Hul 2026 &middot; 2:00 PM &middot; Bahay Pag-asa Payatas</div>
+    </div>
+    <div class="scroll" id="s3Scroll" style="padding-top:0"></div>
+    <div class="foot">
+      <div class="sum" id="s3Sum" hidden></div>
+      <button class="btn off" id="s3Save" disabled>Mark everyone first</button>
+    </div>
+  </section>
+
+  <!-- ========================== S-3 receipt confirmation ====================== -->
+  <section class="screen" id="s3c" aria-label="Attendance saved">
+    <header class="bar pro">
+      <div class="side"></div>
+      <div class="title">&nbsp;</div>
+      <div class="side end"><button class="iconbtn" id="s3cDone" style="font-size:15px;font-weight:500">Tapos &#10005;</button></div>
+    </header>
+    <div class="scroll" id="s3cScroll"></div>
+    <div class="foot"><button class="btn" id="s3cDone2">Tapos na &middot; Done</button></div>
+  </section>
+
+  <!-- ================================= S-4 flags ============================== -->
+  <section class="screen" id="s4" aria-label="Flags">
+    <header class="bar pro">
+      <div class="side"><button class="iconbtn" data-go="s1" aria-label="Back">&lsaquo;</button></div>
+      <div class="title">Flags</div>
+      <div class="side end"><button class="iconbtn" id="s4Menu" aria-label="More options">&#8942;</button></div>
+    </header>
+    <div class="offline" id="s4Off" hidden>&#9888; Naka-offline &mdash; Tawag still works. SMS and follow-up notes queue on this phone.</div>
+    <div class="utabs" role="tablist">
+      <button class="utab" role="tab" data-ftab="open" aria-selected="true">Bukas 6</button>
+      <button class="utab" role="tab" data-ftab="watch" aria-selected="false">Sinusubaybayan 3</button>
+      <button class="utab" role="tab" data-ftab="closed" aria-selected="false">Sarado 24</button>
+    </div>
+    <div class="scroll" id="s4Scroll"></div>
+  </section>
+
+  <!-- ================================ Ako · account =========================== -->
+  <section class="screen" id="s5" aria-label="Account">
+    <header class="bar pro">
+      <div class="side"></div>
+      <div class="title">Ako</div>
+      <div class="side end"></div>
+    </header>
+    <div class="scroll" id="s5Scroll"></div>
+  </section>
+
+  <nav class="tabs" id="tabs" aria-label="Sections">
+    <button class="tab on" type="button" data-tab="s1" aria-current="page"><span class="ic">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0"/><path d="M16.2 5.4a3.2 3.2 0 0 1 0 5.2M17.6 20a6.2 6.2 0 0 0-1.8-4.4"/></svg>
+    </span>Caseload</button>
+    <button class="tab" type="button" data-tab="s2"><span class="ic">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/><path d="M8.5 15l2 2 4-4"/></svg>
+    </span>Sesyon</button>
+    <button class="tab" type="button" data-tab="flags" style="position:relative"><span class="ic">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4h13l-2.5 4L18 12H5"/></svg>
+    </span><span class="bdg2" id="tabFlagBdg">6</span>Flags</button>
+    <button class="tab" type="button" data-tab="me"><span class="ic">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+    </span>Ako</button>
+  </nav>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Options"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span id="toastMsg"></span><button id="toastAct" type="button">I-BALIK ↺</button><div class="rule"></div>
+  </div>
+</div>
+</div>
+
+<script>
+"use strict";
+/* ============================ helpers ============================ */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.prototype.slice.call(r.querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function api(p,b){if(location.protocol==="file:")return null;/* opened as a local file — no server to call */
+try{const r=await fetch(p,b?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}:{});if(!r.ok)throw 0;return await r.json();}catch(e){return null;}}
+
+const NOW=new Date(2026,6,22,14,5);           /* Miyerkules, 22 Hulyo 2026 · 2:05 PM */
+const DAY_S=["Lin","Lun","Mar","Miy","Huw","Biy","Sab"];
+const MON_S=["Ene","Peb","Mar","Abr","May","Hun","Hul","Ago","Set","Okt","Nob","Dis"];
+const MON_F=["Enero","Pebrero","Marso","Abril","Mayo","Hunyo","Hulyo","Agosto","Setyembre","Oktubre","Nobyembre","Disyembre"];
+const fTime=d=>{let h=d.getHours();const m=String(d.getMinutes()).padStart(2,"0"),ap=h<12?"AM":"PM";h=h%12||12;return h+":"+m+" "+ap;};
+const fDate=d=>d.getDate()+" "+MON_S[d.getMonth()]+" "+d.getFullYear();
+const fShort=d=>DAY_S[d.getDay()]+" "+String(d.getDate()).padStart(2,"0")+" "+MON_S[d.getMonth()];
+const initials=n=>{const p=n.split(",");return ((p[1]||" ").trim()[0]||"?")+(p[0].trim()[0]||"");};
+const SHIELD='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.1-7 10-4-1.9-7-5.6-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>';
+const SHIELD_BIG='<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.1-7 10-4-1.9-7-5.6-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>';
+
+/* =================== canonical JSON + SHA-256 (on device) =================== */
+function canonical(v){
+  if(v===null||typeof v!=="object")return JSON.stringify(v);
+  if(Array.isArray(v))return "["+v.map(canonical).join(",")+"]";
+  return "{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+canonical(v[k])).join(",")+"}";
+}
+/* pure-JS fallback so the receipt exists even where crypto.subtle is unavailable */
+const _K=[],_H0=[];
+(function(){let n=2,i=0;
+  while(i<64){let p=true;for(let f=2;f*f<=n;f++){if(n%f===0){p=false;break;}}
+    if(p){if(i<8)_H0.push(Math.floor((Math.sqrt(n)%1)*4294967296)>>>0);
+      _K.push(Math.floor((Math.cbrt(n)%1)*4294967296)>>>0);i++;}
+    n++;}})();
+function sha256js(str){
+  const rr=(n,x)=>(x>>>n)|(x<<(32-n));
+  const bytes=new TextEncoder().encode(str),l=bytes.length;
+  const buf=new Uint8Array((((l+8)>>6)+1)<<6);buf.set(bytes);buf[l]=0x80;
+  const dv=new DataView(buf.buffer);
+  dv.setUint32(buf.length-8,Math.floor(l*8/4294967296),false);
+  dv.setUint32(buf.length-4,(l*8)>>>0,false);
+  const H=_H0.slice(),w=new Uint32Array(64);
+  for(let i=0;i<buf.length;i+=64){
+    for(let j=0;j<16;j++)w[j]=dv.getUint32(i+j*4,false);
+    for(let j=16;j<64;j++){
+      const a1=w[j-15],b1=w[j-2];
+      const s0=rr(7,a1)^rr(18,a1)^(a1>>>3),s1=rr(17,b1)^rr(19,b1)^(b1>>>10);
+      w[j]=(w[j-16]+s0+w[j-7]+s1)>>>0;}
+    let a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for(let j=0;j<64;j++){
+      const S1=rr(6,e)^rr(11,e)^rr(25,e),ch=(e&f)^((~e)&g);
+      const t1=(h+S1+ch+_K[j]+w[j])>>>0;
+      const S0=rr(2,a)^rr(13,a)^rr(22,a),mj=(a&b)^(a&c)^(b&c);
+      const t2=(S0+mj)>>>0;
+      h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;}
+    H[0]=(H[0]+a)>>>0;H[1]=(H[1]+b)>>>0;H[2]=(H[2]+c)>>>0;H[3]=(H[3]+d)>>>0;
+    H[4]=(H[4]+e)>>>0;H[5]=(H[5]+f)>>>0;H[6]=(H[6]+g)>>>0;H[7]=(H[7]+h)>>>0;}
+  return H.map(x=>(x>>>0).toString(16).padStart(8,"0")).join("");
+}
+async function sha256(str){
+  try{
+    if(window.crypto&&crypto.subtle&&crypto.subtle.digest){
+      const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
+    }
+  }catch(e){}
+  return sha256js(str);
+}
+const shortHash=h=>h.slice(0,4)+"…"+h.slice(-4);
+const groupHash=h=>h.slice(0,8)+" "+h.slice(8,16)+" … "+h.slice(-16,-8)+" "+h.slice(-8);
+
+/* ============================ seed data ============================ */
+const WORKER={name:"Ms. A. Villanueva",office:"LSWDO Quezon City",id:"LSWDO-QC-0447"};
+
+const PROGRAMS=[
+ {id:"pg1",name:"Anger management",group:"Group B",venue:"Bahay Pag-asa Payatas, Quezon City",
+  order:"CO-2025-0417",expires:new Date(2026,8,30),required:12,held:8,avg:87,
+  sessions:[
+   {n:9, at:new Date(2026,6,22,14,0),end:"4:00 PM",state:"today"},
+   {n:10,at:new Date(2026,6,29,14,0),end:"4:00 PM",state:"upcoming"},
+   {n:11,at:new Date(2026,7,5,14,0), end:"4:00 PM",state:"upcoming"},
+   {n:8, at:new Date(2026,6,15,14,0),end:"4:00 PM",state:"logged",present:13,follow:2,hash:"4f2a1c88a71d6e0b95c4d2f38e77a1b0c6d3095f2ea41bb7cc0d9e88f16d9b1c"},
+   {n:7, at:new Date(2026,6,8,14,0), end:"4:00 PM",state:"logged",present:15,follow:0,hash:"8c07be31d2a94f5077cc10bb6e5321af90d4c2e7b83a1f6d5509cc7712ab22de"}]},
+ {id:"pg2",name:"Life skills",group:"Group A",venue:"Brgy. Holy Spirit Multi-purpose Hall",
+  order:"CO-2025-0388",expires:new Date(2026,9,15),required:10,held:5,avg:79,
+  sessions:[
+   {n:6,at:new Date(2026,6,24,9,0),end:"11:00 AM",state:"upcoming"},
+   {n:7,at:new Date(2026,6,31,9,0),end:"11:00 AM",state:"upcoming"},
+   {n:8,at:new Date(2026,7,7,9,0), end:"11:00 AM",state:"upcoming"},
+   {n:5,at:new Date(2026,6,17,9,0),end:"11:00 AM",state:"logged",present:11,follow:1,hash:"71bd44a0c39e7f2183ba55d1c7e9048f6a2b31cd90ee7745bb2c8f0a3e6103af"}]},
+ {id:"pg3",name:"Community service",group:"Brgy. Holy Spirit",venue:"Brgy. Holy Spirit, Quezon City",
+  order:"CO-2026-0031",expires:new Date(2026,10,30),required:10,held:6,avg:82,
+  sessions:[{n:7,at:new Date(2026,6,25,7,30),end:"11:30 AM",state:"upcoming"}]}
+];
+
+/* roster of Anger management · Group B — 15 enrolled */
+const ROSTER=[
+ {id:"r1", name:"Bautista, Renz A.",       age:16,done:5,of:12,missStreak:3,last:new Date(2026,6,3), guardian:"Mrs. Editha Bautista",gno:"0917 445 2210",no:"0917 445 2211",brgy:"Payatas"},
+ {id:"r2", name:"Santos, Kyle M.",         age:16,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Rolando Santos", gno:"0918 330 1145",no:"0918 330 1146",brgy:"Payatas",tight:true},
+ {id:"r3", name:"Ocampo, Jerome L.",       age:15,done:0,of:12,missStreak:0,never:true,enrolled:new Date(2026,5,12),guardian:"Mrs. Lita Ocampo",gno:"0995 771 0032",no:"0995 771 0033",brgy:"Bagong Silangan"},
+ {id:"r4", name:"Dizon, Angelo B.",        age:16,done:6,of:12,missStreak:1,last:new Date(2026,6,8), guardian:"Mrs. Fe Dizon",     gno:"0917 220 8890",no:"0917 220 8891",brgy:"Commonwealth"},
+ {id:"r5", name:"Aguinaldo, Paolo M.",     age:17,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Ruel Aguinaldo",gno:"0920 114 5567",no:"",brgy:"Batasan Hills"},
+ {id:"r6", name:"Buenaventura, Rey Mark T.",age:16,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Aida Buenaventura",gno:"0939 887 2201",no:"",brgy:"Payatas"},
+ {id:"r7", name:"Castañeda, Jomar L.",     age:15,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Nilo Castañeda",gno:"0917 663 4410",no:"",brgy:"Holy Spirit"},
+ {id:"r8", name:"Dela Peña, Kirby S.",     age:17,done:6,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Susan Dela Peña",gno:"0908 442 7712",no:"",brgy:"Commonwealth"},
+ {id:"r9", name:"Escobar, Nino Fritz D.",  age:16,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Fritz Escobar", gno:"0966 200 3388",no:"",brgy:"Payatas"},
+ {id:"r10",name:"Gonzales, Aljon P.",      age:15,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Ester Gonzales",gno:"0977 551 9902",no:"",brgy:"Batasan Hills"},
+ {id:"r11",name:"Hilario, Dexter R.",      age:17,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Boy Hilario",   gno:"0912 774 6650",no:"",brgy:"Bagong Silangan"},
+ {id:"r12",name:"Lapuz, Christian Jay B.", age:16,done:5,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Rina Lapuz",   gno:"0947 118 2204",no:"",brgy:"Payatas"},
+ {id:"r13",name:"Marasigan, Jethro V.",    age:15,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Elmer Marasigan",gno:"0918 991 0074",no:"",brgy:"Holy Spirit"},
+ {id:"r14",name:"Pagulayan, Ryan Cris M.", age:16,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Dolores Pagulayan",gno:"0929 330 1188",no:"",brgy:"Commonwealth"},
+ {id:"r15",name:"Ventura, Joshua Emmanuel C.",age:17,done:6,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Jun Ventura",gno:"0917 004 5521",no:"",brgy:"Payatas"}
+];
+
+/* S-1 caseload — the arithmetic band is computed, never typed */
+function schedulableBefore(prog,person){
+  return prog.sessions.filter(s=>s.state!=="logged"&&s.at<=prog.expires).length;
+}
+const CASELOAD=[
+ {id:"r1", prog:"pg1"},{id:"r3",prog:"pg1"},{id:"r4",prog:"pg1"},
+ {id:"x1", prog:"pg3",name:"Reyes, Mark Anthony",age:17,done:4,of:10,missStreak:2,last:new Date(2026,6,11),guardian:"Mrs. Delia Reyes",gno:"0917 553 2288",brgy:"Holy Spirit"},
+ {id:"r2", prog:"pg1"},
+ {id:"x2", prog:"pg2",name:"Navarro, Precious Joy A.",age:15,done:6,of:10,missStreak:0,last:new Date(2026,6,17),guardian:"Mrs. Amy Navarro",gno:"0921 448 7710",brgy:"Batasan Hills",tight:true}
+];
+function person(id){return ROSTER.find(r=>r.id===id)||CASELOAD.find(c=>c.id===id);}
+function prog(id){return PROGRAMS.find(p=>p.id===id);}
+
+/* band 3 arithmetic: sessions still required > sessions still schedulable */
+function arithmetic(c){
+  const p=prog(c.prog),pr=Object.assign({},person(c.id),c);
+  const remaining=(pr.of||p.required)-(pr.done||0);
+  const sched=p.sessions.filter(s=>s.state!=="logged").length;
+  return {remaining:remaining,sched:sched,short:remaining-sched,expires:p.expires,prog:p};
+}
+function bandOf(c){
+  const pr=Object.assign({},person(c.id),c);
+  if(pr.never||pr.missStreak>=1)return "follow";
+  const a=arithmetic(c);
+  if(a.short>0)return "short";
+  return "track";
+}
+CASELOAD.forEach(c=>{c.band=bandOf(c);});
+
+/* ============================ state ============================ */
+const S={screen:"s1",q:"",offline:false,loading:true,
+  open:{follow:true,short:true,track:false},info:{},searchOpen:false,
+  s2tab:"sessions",s2prog:"pg1",s4tab:"open",
+  marks:{},bulkMarked:false,notes:{},draft:null,readonly:false,
+  record:null,hash:null,queue:[
+    {t:"Life skills · Session 5",s:"17 Hul 9:00 AM · 11 present · 1 for follow-up",
+     hash:"71bd44a0c39e7f2183ba55d1c7e9048f6a2b31cd90ee7745bb2c8f0a3e6103af",state:"saved",at:"9:58 AM"}],
+  undoTimer:null,committed:false};
+
+/* ============================ nav / toast / sheet ============================ */
+/* One layout: every screen is a full-frame push. Person detail is the bottom
+   sheet — there is no second column to put it in.
+   S-1/S-2/S-4/S-5 are tab roots and keep the bottom bar; the attendance flow
+   (S-3, S-3c) hides it so its own Save / Tapos footer is never buried. */
+const TABROOT={s1:1,s2:1,s4:1,s5:1};
+function show(id){
+  S.screen=id;["s1","s2","s3","s3c","s4","s5"].forEach(x=>$("#"+x).classList.toggle("on",x===id));
+  const sc=$("#"+id+" .scroll");if(sc)sc.scrollTop=0;
+  paintTabs();}
+function paintTabs(){
+  const t=S.screen==="s2"?"s2":S.screen==="s4"?"flags":S.screen==="s5"?"me":"s1";
+  $$(".tab").forEach(b=>{const on=b.dataset.tab===t;
+    b.classList.toggle("on",on);
+    if(on)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
+  $("#tabs").hidden=!TABROOT[S.screen];}
+function goTab(t){
+  if(t==="s1"){renderS1();show("s1");}
+  else if(t==="s2"){S.s2prog="pg1";S.s2tab="sessions";renderS2();show("s2");}
+  else if(t==="flags"){renderS4();show("s4");}
+  else if(t==="me"){renderS5();show("s5");}
+}
+$("#tabs").addEventListener("click",function(e){
+  const b=e.target.closest("[data-tab]");if(!b)return;goTab(b.dataset.tab);
+});
+
+/* ============================ S-5 · account ============================ */
+function renderS5(){
+  const waiting=S.queue.filter(q=>q.state==="saved").length;
+  const rows=[["Office",WORKER.office],["Role","Social Worker II"],["Worker ID",WORKER.id],
+    ["People assigned","44"],["Programmes",String(PROGRAMS.length)],
+    ["Open flags",String(FLAGS.filter(f=>f.state==="open").length)],
+    ["Last sync",S.offline?"7:42 AM · offline":fTime(new Date(NOW.getTime()-40*6e4))]];
+  $("#s5Scroll").innerHTML='<div class="mecard"><div class="meav">AV</div>'
+    +'<div class="grow"><div class="mn">'+esc(WORKER.name)+"</div>"
+    +'<div class="mr">Social Worker II · '+esc(WORKER.office)+"</div></div></div>"
+    +'<div class="note '+(S.offline||waiting?"amber":"info")+'" style="margin-bottom:16px"><span class="g">'
+    +(S.offline||waiting?"⚠":"ⓘ")+"</span><span>"
+    +(S.offline?"Naka-offline. You can still log attendance end to end — "+waiting+" waiting to sync."
+      :waiting?waiting+" logged session"+(waiting>1?"s":"")+" waiting to sync. The receipts were already computed on this phone."
+      :"Naka-sync · every logged session has reached the LSWDO record.")+"</span></div>"
+    +'<div class="rcard">'+rows.map(r=>'<div class="kv"><span class="k">'+esc(r[0])+"</span>"
+      +'<span class="v">'+esc(r[1])+"</span></div>").join("")+"</div>"
+    +'<button class="btn quiet" id="queueBtn" style="margin-bottom:10px">Tingnan ang sync queue · View sync queue</button>'
+    +'<button class="btn quiet" id="signout">Mag-sign out · Sign out</button>'
+    +'<p class="tiny" style="text-align:center;padding:14px 0 0">e-Laya · LSWDO module. '
+    +"Signed in through eGovPH SSO.</p>";
+}
+$("#s5Scroll").addEventListener("click",function(e){
+  if(e.target.closest("#queueBtn")){queueSheet();return;}
+  if(e.target.closest("#signout")){
+    openSheet('<h3>Mag-sign out · Sign out?</h3>'
+      +'<p class="lead">Anything saved on this phone uploads first. Nothing is lost.</p>'
+      +'<button class="opt dz" id="soYes"><span class="g">→</span><span>Sign out</span></button>'
+      +'<button class="opt" id="soNo"><span class="g">↩</span><span>Manatili · Stay signed in</span></button>');
+  }
+});
+document.addEventListener("click",function(e){
+  if(e.target.closest("#soNo")){closeSheet();}
+  if(e.target.closest("#soYes")){closeSheet();toast("Signed out of this prototype.","",null);}
+});
+let toastTimer=null,pendingUndo=null;
+function toast(msg,label,onUndo){
+  clearTimeout(toastTimer);
+  $("#toastMsg").innerHTML=msg;
+  const b=$("#toastAct");b.textContent=label||"I-BALIK ↺";b.hidden=!onUndo;
+  pendingUndo=onUndo||null;
+  const t=$("#toast");t.classList.remove("on");void t.offsetWidth;t.classList.add("on");
+  toastTimer=setTimeout(()=>{t.classList.remove("on");if(pendingUndo)commitAfterUndo();pendingUndo=null;},12000);
+}
+function hideToast(){clearTimeout(toastTimer);$("#toast").classList.remove("on");pendingUndo=null;}
+$("#toastAct").onclick=()=>{const f=pendingUndo;pendingUndo=null;hideToast();if(f)f();};
+let commitAfterUndo=()=>{};
+function openSheet(html){$("#sheet").innerHTML='<div class="grab"></div>'+html;$("#sheet").classList.add("on");$("#scrim").classList.add("on");}
+function closeSheet(){$("#sheet").classList.remove("on");$("#scrim").classList.remove("on");}
+$("#scrim").onclick=closeSheet;
+
+/* ============================ S-1 ============================ */
+function rowFor(c){
+  const pr=Object.assign({},person(c.id),c),p=prog(c.prog);
+  const chips=[];
+  let rail="quiet";
+  if(c.band==="follow"){
+    rail="warn";
+    if(pr.never)chips.push(["amber","Never attended"],["","Enrolled "+fDate(pr.enrolled||new Date(2026,5,12))]);
+    else{chips.push(["amber",pr.missStreak+" missed in a row"]);
+      chips.push(["","Last seen "+Math.round((NOW-pr.last)/864e5)+" days"]);}
+  }else if(c.band==="short"){
+    rail="warn";
+    const a=arithmetic(c);
+    chips.push(["amber","Needs "+a.short+" make-up"+(a.short>1?"s":"")+" before "+fDate(a.expires).replace(" 2026","")]);
+  }else{
+    rail="quiet";chips.push(["slate",(pr.done||0)+" of "+(pr.of||p.required)+" sessions"]);
+  }
+  const sub=c.band==="short"
+    ? p.name+" · "+(pr.done||0)+" of "+(pr.of||p.required)+" sessions done"
+    : p.name+" · "+p.group;
+  return '<button class="row pro card1" type="button" data-person="'+c.id+'" data-prog="'+c.prog+'">'
+    +'<span class="rail '+rail+'"></span>'
+    +'<span class="pbody"><span class="pt">'+esc(pr.name)+' <span class="age">· '+pr.age+"</span></span>"
+    +'<span class="ps">'+esc(sub)+"</span>"
+    +'<span class="pm'+(chips.length>1?" multi":"")+'">'
+      +chips.map(x=>'<span class="mchip '+x[0]+'">'+esc(x[1])+"</span>").join("")
+      +(chips.length>1?'<span class="mchip plus">+'+(chips.length-1)+"</span>":"")+"</span></span>"
+    +'<span class="pchev">›</span></button>';
+}
+function renderS1(){
+  const el=$("#s1Scroll");
+  if(S.loading){
+    el.innerHTML='<div class="sk" style="height:118px;border-radius:10px;margin-bottom:20px"></div>'
+      +'<div class="sk line" style="width:55%"></div>'
+      +Array(4).fill('<div class="sk" style="height:78px;border-radius:10px;margin-bottom:8px"></div>').join("");
+    return;
+  }
+  const p=prog("pg1"),s9=p.sessions.find(s=>s.n===9);
+  const logged=s9.state==="logged";
+  let h="";
+  if(S.searchOpen){
+    h+='<div class="search"><input id="q" type="search" placeholder="Search name or programme" value="'+esc(S.q)+'" autocomplete="off"><span class="mag">⚲</span></div>';
+  }
+  /* TODAY — a strip, not a card */
+  const venue=esc(p.venue.split(",")[0])+" · 15 enrolled";
+  if(logged){
+    h+='<div class="today"><div class="kick">Ngayon · 2:00 PM</div>'
+      +'<div class="pname">'+p.name+" · "+p.group+"</div>"
+      +'<div class="vline"><span class="ps">'+venue+'</span>'
+      +'<button class="vlink" data-go2="s2">Receipt ›</button></div>'
+      +'<div class="note ok" style="margin-top:10px;background:var(--success-surface);border:1px solid var(--success-border);color:var(--success)">'
+      +'<span class="g">'+SHIELD+'</span><span>Naitala · '+fTime(NOW)+" · "+s9.present+" present · "+s9.follow+" for follow-up</span></div></div>";
+  }else{
+    h+='<div class="today"><div class="kick">Ngayon · 2:00 PM</div>'
+      +'<div class="pname">'+p.name+" · "+p.group+"</div>"
+      +'<div class="vline"><span class="ps">'+venue+'</span>'
+      +'<button class="vlink" data-go2="s2">Roster ›</button></div>'
+      +'<button class="btn" id="goLog">Log attendance</button></div>';
+  }
+  const q=S.q.trim().toLowerCase();
+  const filt=c=>{const pr=Object.assign({},person(c.id),c);
+    return !q||pr.name.toLowerCase().includes(q)||prog(c.prog).name.toLowerCase().includes(q);};
+
+  /* ALERT BANDS — content starts here, immediately */
+  const shortList=CASELOAD.filter(c=>c.band==="short"&&filt(c));
+  if(shortList.length){
+    const a=arithmetic(shortList[0]);
+    h+='<div class="band" id="band-short"><div class="bandh2">'
+      +'<span class="warnico" aria-hidden="true">⚠</span>'
+      +'<span class="bt">Hindi matatapos sa iskedyul</span><span class="cpill2">'+shortList.length+'</span>'
+      +'<button class="infobtn" data-info="short" aria-expanded="'+!!S.info.short+'" aria-label="Explain this band">ⓘ</button></div>'
+      +'<div class="bandsub1">Perpekto ang attendance; kulang ang iskedyul.</div>'
+      +(S.info.short?'<div class="bandxp">Won\'t finish on this schedule — '+a.remaining+" sessions still required, only "+a.sched
+        +" left on the calendar before the order lapses. Attendance is perfect; the schedule is short.</div>":"")
+      +shortList.map(rowFor).join("")+"</div>";
+  }
+  const followList=CASELOAD.filter(c=>c.band==="follow"&&filt(c));
+  if(followList.length){
+    h+='<div class="band" id="band-follow"><div class="bandh2">'
+      +'<span class="bt">Kailangan ng follow-up</span><span class="cpill2">'+followList.length+'</span></div>'
+      +'<div class="bandsub1">A missed session is a support trigger, not a violation.</div>'
+      +followList.map(rowFor).join("")+"</div>";
+  }
+  if(!shortList.length&&!followList.length&&q){
+    h+='<div class="band"><p style="font-size:14px;color:var(--muted);padding:4px 2px">No one matches “'
+      +esc(S.q.trim())+'”. Try a programme name.</p><button class="linkbtn" id="clearQ">Clear search</button></div>';
+  }
+  /* QUIET — collapsed one-liner */
+  h+='<div class="band" id="band-track" style="margin-bottom:0">'
+    +'<button class="quietrow" data-band="track" aria-expanded="'+S.open.track+'">'
+    +'<span>Nasa tamang landas</span><span class="cpill2">38</span><span class="pchev">'+(S.open.track?"⌄":"›")+"</span></button>";
+  if(S.open.track){
+    h+='<div style="margin-top:8px">'+ROSTER.slice(4,10).map(r=>'<button class="row pro card1" type="button" data-person="'+r.id+'" data-prog="pg1">'
+      +'<span class="rail quiet"></span><span class="pbody"><span class="pt">'+esc(r.name)+' <span class="age">· '+r.age+'</span></span>'
+      +'<span class="ps">Anger management · Group B</span>'
+      +'<span class="pm"><span class="mchip slate">'+r.done+' of 12 sessions</span></span></span><span class="pchev">›</span></button>').join("")
+      +'<div class="tiny" style="padding:0 2px 4px">… 32 more</div></div>';
+  }
+  h+="</div>";
+  /* SUSUNOD — one-line row at the very bottom */
+  h+='<div class="nextsec"><div class="bandh2"><span class="bt">Susunod</span></div>'
+    +'<button class="nextrow" data-go2="s2b"><span class="nt">Life skills · Group A · Biy 24 Hul, 9:00 AM</span>'
+    +'<span class="pchev">›</span></button></div>';
+  h+='<p class="tiny" style="text-align:center;padding:12px 0 8px">44 people assigned · LSWDO Quezon City<br>Bands are computed on this device. Last sync '
+    +(S.offline?"7:42 AM — offline":fTime(new Date(NOW.getTime()-40*6e4)))+"</p>";
+  el.innerHTML=h;
+}
+
+/* ============================ S-2 ============================ */
+function renderS2(){
+  const p=prog(S.s2prog);
+  $("#s2Title").textContent=p.name;
+  $$(".utab[data-tab]").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.tab===S.s2tab)));
+  let h='<div class="hcard"><h2>'+esc(p.name)+" · "+esc(p.group)+"</h2>"
+    +'<div class="ps">'+esc(p.venue)+"</div>"
+    +'<div class="ord">Court order '+p.order+" · expires "+fDate(p.expires)+"</div>"
+    +'<div class="prog"><span class="bar2"><i style="width:'+Math.round(p.held/p.required*100)+'%"></i></span>'
+    +'<span class="pct">'+p.held+" of "+p.required+"</span></div>"
+    +'<div class="tiny" style="margin-top:8px">15 enrolled · '+p.avg+"% average attendance · "+p.sessions.filter(s=>s.state!=="logged").length
+    +" sessions left on the calendar</div></div>";
+
+  if(S.s2tab==="sessions"){
+    const up=p.sessions.filter(s=>s.state!=="logged").sort((a,b)=>a.at-b.at);
+    const lg=p.sessions.filter(s=>s.state==="logged").sort((a,b)=>b.at-a.at);
+    h+='<div class="band"><div class="bandh"><span>SUSUNOD · UPCOMING</span></div><div class="bandcard">';
+    h+=up.map(s=>{
+      const today=Math.round((s.at-NOW)/864e5)===0||(s.at.toDateString()===NOW.toDateString());
+      return '<button class="row pro" type="button" data-session="'+s.n+'">'
+      +'<span class="rail '+(today?"pri":"quiet")+'"></span>'
+      +'<span class="pbody"><span class="pt">Session '+s.n+(today?" · Ngayon":"")+"</span>"
+      +'<span class="ps">'+fShort(s.at)+" · "+fTime(s.at)+"–"+s.end+"</span>"
+      +'<span class="pm">'+(today?'<span class="mchip amber">Not yet logged</span>':'<span class="mchip slate">Scheduled</span>')+"</span></span>"
+      +(today?'<span class="btn sm" style="align-self:center;pointer-events:none">Log attendance</span>':'<span class="pchev">›</span>')
+      +"</button>";}).join("");
+    h+="</div></div>";
+    h+='<div class="band"><div class="bandh"><span>NAITALA NA · LOGGED</span></div><div class="bandcard">'
+      +lg.map(s=>'<button class="row pro" type="button" data-receipt="'+s.hash+'">'
+        +'<span class="rail quiet"></span><span class="pbody"><span class="pt">Session '+s.n+"</span>"
+        +'<span class="ps">'+fShort(s.at)+" · "+s.present+" present"+(s.follow?" · "+s.follow+" for follow-up":"")+"</span>"
+        +'<span class="pm"><span class="mchip slate mono">'+SHIELD+" Receipt "+shortHash(s.hash)+"</span></span></span>"
+        +'<span class="pchev">›</span></button>').join("")+"</div></div>";
+    h+='<p class="tiny">Every logged session carries a receipt computed on the phone that logged it. Tapping a receipt re-computes it here, offline.</p>';
+  }else{
+    h+='<div class="fchips"><button class="fchip" aria-pressed="true">All 15</button>'
+      +'<button class="fchip" aria-pressed="false">Follow-up 3</button>'
+      +'<button class="fchip" aria-pressed="false">Won\'t finish 1</button>'
+      +'<button class="fchip" aria-pressed="false">Complete 0</button></div>';
+    h+='<div class="bandcard">'+ROSTER.map(r=>{
+      const pctv=Math.round(r.done/r.of*100);
+      const chip=r.never?["amber","Never attended"]:r.missStreak>=1?["amber",r.missStreak+" missed in a row"]
+        :r.tight?["amber","Needs 2 make-ups"]:["slate","On track"];
+      return '<button class="row pro" type="button" data-person="'+r.id+'" data-prog="pg1">'
+        +'<span class="rail '+(r.never||r.missStreak||r.tight?"warn":"quiet")+'"></span>'
+        +'<span class="pbody"><span class="pt">'+esc(r.name)+' <span class="age">· '+r.age+'</span></span>'
+        +'<span class="ps">'+r.done+" of "+r.of+" sessions"+(r.never?" · enrolled "+fDate(r.enrolled):" · last attended "+fDate(r.last))+"</span>"
+        +'<span class="pm"><span class="bar2 w72"><i style="width:'+pctv+'%"></i></span><span class="pct">'+pctv+"%</span>"
+        +'<span class="mchip '+chip[0]+'">'+chip[1]+"</span></span></span>"
+        +'<span class="pchev">›</span></button>';}).join("")+"</div>"
+      +'<p class="tiny">Under 50% the bar stays blue. The number carries the meaning; the colour does not judge.</p>';
+  }
+  $("#s2Scroll").innerHTML=h;
+}
+
+/* ============================ S-3 ============================ */
+function marked(){return Object.keys(S.marks).length;}
+function presentCount(){return Object.values(S.marks).filter(v=>v!=="missed").length;}
+function missedCount(){return Object.values(S.marks).filter(v=>v==="missed").length;}
+function renderS3(){
+  const p=prog("pg1"),s=p.sessions.find(x=>x.n===9);
+  $("#s3L1").textContent=p.name+" · "+p.group+" · Session "+s.n;
+  $("#s3L2").textContent=fShort(s.at)+" 2026 · "+fTime(s.at)+" · "+p.venue;
+  const n=marked(),total=ROSTER.length;
+  let h='<div class="counter"><div class="n" aria-live="polite">'+n+' <span>/ '+total+' marked</span></div>'
+    +'<div class="cbar"><i style="width:'+(n/total*100)+'%"></i></div></div>';
+  if(S.draft)h+='<div class="note amber" style="margin-bottom:12px"><span class="g">⚠</span><span>Draft from '
+    +S.draft.at+" — "+S.draft.n+" of 15 marked. Restored on this phone.</span></div>";
+  if(S.readonly)h+='<div class="note info" style="margin-bottom:12px"><span class="g">ⓘ</span><span>Logged 15 Jul, 4:07 PM by Ms. A. Villanueva. This roster is read-only.</span></div>';
+  h+='<div class="bandcard" id="rosterCard">';
+  h+='<button class="bulkrow" id="markAll" type="button">'
+    +(S.bulkMarked?'<span>✓✓ All marked present</span><span class="x" id="clearAll">Alisin ✕</span>'
+      :'<span>✓✓ Lahat present · Mark all</span><span class="x">1 tap · 15 tao</span>')+"</button>";
+  ROSTER.forEach(r=>{
+    const m=S.marks[r.id];
+    const sub=m==="missed"?'<span style="color:var(--text);font-weight:500">Kailangan ng follow-up</span>'
+      :m==="late"?"Huli · "+(S.notes[r.id]||"20 min late")
+      :m==="excused"?"May dahilan · "+(S.notes[r.id]||"may sakit")
+      :m==="left"?"Umalis nang maaga · "+(S.notes[r.id]||"3:10 PM")
+      :(r.never?"0 of 12 · never attended":r.done+" of 12"+(r.missStreak?" · missed last "+r.missStreak:""));
+    const mod=(m==="late"||m==="excused"||m==="left");
+    h+='<div class="srow" data-p="'+r.id+'" data-mark="'+(m||"")+'">'
+      +'<div class="swbg"><span class="l">✓ Present</span><span class="r">Follow-up —</span></div>'
+      +'<div class="srowin"><div class="av">'+esc(initials(r.name))+"</div>"
+      +'<div class="pbody"><div class="pt">'+esc(r.name)+' <span class="age">· '+r.age+"</span></div>"
+      +'<div class="ps">'+sub+"</div></div>"
+      +'<div class="tg" role="radiogroup" aria-label="'+esc(r.name)+' attendance">'
+      +'<button class="tgb" role="radio" data-set="present" data-p="'+r.id+'" aria-checked="'+(!!m&&m!=="missed")+'" aria-label="Present">✓'
+      +(mod?'<span class="cdot"></span>':"")+"</button>"
+      +'<button class="tgb" role="radio" data-set="missed" data-p="'+r.id+'" aria-checked="'+(m==="missed")+'" aria-label="Missed">—</button>'
+      +"</div></div></div>";
+  });
+  h+='<button class="walkin" type="button" id="walkin"><span style="font-size:20px">＋</span> Magdagdag ng kalahok · Add participant</button>';
+  h+="</div>";
+  h+='<p class="tiny" style="padding:10px 2px">Swipe right = present · swipe left = follow-up · press and hold a row for Huli, May dahilan, Umalis nang maaga.</p>';
+  $("#s3Scroll").innerHTML=h;
+
+  const save=$("#s3Save"),sum=$("#s3Sum");
+  const all=n===total;
+  save.disabled=!all||S.readonly;
+  save.classList.toggle("off",!all);
+  save.textContent=all?"I-save ang attendance · Save":"Mark everyone first";
+  sum.hidden=!all;
+  if(all)sum.textContent=presentCount()+" present · "+missedCount()+" for follow-up";
+}
+function setMark(id,v){
+  if(S.readonly)return;
+  if(S.marks[id]===v&&v!=="present")delete S.marks[id];else S.marks[id]=v;
+  renderS3();
+}
+function markAll(){
+  const before=Object.assign({},S.marks),wasBulk=S.bulkMarked;
+  ROSTER.forEach(r=>{S.marks[r.id]="present";});
+  S.bulkMarked=true;renderS3();
+  toast("Lahat present · 15 marked present. This is recorded as one deliberate act.","I-BALIK ↺",
+    ()=>{S.marks=before;S.bulkMarked=wasBulk;renderS3();toast("Undone — the roster is unmarked again.","",null);});
+}
+
+/* swipe + long-press */
+(function(){
+  let sx=0,sy=0,id=null,el=null,drag=false,lp=null,moved=false;
+  const scroll=$("#s3Scroll");
+  scroll.addEventListener("pointerdown",function(e){
+    const row=e.target.closest(".srow");if(!row||e.target.closest(".tgb"))return;
+    id=row.dataset.p;el=row;sx=e.clientX;sy=e.clientY;drag=false;moved=false;
+    lp=setTimeout(()=>{nuanceSheet(id);if(navigator.vibrate)navigator.vibrate(10);id=null;},430);
+  });
+  scroll.addEventListener("pointermove",function(e){
+    if(!id||!el)return;
+    const dx=e.clientX-sx,dy=e.clientY-sy;
+    if(Math.abs(dy)>14&&!drag){clearTimeout(lp);id=null;return;}
+    if(Math.abs(dx)>8){clearTimeout(lp);drag=true;moved=true;
+      const inner=el.querySelector(".srowin");
+      inner.style.transform="translateX("+Math.max(-140,Math.min(140,dx))+"px)";
+      el.dataset.drag=dx>0?"r":"l";
+      if(Math.abs(dx)>el.offsetWidth*0.6){commit(dx>0?"present":"missed");}
+    }
+  });
+  function commit(v){
+    if(!el||!id)return;
+    const inner=el.querySelector(".srowin");
+    inner.style.transition="transform .18s ease";inner.style.transform="";
+    el.dataset.drag="";
+    const pid=id;id=null;drag=false;
+    setTimeout(()=>{setMark(pid,v);},60);
+  }
+  scroll.addEventListener("pointerup",function(e){
+    clearTimeout(lp);
+    if(!id||!el){if(el){const i=el.querySelector(".srowin");if(i){i.style.transition="transform .2s ease";i.style.transform="";}el.dataset.drag="";}el=null;return;}
+    const dx=e.clientX-sx;
+    if(drag&&Math.abs(dx)>el.offsetWidth*0.25)commit(dx>0?"present":"missed");
+    else{const i=el.querySelector(".srowin");i.style.transition="transform .2s ease";i.style.transform="";el.dataset.drag="";id=null;}
+    el=null;
+  });
+  scroll.addEventListener("pointercancel",()=>{clearTimeout(lp);if(el){const i=el.querySelector(".srowin");i.style.transform="";el.dataset.drag="";}id=null;el=null;});
+})();
+function nuanceSheet(id){
+  const r=ROSTER.find(x=>x.id===id);if(!r)return;
+  openSheet('<h3>'+esc(r.name)+'</h3><p class="lead">Beyond present and missed. These keep the binary binary.</p>'
+    +'<button class="opt" data-nu="late" data-p="'+id+'"><span class="g">◔</span><span>Huli · Late<span class="sub">Counts as attended, with the minutes noted</span></span></button>'
+    +'<button class="opt" data-nu="excused" data-p="'+id+'"><span class="g">✎</span><span>May dahilan · Excused<span class="sub">Does not count as a missed session</span></span></button>'
+    +'<button class="opt" data-nu="left" data-p="'+id+'"><span class="g">→</span><span>Umalis nang maaga · Left early</span></button>'
+    +'<button class="opt" data-nu="note" data-p="'+id+'"><span class="g">✚</span><span>Add a note</span></button>');
+}
+
+/* ---- save ---- */
+async function saveAttendance(){
+  const p=prog("pg1"),s=p.sessions.find(x=>x.n===9);
+  const btn=$("#s3Save");btn.disabled=true;btn.textContent="Saving…";
+  const record={
+    session:{programme:p.name,group:p.group,session_number:s.n,
+      scheduled_at:s.at.toISOString(),venue:p.venue,court_order:p.order},
+    logged_by:{name:WORKER.name,office:WORKER.office,user_id:WORKER.id},
+    logged_at:new Date(NOW.getTime()+2*6e4).toISOString(),
+    bulk_marked:S.bulkMarked,
+    attendance:ROSTER.map(r=>{
+      const o={person_id:r.id,name:r.name,status:S.marks[r.id]||"unmarked"};
+      if(S.notes[r.id])o.note=S.notes[r.id];
+      return o;}),
+    totals:{present:presentCount(),follow_up:missedCount(),enrolled:ROSTER.length}
+  };
+  const payload=canonical(record);
+  const hash=await sha256(payload);
+  S.record=record;S.payload=payload;S.hash=hash;S.committed=false;
+  /* the receipt exists before any server sees it — the upload is a separate, later fact */
+  S.synced=!S.offline&&(await api("/api/sso"))!==null;
+  S.queue.unshift({t:p.name+" · Session "+s.n,
+    s:fShort(s.at)+" "+fTime(s.at)+" · "+presentCount()+" present · "+missedCount()+" for follow-up",
+    hash:hash,state:S.synced?"synced":"saved",at:fTime(new Date(NOW.getTime()+2*6e4))});
+  s.state="logged";s.present=presentCount();s.follow=missedCount();s.hash=hash;
+  p.held=p.required-p.sessions.filter(x=>x.state!=="logged").length;
+  renderConfirm();show("s3c");
+  commitAfterUndo=()=>{S.committed=true;};
+  toast("Naitala na · Attendance saved."+(S.offline?" Nakasave sa telepono.":""),"I-BALIK ↺",()=>{
+    /* true local rollback inside the window */
+    s.state="today";delete s.present;delete s.follow;delete s.hash;
+    S.queue.shift();S.record=null;S.hash=null;
+    renderS3();show("s3");renderS1();
+    toast("Ibinalik · nothing was saved. Your marks are exactly as you left them.","",null);
+  });
+  ROSTER.forEach(r=>{if(S.marks[r.id]==="missed"){
+    api("/api/sms",{numbers:[r.gno.replace(/\s/g,"")],
+      message:"e-Laya: Hindi po nakadalo si "+r.name.split(",")[1].trim()+" sa sesyon ngayong "+fShort(s.at)
+      +". Makipag-ugnayan po sa LSWDO QC. Salamat."});}});
+  renderS1();
+}
+
+function renderConfirm(){
+  const p=prog("pg1"),s=p.sessions.find(x=>x.n===9);
+  const fu=ROSTER.filter(r=>S.marks[r.id]==="missed");
+  let h='<div class="okmark">'+SHIELD_BIG+"</div>"
+    +'<h3 style="text-align:center;font-size:20px">Naitala na · Attendance saved</h3>'
+    +'<p style="text-align:center;font-size:14px;color:var(--muted);margin-top:4px">'+p.name+" · "+p.group+" · Session "+s.n+"</p>"
+    +'<div class="figs"><div class="fig"><span class="n" style="color:var(--primary)">'+presentCount()+'</span><span class="l">Present</span></div>'
+    +'<div class="fig"><span class="n">'+missedCount()+'</span><span class="l">Follow-up</span></div>'
+    +'<div class="fig"><span class="n" style="color:var(--muted)">'+ROSTER.length+'</span><span class="l">Enrolled</span></div></div>';
+
+  /* the follow-ups sit ABOVE the cryptography, on purpose */
+  if(fu.length){
+    h+='<div class="bandh"><span>'+(fu.length===1?"ISANG FOLLOW-UP":fu.length===2?"DALAWANG FOLLOW-UP":fu.length+" FOLLOW-UP")
+      +" · "+fu.length+(fu.length===1?" FOLLOW-UP CREATED":" FOLLOW-UPS CREATED")+"</span></div>"
+      +'<div class="bandcard" style="margin-bottom:20px">';
+    fu.forEach(r=>{
+      h+='<div class="fu"><span class="rail"></span><div class="grow" style="min-width:0">'
+        +'<div class="pt">'+esc(r.name)+' <span class="age">· '+r.age+"</span></div>"
+        +'<div class="ps">'+(r.never?"Never attended since enrolling "+fDate(r.enrolled)
+          :(r.missStreak+1)+"th missed session")+" · guardian notified</div>"
+        +'<div class="ps" style="color:var(--faint)">'+esc(r.guardian)+" · "+esc(r.gno)+"</div>"
+        +'<div class="acts"><a class="btn ghost sm" href="tel:'+r.gno.replace(/\s/g,"")+'">Tawag</a>'
+        +'<button class="btn ghost sm" data-sms="'+r.id+'">SMS</button>'
+        +'<button class="btn ghost sm" data-logc="'+r.id+'">Log contact</button></div></div></div>';
+    });
+    h+="</div>";
+  }else{
+    h+='<div class="note info" style="margin-bottom:20px"><span class="g">ⓘ</span><span>Buong grupo ay dumalo · everyone attended. No follow-up was created.</span></div>';
+  }
+
+  /* the receipt */
+  h+='<div class="bandh"><span>RESIBO NG PAGTATALA · INTEGRITY RECEIPT</span></div>'
+    +'<div class="rcard"><div class="seclabel">SHA-256</div>'
+    +'<div class="hashline"><span class="hash">'+groupHash(S.hash||"")+"</span>"
+    +'<button class="copy" id="copyHash" aria-label="Copy the full 64 characters">⧉</button></div>'
+    +"<p>Computed on this phone at "+fTime(new Date(NOW.getTime()+2*6e4))+" from the session record, in canonical JSON.</p>"
+    +"<p>Anyone holding the same session record can recompute this and get the same 64 characters. "
+    +"If one attendance mark changes, the receipt changes. That is what it proves.</p>"
+    +'<div class="note info" style="margin-top:12px"><span class="g">ⓘ</span><span>This is not written to a blockchain. '
+    +"The eGovChain node is read-only.</span></div>"
+    +'<div class="tert"><button class="btn quiet" id="showFull">Show full</button>'
+    +'<button class="btn quiet" id="verify">Verify this</button></div></div>';
+  h+='<p class="tiny">'+(S.offline
+      ?"Nakasave sa telepono · Saved on this phone. It uploads by itself when you have a signal — the receipt was already computed here, so it cannot change when it uploads."
+      :S.synced?"Synced · the server computed the same receipt."
+      :"Nakasave sa telepono · Saved on this phone. Could not upload yet — it will retry by itself. Nothing was lost.")
+    +"</p>";
+  $("#s3cScroll").innerHTML=h;
+}
+
+/* ============================ S-4 ============================ */
+const FLAGS=[
+ {id:"f1",pid:"r1",prog:"Anger management · Group B",why:"4 missed in a row · last seen 19 days ago",
+  log:["SMS to Renz — 15 Jul, 4:07 PM","SMS to guardian (Mrs. Bautista) — 15 Jul","Flag raised to LSWDO — 15 Jul"],state:"open"},
+ {id:"f2",pid:"r3",prog:"Anger management · Group B",why:"Never attended since enrolling 12 Jun",
+  log:["SMS to guardian (Mrs. Ocampo) — 20 Jun","Home visit attempted — 03 Jul, nobody home","Flag raised to LSWDO — 04 Jul"],state:"open"},
+ {id:"f3",pid:"r4",prog:"Anger management · Group B",why:"1 missed · last seen 14 days ago",
+  log:["SMS to Angelo — 09 Jul, 5:12 PM"],state:"open"}
+];
+function renderS4(){
+  $$(".utab[data-ftab]").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.ftab===S.s4tab)));
+  let h='<div class="note info" style="margin-bottom:16px"><span class="g">ⓘ</span>'
+    +"<span>Ang flag ay hudyat para sa follow-up, hindi parusa.<br>A flag is a prompt to follow up, not a penalty.</span></div>";
+  if(S.s4tab==="closed"){
+    h+='<div class="empty" style="padding-top:40px"><div class="ic">'+SHIELD_BIG+"</div><h3>24 na saradong flag · 24 closed</h3>"
+      +'<p style="max-width:300px;margin:8px auto 0">Every closure carries a reason. Fare (9) · Work (6) · Illness (4) · No companion (3) · Moved away (2). '
+      +"That list is the only data that ever explains why people stop coming.</p></div>";
+    $("#s4Scroll").innerHTML=h;return;
+  }
+  if(S.s4tab==="watch"){
+    h+='<div class="empty" style="padding-top:40px"><div class="ic">◔</div><h3>3 sinusubaybayan</h3>'
+      +'<p style="max-width:300px;margin:8px auto 0">Contact was made and a return was agreed. These re-open by themselves if the next session is missed.</p></div>';
+    $("#s4Scroll").innerHTML=h;return;
+  }
+  const open=FLAGS.filter(f=>f.state==="open");
+  if(!open.length){
+    h+='<div class="empty" style="padding-top:40px"><div class="ic" style="color:var(--success)">'+SHIELD_BIG+"</div>"
+      +"<h3>Walang bukas na flag · No open flags.</h3>"
+      +'<p style="max-width:300px;margin:8px auto 0">Everyone on your caseload attended their last session. 38 people on track.</p></div>';
+  }
+  open.forEach(f=>{
+    const r=ROSTER.find(x=>x.id===f.pid)||{};
+    h+='<div class="flagcard"><div class="flagbody"><span class="rail"></span>'
+      +'<div class="grow" style="min-width:0"><div style="display:flex;gap:12px;align-items:center">'
+      +'<div class="av">'+esc(initials(r.name||""))+'</div><div class="grow" style="min-width:0">'
+      +'<div class="pt">'+esc(r.name)+' <span class="age">· '+r.age+"</span></div>"
+      +'<div class="ps">'+esc(f.prog)+"</div></div></div>"
+      +'<div class="ps" style="margin-top:8px;white-space:normal;color:var(--text)">'+esc(f.why)+"</div>"
+      +'<div class="plog"><div class="h">Nauna nang ginawa · Already done</div>'
+      +f.log.map(l=>'<div class="e"><i>✓</i> '+esc(l)+"</div>").join("")+"</div>"
+      +'<div class="facts"><a class="btn ghost sm" href="tel:'+(r.gno||"").replace(/\s/g,"")+'">Tawag</a>'
+      +'<button class="btn ghost sm" data-sms="'+f.pid+'">SMS</button>'
+      +'<button class="btn sm" data-close="'+f.id+'">Itala ang follow-up</button></div>'
+      +"</div></div></div>";
+  });
+  h+='<p class="tiny">Flags are raised by the rules on S-1 and closed with a reason. Snoozing is available from a long press — suppressing a prompt you have understood is different from ignoring it.</p>';
+  $("#s4Scroll").innerHTML=h;
+}
+
+/* ============================ events ============================ */
+document.addEventListener("click",function(e){
+  const t=e.target;
+  const go=t.closest("[data-go]");if(go){show(go.dataset.go);return;}
+  const go2=t.closest("[data-go2]");
+  if(go2){if(go2.dataset.go2==="s2b")S.s2prog="pg2";else S.s2prog="pg1";S.s2tab="sessions";renderS2();show("s2");return;}
+  if(t.id==="goLog"||t.closest("#goLog")){S.s2prog="pg1";renderS3();show("s3");return;}
+  const ib=t.closest("[data-info]");
+  if(ib){S.info[ib.dataset.info]=!S.info[ib.dataset.info];renderS1();return;}
+  const bh=t.closest("[data-band]");if(bh){S.open[bh.dataset.band]=!S.open[bh.dataset.band];renderS1();return;}
+  if(t.id==="clearQ"){S.q="";renderS1();return;}
+  const tab=t.closest("[data-tab]");if(tab){S.s2tab=tab.dataset.tab;renderS2();return;}
+  const ftab=t.closest("[data-ftab]");if(ftab){S.s4tab=ftab.dataset.ftab;renderS4();return;}
+  const ses=t.closest("[data-session]");if(ses){renderS3();show("s3");return;}
+  const rc=t.closest("[data-receipt]");if(rc){receiptSheet(rc.dataset.receipt);return;}
+  const pp=t.closest("[data-person]");if(pp){personSheet(pp.dataset.person);return;}
+  const tgb=t.closest(".tgb");if(tgb){setMark(tgb.dataset.p,tgb.dataset.set);return;}
+  if(t.closest("#clearAll")){S.marks={};S.bulkMarked=false;renderS3();return;}
+  if(t.closest("#markAll")){markAll();return;}
+  if(t.id==="walkin"||t.closest("#walkin")){walkinSheet();return;}
+  const nu=t.closest("[data-nu]");
+  if(nu){const v=nu.dataset.nu,id=nu.dataset.p;closeSheet();
+    if(v==="note"){S.marks[id]=S.marks[id]||"present";S.notes[id]="note recorded";renderS3();toast("Note added to this person's record.","",null);}
+    else{S.marks[id]=v;renderS3();}
+    return;}
+  const sms=t.closest("[data-sms]");
+  if(sms){const r=ROSTER.find(x=>x.id===sms.dataset.sms);smsSend(r);return;}
+  const lc=t.closest("[data-logc]");if(lc){logContactSheet(lc.dataset.logc);return;}
+  const cf=t.closest("[data-close]");if(cf){closeFlagSheet(cf.dataset.close);return;}
+  const oc=t.closest("[data-outcome]");
+  if(oc){const v=oc.dataset.outcome;closeSheet();
+    if(v==="barrier"){setTimeout(()=>barrierSheet(),220);return;}
+    finishFlag(v);return;}
+  const br=t.closest("[data-barrier]");if(br){closeSheet();finishFlag("barrier:"+br.dataset.barrier);return;}
+  if(t.id==="copyHash"){copy(S.hash||"");toast("All 64 characters copied.","",null);return;}
+  if(t.id==="showFull"){fullSheet();return;}
+  if(t.id==="verify"){verifySheet();return;}
+});
+$("#s1Scroll").addEventListener("input",function(e){
+  if(e.target.id==="q"){S.q=e.target.value;const pos=e.target.selectionStart;renderS1();
+    const q=$("#q");if(q){q.focus();q.setSelectionRange(pos,pos);}}
+});
+$("#s3Save").onclick=saveAttendance;
+$("#s3cDone").onclick=$("#s3cDone2").onclick=function(){hideToast();S.committed=true;renderS1();renderS2();show("s1");};
+$("#toFlags").onclick=()=>{renderS4();show("s4");};
+$("#s1Search").onclick=function(){
+  S.searchOpen=!S.searchOpen;
+  if(!S.searchOpen)S.q="";
+  this.setAttribute("aria-expanded",String(S.searchOpen));
+  renderS1();
+  if(S.searchOpen){const q=$("#q");if(q)q.focus();}
+};
+$("#s3Close").onclick=function(){
+  const n=marked();
+  if(!n||S.readonly){show("s1");return;}
+  if(n===ROSTER.length){show("s1");return;}
+  openSheet('<h3>You’ve marked '+n+' of '+ROSTER.length+'. Leave without saving?</h3>'
+    +'<p class="lead">Nothing has been recorded yet. A draft restores exactly as it is now.</p>'
+    +'<button class="opt" id="keep"><span class="g">↩</span><span>Keep marking</span></button>'
+    +'<button class="opt" id="draft"><span class="g">▤</span><span>Save as draft<span class="sub">Restores on this phone the next time you open the session</span></span></button>'
+    +'<button class="opt dz" id="discard"><span class="g">✕</span><span>Discard</span></button>');
+};
+document.addEventListener("click",function(e){
+  if(e.target.closest("#keep")){closeSheet();}
+  if(e.target.closest("#draft")){S.draft={n:marked(),at:fTime(NOW)};closeSheet();show("s1");
+    toast("Draft saved on this phone — "+S.draft.n+" of 15 marked.","",null);}
+  if(e.target.closest("#discard")){S.marks={};S.bulkMarked=false;S.draft=null;closeSheet();renderS3();show("s1");
+    toast("Marks discarded. Nothing was recorded.","",null);}
+});
+
+/* sheets */
+/* one source of truth for the person copy — the bottom sheet is its only
+   composition. */
+function personParts(id){
+  const r=person(id);if(!r)return null;
+  const c=CASELOAD.find(x=>x.id===id);
+  const p=prog(c?c.prog:"pg1");
+  const a=c?arithmetic(c):null;
+  const warn=!!(r.never||r.missStreak||r.tight);
+  return {r:r,p:p,a:a,warn:warn,
+    meta:esc(p.name+" · "+p.group)+" · Brgy. "+esc(r.brgy||"Payatas"),
+    explain:(r.never?"Never attended since enrolling "+fDate(r.enrolled)+". Zero attendance has no pattern to break, so a streak rule would never fire — this person is flagged from day one."
+      :r.missStreak?r.missStreak+" missed sessions in a row. This person needs a follow-up."
+      :a&&a.short>0?"Attendance is perfect. "+a.remaining+" sessions are still required and only "+a.sched
+        +" are on the calendar before "+fDate(a.expires)+" — "+a.short+" make-up session"+(a.short>1?"s are":" is")+" needed. This is a scheduling failure, not a behaviour problem."
+      :"Attending on schedule and able to finish before the order lapses."),
+    sessions:(r.done||0)+" of "+(r.of||p.required)+" sessions attended",
+    lastLine:"Last attended "+(r.last?fDate(r.last):"—"),
+    tel:(r.gno||"").replace(/\s/g,""),
+    guardian:esc(r.guardian||"")+" · "+esc(r.gno||"")};
+}
+function personSheet(id){
+  const m=personParts(id);if(!m)return;
+  const r=m.r;
+  let body='<h3>'+esc(r.name)+' <span style="font-weight:400;color:var(--muted)">· '+r.age+'</span></h3>'
+    +'<p class="lead">'+m.meta+"</p>";
+  body+='<div class="note '+(m.warn?"amber":"info")+'" style="margin-bottom:12px"><span class="g">'
+    +(m.warn?"⚠":"ⓘ")+"</span><span>"+m.explain+"</span></div>";
+  body+='<button class="opt"><span class="g">✓</span><span>'+m.sessions+'<span class="sub">'+m.lastLine+"</span></span></button>"
+    +'<a class="opt" href="tel:'+m.tel+'"><span class="g">☎</span><span>Tawag ang guardian<span class="sub">'
+    +m.guardian+"</span></span></a>"
+    +'<button class="opt" data-sms="'+id+'"><span class="g">✉</span><span>Send a reminder SMS<span class="sub">Goes to the person and the guardian</span></span></button>'
+    +'<button class="opt" data-logc="'+id+'"><span class="g">✎</span><span>Log a contact</span></button>'
+    +'<a class="opt" href="cases.html"><span class="g">⚖</span><span>Open the PAO case file ↗<span class="sub">Attendance appears on the lawyer’s C-2 screen</span></span></a>';
+  openSheet(body);
+}
+function receiptSheet(hash){
+  openSheet('<h3>Resibo · Receipt</h3><p class="lead">Recomputed on this phone just now — no network involved.</p>'
+    +'<div class="rcard" style="margin:0"><div class="seclabel">SHA-256</div>'
+    +'<div class="hash">'+groupHash(hash)+"</div>"
+    +"<p>Anyone holding the same session record can recompute this and get the same 64 characters. If one attendance mark changes, the receipt changes.</p>"
+    +'<div class="note info" style="margin-top:12px"><span class="g">ⓘ</span><span>This is not written to a blockchain. The eGovChain node is read-only.</span></div></div>');
+}
+function walkinSheet(){
+  openSheet('<h3>Magdagdag ng kalahok · Add participant</h3>'
+    +'<p class="lead">A walk-in is common. Adding one never takes you out of the roster.</p>'
+    +'<button class="opt"><span class="g">＋</span><span>Ramos, Christian D. · 16<span class="sub">On your caseload · Life skills Group A</span></span></button>'
+    +'<button class="opt"><span class="g">＋</span><span>Villamor, Jake P. · 15<span class="sub">On your caseload · Community service</span></span></button>'
+    +'<button class="opt"><span class="g">✎</span><span>Enroll someone new<span class="sub">Needs a court order reference</span></span></button>');
+}
+function logContactSheet(id){
+  const r=person(id)||{};
+  openSheet('<h3>Itala ang follow-up · Log a contact</h3><p class="lead">'+esc(r.name||"")+"</p>"
+    +'<div class="field"><label>Ano ang nangyari? · What happened?</label>'
+    +'<textarea class="input" rows="3" placeholder="Nakausap ang nanay. Babalik sa susunod na sesyon."></textarea></div>'
+    +'<button class="btn" onclick="document.getElementById(\'sheet\').classList.remove(\'on\');document.getElementById(\'scrim\').classList.remove(\'on\')">I-save ang tala</button>');
+}
+function closeFlagSheet(fid){
+  openSheet('<h3>Isara ang flag · Close this flag</h3>'
+    +'<p class="lead">A flag can never be closed silently. The reason is the only data that ever explains why people stop coming.</p>'
+    +'<button class="opt" data-outcome="reached"><span class="g">✓</span><span>Nakausap · Reached, will return</span></button>'
+    +'<button class="opt" data-outcome="barrier"><span class="g">◑</span><span>Nakausap, may hadlang · Reached, has a barrier</span></button>'
+    +'<button class="opt" data-outcome="unreachable"><span class="g">◌</span><span>Hindi maabot · Could not reach</span></button>'
+    +'<button class="opt" data-outcome="moved"><span class="g">→</span><span>Lumipat · Moved away</span></button>'
+    +'<button class="opt" data-outcome="referred"><span class="g">↗</span><span>Ibang programa · Referred elsewhere</span></button>');
+}
+function barrierSheet(){
+  openSheet('<h3>Anong hadlang? · What is the barrier?</h3>'
+    +'<p class="lead">These are the actual reasons. Capturing them turns a flag list into a service-design dataset.</p>'
+    +["Pamasahe · Fare","Trabaho · Work","Sakit · Illness","Walang kasama · No companion","Takot / hiya · Fear or shame","Iba pa · Other"]
+      .map(b=>'<button class="opt" data-barrier="'+esc(b)+'"><span class="g">·</span><span>'+esc(b)+"</span></button>").join(""));
+}
+function finishFlag(v){
+  const f=FLAGS.find(x=>x.state==="open");if(f)f.state="watch";
+  renderS4();
+  toast("Flag closed · "+esc(v.replace("barrier:",""))+". Logged to the LSWDO record.","I-BALIK ↺",
+    ()=>{if(f)f.state="open";renderS4();toast("Flag re-opened.","",null);});
+}
+function fullSheet(){
+  openSheet('<h3>Buong resibo · Full receipt</h3><p class="lead">The 64 characters, and the exact canonical JSON they were computed from.</p>'
+    +'<div class="hash" style="background:var(--secondary);padding:12px;border-radius:10px">'+esc(S.hash||"")+"</div>"
+    +'<div class="seclabel" style="margin-top:16px">Canonical JSON · keys sorted</div>'
+    +'<pre style="background:var(--secondary);padding:12px;border-radius:10px;font-size:11px;line-height:1.5;overflow-x:auto;white-space:pre-wrap;word-break:break-all">'
+    +esc(S.payload||"")+"</pre>");
+}
+async function verifySheet(){
+  const again=await sha256(canonical(S.record));
+  const ok=again===S.hash;
+  openSheet('<h3>Pagsusuri · Verify</h3><p class="lead">The record on screen was re-serialised and re-hashed just now, on this device, with no network.</p>'
+    +'<div class="note '+(ok?"":"err")+'" style="background:'+(ok?"var(--success-surface)":"#FEF2F2")+';border:1px solid '
+    +(ok?"var(--success-border)":"#CE112633")+';margin-bottom:12px"><span class="g">'+(ok?SHIELD:"⚠")+"</span>"
+    +'<span style="font-weight:500;color:'+(ok?"var(--success)":"var(--destructive)")+'">'+(ok?"MATCH":"NO MATCH")+"</span></div>"
+    +'<div class="seclabel">Receipt on file</div><div class="hash" style="font-size:13px">'+esc(S.hash||"")+"</div>"
+    +'<div class="seclabel" style="margin-top:12px">Recomputed now</div><div class="hash" style="font-size:13px">'+esc(again)+"</div>"
+    +'<p class="tiny" style="margin-top:12px">This is the whole claim: tamper-evident, reproducible by anyone holding the record. Not anchored, not immutable, not on a chain.</p>');
+}
+function smsSend(r){
+  if(!r)return;
+  let cancelled=false;
+  toast("SMS to "+esc(r.guardian||r.name)+" queued · sends in 12s.","I-BALIK ↺",()=>{cancelled=true;toast("SMS cancelled. Nothing was sent.","",null);});
+  setTimeout(async()=>{if(cancelled)return;
+    await api("/api/sms",{numbers:[(r.gno||"").replace(/\s/g,"")],
+      message:"e-Laya: Paalala po sa susunod na sesyon. LSWDO Quezon City."});},12000);
+}
+function copy(s){try{navigator.clipboard.writeText(s);}catch(e){
+  const ta=document.createElement("textarea");ta.value=s;document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");}catch(_){}ta.remove();}}
+
+/* offline + sync queue */
+function applyOffline(){
+  const txt="⚠ Naka-offline — you can still log attendance. "+S.queue.filter(q=>q.state==="saved").length+" waiting to sync ›";
+  $("#s1Off").hidden=!S.offline;$("#s1Off").textContent=txt;
+  $("#s3Off").hidden=!S.offline;$("#s3Off").textContent="⚠ Naka-offline — nakasave sa telepono. "+S.queue.filter(q=>q.state==="saved").length+" naghihintay ›";
+  $("#s2Off").hidden=!S.offline;$("#s4Off").hidden=!S.offline;
+}
+$("#s1Off").onclick=$("#s3Off").onclick=queueSheet;
+function queueSheet(){
+  let h='<h3>Naghihintay mag-sync · Waiting to sync</h3>';
+  h+=S.queue.map(q=>{
+    const st=q.state==="synced"?["okk",SHIELD,"Synced · the server computed the same receipt"]
+      :q.state==="bad"?["bad","⚠","Receipt does not match. Nothing was overwritten — both versions are kept. Review before this session counts."]
+      :["",SHIELD,"Saved on this phone "+q.at];
+    return '<div class="qitem '+st[0]+'"><span class="g">'+st[1]+"</span><span class=\"grow\">"
+      +'<span class="t">'+esc(q.t)+'</span><span class="s">'+esc(q.s)+'<br><span class="mono">Receipt '+shortHash(q.hash)+"</span> · "+st[2]
+      +(q.state==="bad"?' <button class="linkbtn" style="font-size:13px">Review ›</button>':"")+"</span></span></div>";}).join("");
+  h+='<p class="lead" style="margin-top:14px">Nothing is lost. These upload by themselves when you have a signal. '
+    +"The receipt was already computed on this phone, so it cannot change when it uploads.</p>"
+    +'<button class="btn quiet" id="trysync">Try syncing now</button>';
+  openSheet(h);
+}
+document.addEventListener("click",async function(e){
+  if(e.target.id==="trysync"){
+    closeSheet();
+    const r=await api("/api/sso");
+    toast(r?"Synced · the server computed the same receipt.":"Could not upload yet. It will retry by itself. Nothing is lost.","",null);
+  }
+});
+
+/* menus */
+$("#s1Menu").onclick=()=>openSheet('<h3>Caseload options</h3>'
+  +'<button class="opt" data-do="week"><span class="g">☷</span><span>See the week</span></button>'
+  +'<button class="opt" data-do="csv"><span class="g">⤓</span><span>Export caseload (CSV)</span></button>'
+  +'<div class="grouplbl">Prototype states</div>'
+  +'<button class="opt" data-do="loading"><span class="g">◌</span><span>Show the loading state</span></button>'
+  +'<button class="opt" data-do="offline"><span class="g">⚡</span><span>'+(S.offline?"Go back online":"Go offline")+'</span></button>'
+  +'<button class="opt" data-do="nosession"><span class="g">∅</span><span>No session today</span></button>');
+$("#s2Menu").onclick=()=>openSheet('<h3>Programme options</h3>'
+  +'<button class="opt"><span class="g">＋</span><span>Add a make-up session<span class="sub">The order expires 30 Sep 2026</span></span></button>'
+  +'<button class="opt"><span class="g">⤓</span><span>Export roster (CSV)</span></button>'
+  +'<button class="opt"><span class="g">⎙</span><span>Print sign-in sheet<span class="sub">Paper is the honest fallback for a hall with no signal</span></span></button>'
+  +'<button class="opt"><span class="g">ⓘ</span><span>Programme details</span></button>');
+$("#s3Menu").onclick=()=>openSheet('<h3>Session options</h3>'
+  +'<button class="opt" data-do="cancel"><span class="g">⊘</span><span>Mark the whole session as not held<span class="sub">Requires a reason. A cancelled session must never record 15 misses.</span></span></button>'
+  +'<button class="opt" data-do="draft2"><span class="g">▤</span><span>Save as draft</span></button>'
+  +'<button class="opt" data-do="offline"><span class="g">⚡</span><span>'+(S.offline?"Go back online":"Go offline")+'</span></button>'
+  +'<button class="opt" data-do="readonly"><span class="g">🔒</span><span>Show the already-logged state</span></button>');
+$("#s4Menu").onclick=()=>openSheet('<h3>Flag options</h3>'
+  +'<button class="opt"><span class="g">✉</span><span>Send reminder to all open flags (3)</span></button>'
+  +'<button class="opt"><span class="g">→</span><span>Assign to another worker</span></button>'
+  +'<button class="opt"><span class="g">◔</span><span>Snooze 7 days<span class="sub">Requires a reason</span></span></button>');
+
+$("#sheet").addEventListener("click",function(e){
+  const d=e.target.closest("[data-do]");if(!d)return;
+  const a=d.dataset.do;closeSheet();
+  if(a==="offline"){S.offline=!S.offline;applyOffline();
+    toast(S.offline?"Offline. You can still log attendance end to end.":"Back online.","",null);}
+  if(a==="loading"){S.loading=true;renderS1();setTimeout(()=>{S.loading=false;renderS1();},1400);}
+  if(a==="nosession"){noSessionDemo();}
+  if(a==="csv"){toast("Caseload exported · 44 people.","",null);}
+  if(a==="week"){toast("Week view · 4 sessions between 22 and 26 Hulyo.","",null);}
+  if(a==="draft2"){S.draft={n:marked(),at:fTime(NOW)};show("s1");toast("Draft saved on this phone.","",null);}
+  if(a==="readonly"){S.readonly=!S.readonly;renderS3();}
+  if(a==="cancel"){setTimeout(()=>openSheet('<h3>Bakit hindi natuloy? · Why was it not held?</h3>'
+    +'<p class="lead">A cancelled session must never accumulate misses against fifteen people.</p>'
+    +["Cancelled — weather","Cancelled — facilitator unavailable","Cancelled — venue","Other"]
+      .map(r=>'<button class="opt" data-cx="'+esc(r)+'"><span class="g">·</span><span>'+esc(r)+"</span></button>").join("")),220);}
+  const cx=e.target.closest("[data-cx]");if(cx){}
+});
+document.addEventListener("click",function(e){
+  const cx=e.target.closest("[data-cx]");
+  if(cx){closeSheet();S.marks={};S.bulkMarked=false;renderS3();show("s1");
+    toast("Session 9 recorded as not held · "+esc(cx.dataset.cx)+". Nobody was marked absent.","",null);}
+});
+function noSessionDemo(){
+  const el=$("#s1Scroll");
+  const card=el.querySelector(".today");
+  if(!card)return;
+  card.outerHTML='<div class="today"><div class="kick">Ngayon</div>'
+    +'<div class="pname">Walang sesyon ngayon</div>'
+    +'<div class="vline"><span class="ps">Next: Biy 24 Hul · 9:00 AM · Life skills Group A</span>'
+    +'<button class="vlink" data-go2="s2b">Week ›</button></div></div>';
+}
+
+/* Escape dismisses the sheet. There is no keyboard on the target device, so
+   the row-navigation and marking shortcuts are gone with the desktop layout. */
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape")closeSheet();
+});
+
+/* ============================ boot ============================ */
+(async function boot(){
+  $("#s1Date").textContent=DAY_S[NOW.getDay()]+" · "+NOW.getDate()+" "+MON_S[NOW.getMonth()];
+  renderS1();renderS2();renderS3();renderS4();
+  const sso=await api("/api/sso");
+  if(sso&&(sso.name||sso.full_name))$("#s1Who").textContent="👤 "+(sso.name||sso.full_name)+" · LSWDO Quezon City";
+  setTimeout(()=>{S.loading=false;renderS1();},480);
+})();
+</script>
+</body>
+</html>

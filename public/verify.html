@@ -1,0 +1,2231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>e-Laya · Sino siya? — Identity resolution</title>
+<link rel="stylesheet" href="elaya.css">
+<style>
+/* ------------------------------------------------------------------
+   Additive layout only. Nothing in elaya.css is re-declared or
+   overridden — new classes for components the shared stylesheet does
+   not carry (full-bleed offset, timeline, interview, candidates,
+   evidence record, privacy veil, sheets).
+   ------------------------------------------------------------------ */
+.sessband{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;
+  font-size:12px;color:var(--muted);flex:none;display:flex;align-items:center;gap:8px;line-height:1.3}
+.sessband .ref{font-weight:500;color:var(--muted-strong);font-variant-numeric:tabular-nums}
+
+.bleed{margin-left:-16px;margin-right:-16px;margin-top:-16px;border-radius:0;border-left:0;border-right:0}
+.verdict.child.bleed{padding:28px 22px 26px}
+.vshield{display:block;margin-bottom:14px;line-height:0}
+.vcat{font-size:17px;font-weight:500;color:#fff;margin-top:14px;line-height:1.35}
+.vgloss{font-size:14px;color:#C3D4FF;margin-top:4px;line-height:1.4}
+.vrule{height:1px;background:#FFFFFF33;border:0;margin:20px 0}
+.vage{font-size:22px;font-weight:500;color:#fff;line-height:1.25}
+.vref{font-size:13px;color:#C3D4FF;margin-top:5px;line-height:1.45}
+.vbody{font-size:15px;color:#fff;line-height:1.6;margin-top:2px}
+.vlaw{font-size:13px;font-weight:500;color:#C3D4FF;margin-top:12px}
+.vnote{font-size:14px;font-weight:500;color:#fff;line-height:1.5;margin-top:18px}
+.vchip{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--text);
+  font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  padding:5px 11px;border-radius:999px;margin-bottom:16px}
+.verdict.adult .vage-w{font-size:20px;font-weight:500;color:var(--text);line-height:1.25}
+.verdict.adult .vref-w{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.45}
+
+/* neutral diagnostic — a read that failed says nothing about a person, so it is
+   never coloured as if it did. There is no destructive colour in this file. */
+.card.leftrule{border-left:4px solid var(--border-strong)}
+.ic{font-size:20px;line-height:1;display:block;margin-bottom:12px;color:var(--muted)}
+.h22{font-size:22px;font-weight:500;line-height:1.3;color:var(--text)}
+.h18{font-size:18px;font-weight:500;line-height:1.35;color:var(--text)}
+.say16{font-size:16px;font-weight:500;color:var(--text);line-height:1.5;margin-top:10px}
+.diag{font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--faint);
+  line-height:1.5;word-break:break-word}
+
+/* timeline strip */
+.tl{border-radius:var(--radius);padding:14px;margin-top:20px;background:#FFFFFF1A}
+.tl.onwhite{background:#F7F9FF;border:1px solid var(--border)}
+.tl .axw{position:relative;height:72px;margin:6px 0 2px}
+.tl .ax{position:absolute;left:0;right:0;top:30px;height:2px;background:#FFFFFF66}
+.tl.onwhite .ax{background:var(--border-strong)}
+.tl .arw{position:absolute;right:-1px;top:25px;font-size:12px;line-height:1;color:#FFFFFF99}
+.tl.onwhite .arw{color:var(--muted)}
+.tl .thr{position:absolute;top:14px;width:3px;height:34px;background:var(--accent);border-radius:2px;margin-left:-1.5px}
+.tl .dot{position:absolute;top:24px;width:14px;height:14px;border-radius:50%;background:#fff;
+  border:3px solid var(--primary);margin-left:-7px;box-sizing:border-box}
+.tl.onwhite .dot{border-color:var(--primary);background:var(--primary)}
+.tl .ring{position:absolute;top:26px;width:10px;height:10px;border-radius:50%;border:2px solid #FFFFFFAA;margin-left:-5px}
+.tl.onwhite .ring{border-color:var(--faint)}
+.tl .cap-t{position:absolute;top:0;font-size:11px;font-weight:500;color:#fff;transform:translateX(-50%);white-space:nowrap}
+.tl.onwhite .cap-t{color:var(--muted-strong)}
+.tl .lb{position:absolute;top:44px;font-size:11px;color:#C3D4FF;line-height:1.3;text-align:center;
+  transform:translateX(-50%);white-space:nowrap}
+.tl.onwhite .lb{color:var(--muted)}
+.tl .cap{font-size:13px;color:#fff;line-height:1.55;margin-top:6px}
+.tl.onwhite .cap{color:var(--text)}
+.tl .cap b{font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+
+/* duties */
+.dut{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.dut .dh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.dut .dh .t{font-size:15px;font-weight:500}
+.dut .dr{display:flex;gap:12px;padding:14px;border-bottom:1px solid var(--border);align-items:flex-start}
+.dut .dr:last-child{border-bottom:0}
+.dut .n{width:24px;height:24px;border-radius:50%;background:var(--secondary);color:var(--primary);
+  font-size:13px;font-weight:500;display:grid;place-items:center;flex:none;margin-top:1px}
+.dut .dt{display:block;font-size:15px;color:var(--text);line-height:1.4}
+.dut .ds{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.4}
+.cd{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:999px;
+  background:var(--accent);color:var(--text);font-size:12px;font-weight:500;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.due{display:block;font-size:13px;color:var(--primary-ink);font-weight:500;margin-top:3px;font-variant-numeric:tabular-nums}
+
+/* read-aloud */
+.aloud .lbl{font-size:12px;font-weight:500;color:var(--primary);letter-spacing:.04em;margin-bottom:10px}
+.aloud .scr{font-size:17px;line-height:1.6;color:var(--text)}
+.aloud .acts{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.lnk{background:none;border:0;font-family:var(--font);font-size:15px;font-weight:500;
+  color:var(--primary);cursor:pointer;padding:10px 2px;min-height:44px;text-align:left}
+.lnk.sm{font-size:13px;min-height:32px;padding:6px 2px}
+
+/* identity match */
+.idm .q{font-size:18px;font-weight:500;margin-bottom:14px}
+.idm .ph{display:flex;gap:14px;align-items:flex-start}
+.idm img{width:110px;height:147px;border-radius:var(--radius);flex:none;background:var(--secondary);object-fit:cover;display:block}
+.idm .pmeta{font-size:12px;color:var(--muted);line-height:1.45}
+.idm .pmeta .s{font-size:13px;font-weight:500;color:var(--text);display:block;margin-bottom:3px}
+.two{display:flex;gap:12px;margin-top:16px}
+.two .btn{flex:1;font-size:15px;border-width:2px;border-color:var(--border-strong)}
+.two .btn.on{background:var(--secondary)}
+.gate{opacity:.5;pointer-events:none;transition:opacity .3s}
+.gate.live{opacity:1;pointer-events:auto}
+
+/* bands */
+.bandrow{padding:12px 14px;border-radius:var(--radius);margin-bottom:6px}
+.bandrow .bt{display:block;font-size:15px;font-weight:500;color:var(--faint)}
+.bandrow .bs{display:block;font-size:13px;color:var(--faint);margin-top:3px;line-height:1.45}
+.bandrow.on{background:var(--secondary)}
+.bandrow.on .bt{color:var(--text)} .bandrow.on .bs{color:var(--muted-strong)}
+.bandrow .me{font-size:12px;font-weight:500;color:var(--primary);margin-left:6px}
+
+/* viewfinder */
+.vf{position:relative;width:100%;aspect-ratio:1/1;border-radius:var(--radius);overflow:hidden;
+  background:linear-gradient(160deg,#1B2340,#2A3560);display:grid;place-items:center}
+.vf.doc{aspect-ratio:4/3;background:linear-gradient(160deg,#232B49,#33406E)}
+.vf .cor{position:absolute;width:30px;height:30px;border:3px solid var(--primary)}
+.vf .c1{top:14px;left:14px;border-right:0;border-bottom:0;border-radius:6px 0 0 0}
+.vf .c2{top:14px;right:14px;border-left:0;border-bottom:0;border-radius:0 6px 0 0}
+.vf .c3{bottom:14px;left:14px;border-right:0;border-top:0;border-radius:0 0 0 6px}
+.vf .c4{bottom:14px;right:14px;border-left:0;border-top:0;border-radius:0 0 6px 0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.vf.scanning .cor{animation:pulse 1.2s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.vf.scanning .cor{animation:none;opacity:.6}}
+.vf .qr{width:118px;height:118px;opacity:.92}
+.vf .paper{width:132px;opacity:.95}
+.vf .hint{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#C3D4FF;font-size:12px}
+.chiprow{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.chipbtn{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:8px 14px;border-radius:999px;
+  background:#DBEAFE;border:0;color:var(--primary);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer}
+.chipbtn.off{background:var(--secondary)}
+
+/* footer / sheet / veil */
+.fbar{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--border);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:25}
+.fbar .fnote{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.4;text-align:center}
+.scrim{position:absolute;inset:0;background:rgba(26,26,46,.4);z-index:40;opacity:0;pointer-events:none;transition:.2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:24px 24px 0 0;
+  z-index:41;transform:translateY(102%);transition:transform .24s cubic-bezier(.22,.61,.36,1);
+  max-height:88%;overflow-y:auto;padding:10px 16px calc(20px + env(safe-area-inset-bottom))}
+.sheet.on{transform:none}
+.grab{width:36px;height:4px;border-radius:2px;background:#CBD5E1;margin:0 auto 14px}
+.veil{position:absolute;inset:0;background:rgba(240,244,255,.97);z-index:35;display:none;
+  flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;cursor:pointer}
+.veil.on{display:flex}
+.veiled .dobline{visibility:hidden}
+.veil .g{line-height:0;margin-bottom:16px;color:var(--muted)}
+.veil .t{font-size:17px;font-weight:500;color:var(--text)}
+.veil .s{font-size:14px;color:var(--muted-strong);margin-top:8px;line-height:1.5}
+
+/* key/value */
+.kv{display:flex;gap:12px;padding:7px 0;font-size:15px;align-items:flex-start}
+.kv .k{width:120px;flex:none;font-size:13px;color:var(--muted);padding-top:2px}
+.kv .v{flex:1;color:var(--text);font-size:15px;line-height:1.4}
+.kv.priv .v{color:var(--primary);font-size:13px;padding-top:2px}
+
+/* ---- triage: equal options, no primary, no fallback ---- */
+.tri{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.tri button{display:flex;gap:13px;align-items:flex-start;text-align:left;width:100%;
+  background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);
+  padding:16px 15px;font-family:var(--font);cursor:pointer;min-height:96px}
+.tri .g{width:34px;height:34px;border-radius:9px;background:var(--secondary);color:var(--primary);
+  display:grid;place-items:center;flex:none;line-height:0}
+.tri .tt{display:block;font-size:16px;font-weight:500;color:var(--text);line-height:1.35}
+.tri .ts{display:block;font-size:13.5px;color:var(--muted-strong);margin-top:5px;line-height:1.45}
+.tri .tr{display:block;font-size:12px;color:var(--primary);margin-top:8px;font-weight:500}
+.tri .freq{display:inline-block;font-size:11.5px;color:var(--muted);background:#F1F5F9;
+  border-radius:6px;padding:3px 7px;margin-top:8px;margin-right:6px}
+
+/* ---- Rule 35.b(2) sources ---- */
+.src{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.src .r{padding:14px;border-bottom:1px solid var(--border)}
+.src .r:last-child{border-bottom:0}
+.src .t{display:block;font-size:15px;font-weight:500;color:var(--text);line-height:1.35}
+.src .s{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.4}
+.src .rr{display:block;font-size:12px;color:var(--primary);margin-top:5px;font-weight:500}
+.src .stamp{display:block;font-size:12px;color:var(--muted);margin-top:8px;font-variant-numeric:tabular-nums}
+.seg{display:flex;gap:6px;margin-top:11px}
+.seg button{flex:1;min-height:40px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+  font-family:var(--font);font-size:14px;color:var(--muted-strong);cursor:pointer;padding:8px 2px}
+.seg button.on{background:var(--secondary);border-color:var(--primary);color:var(--primary);font-weight:500}
+.seg button.on.na{background:#F1F5F9;border-color:var(--border-strong);color:var(--muted-strong)}
+
+/* ---- other measures ---- */
+.mea{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.mea button.row-m{display:flex;width:100%;gap:12px;align-items:flex-start;text-align:left;background:var(--surface);
+  border:0;border-bottom:1px solid var(--border);padding:15px 14px;font-family:var(--font);cursor:pointer;min-height:76px}
+.mea button.row-m:last-child{border-bottom:0}
+.mea .w{min-width:52px;height:22px;padding:0 8px;border-radius:999px;background:var(--secondary);color:var(--primary);
+  font-size:11.5px;font-weight:500;display:grid;place-items:center;flex:none;margin-top:2px}
+.mea .w.t3{background:#F1F5F9;color:var(--muted-strong)}
+.mea .lt{display:block;font-size:15px;font-weight:500;color:var(--text);line-height:1.35}
+.mea .ls{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.4}
+.mea .lr{display:block;font-size:12px;color:var(--primary);margin-top:5px;font-weight:500}
+.mea .caveat{display:inline-block;margin-top:8px;background:#FCD11614;color:var(--text);
+  font-size:12px;font-weight:500;padding:6px 9px;border-radius:8px;line-height:1.4}
+.mea .tail{flex:none;color:var(--primary);font-size:15px;align-self:center;display:flex;gap:8px;align-items:center}
+.mea .done{color:var(--success);font-size:13px;font-weight:500;text-align:right;line-height:1.35}
+
+/* ---- evidence record ---- */
+.erec{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.erec .eh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-bottom:1px solid var(--border)}
+.erec .eh .t{font-size:15px;font-weight:500}
+.erec .tg{padding:11px 14px 4px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.erec .tg .tn{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--primary)}
+.erec .tg .tn.t3{color:var(--muted)}
+.erec .tg .tw{font-size:12px;color:var(--muted)}
+.erec .ei{padding:4px 14px 12px 14px}
+.erec .ei .el{font-size:14.5px;color:var(--text);line-height:1.4}
+.erec .ei .ed{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.4}
+.erec .ei .er{font-size:12px;color:var(--faint);margin-top:3px;font-variant-numeric:tabular-nums}
+.erec .none{padding:16px 14px;font-size:14px;color:var(--muted);line-height:1.5}
+.erec .foot{padding:12px 14px;border-top:1px solid var(--border);font-size:12.5px;color:var(--muted-strong);line-height:1.5}
+
+/* ---- THE INTERVIEW ---- */
+.qgrp{font-size:12px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--primary);
+  margin:22px 0 10px}
+.qc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.qc.answered{border-color:var(--primary);background:#FBFCFF}
+.qc.skipped{background:#FAFBFD}
+.qc .qq{font-size:15.5px;font-weight:500;color:var(--text);line-height:1.4}
+.qc .qs{font-size:11.5px;color:var(--primary);background:var(--secondary);border-radius:6px;
+  padding:3px 7px;display:inline-block;margin-left:6px;vertical-align:2px;font-weight:500}
+.qc .ql{font-size:15px;color:var(--muted-strong);font-style:italic;line-height:1.45;margin-top:6px}
+.qc .qwhy{font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:7px}
+.qc .qacts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.qc .input{margin-top:10px}
+.qc .skip{display:flex;gap:8px;margin-top:10px}
+.qc .skip button{flex:1;min-height:42px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+  font-family:var(--font);font-size:14px;color:var(--muted-strong);cursor:pointer;padding:8px 4px}
+.qc .skip button.on{background:#F1F5F9;border-color:var(--border-strong);color:var(--muted-strong);font-weight:500}
+.qc .stat{font-size:12.5px;color:var(--muted);margin-top:9px;line-height:1.4}
+.qc .stat.ok{color:var(--success)}
+.qc .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.qc .chips button{font-size:13.5px;color:var(--primary-ink);background:var(--secondary);border:1px solid var(--border);
+  border-radius:999px;padding:8px 13px;font-family:var(--font);cursor:pointer;min-height:38px}
+.qc .chips button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.psgcrow{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.prog{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 12px;margin:-16px -16px 0;padding-left:16px;padding-right:16px;
+  border-bottom:1px solid var(--border)}
+.prog .bar2{height:6px;border-radius:3px;background:#E6EBF5;overflow:hidden}
+.prog .bar2 i{display:block;height:100%;background:var(--primary);border-radius:3px;transition:width .3s}
+.prog .pt{font-size:13px;color:var(--muted-strong);margin-top:8px;line-height:1.4}
+.prog .pt b{font-weight:500;color:var(--text)}
+
+/* ---- CANDIDATES ---- */
+.propose{border-radius:var(--radius);padding:14px 15px;margin-bottom:12px;font-size:13.5px;line-height:1.55;
+  background:#FFF8E1;border:1px solid var(--warn-border);color:var(--warn)}
+.propose b{font-weight:500;color:var(--warn)}
+.propose .tag{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--accent);color:var(--text);border-radius:6px;padding:3px 8px;margin-bottom:8px}
+.scope{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);padding:15px;margin-bottom:12px}
+.scope h4{margin-bottom:8px}
+.scope ul{list-style:none;margin-top:6px}
+.scope li{font-size:13.5px;color:var(--muted-strong);line-height:1.5;padding:5px 0 5px 22px;position:relative}
+.scope li:before{position:absolute;left:0;top:5px;font-size:13px}
+.scope li.y:before{content:'✓';color:var(--success)}
+.scope li.n:before{content:'✕';color:var(--muted)}
+.scope li.n{color:var(--muted)}
+.qcard{background:var(--secondary);border:1px solid var(--border-strong);border-radius:var(--radius);padding:15px;margin-bottom:12px}
+.qcard .qr2{display:flex;gap:10px;padding:5px 0;font-size:14px;align-items:flex-start}
+.qcard .qr2 .k{width:118px;flex:none;font-size:12.5px;color:var(--muted)}
+.qcard .qr2 .v{flex:1;color:var(--text);font-weight:500}
+
+.cand{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.cand.top{border-color:var(--primary);border-width:2px}
+.cand .ch{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.cand .cn{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.conf{display:flex;gap:3px;align-items:center;margin-top:5px}
+.conf i{width:20px;height:5px;border-radius:3px;background:#E2E8F0;display:block}
+.conf i.on{background:var(--primary)}
+.conf.low i.on{background:var(--faint)}
+.conf b{font-size:12px;font-weight:500;color:var(--muted);margin-left:6px}
+.cand .cname{font-size:19px;font-weight:500;color:var(--text);line-height:1.3}
+.cand .cmeta{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
+.mm{margin-top:13px}
+.mm .hd{font-size:11.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+.mm.ok .hd{color:var(--success)}
+.mm.cf .hd{color:var(--warn)}
+.mm div{font-size:13.5px;color:var(--muted-strong);line-height:1.5;padding:3px 0 3px 18px;position:relative}
+.mm div:before{position:absolute;left:0;top:3px;font-size:12px}
+.mm.ok div:before{content:'✓';color:var(--success)}
+.mm.cf div:before{content:'⚑';color:var(--warn)}
+.mm div span{color:var(--text);font-weight:500}
+.cand .expl{font-size:14px;color:var(--text);line-height:1.55;background:var(--secondary);
+  border-radius:8px;padding:11px 13px;margin-top:13px}
+.cand .cacts{display:flex;gap:10px;margin-top:14px}
+.cand .cacts .btn{flex:1;font-size:14.5px;min-height:44px}
+.nearhd{font-size:13px;color:var(--muted-strong);line-height:1.5;margin:18px 0 10px}
+
+/* ---- what resolution unblocks (adult) ---- */
+.unb{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.unb .uh{padding:13px 14px;border-bottom:1px solid var(--border);font-size:15px;font-weight:500}
+.unb .ur{display:flex;gap:11px;padding:13px 14px;border-bottom:1px solid var(--border);align-items:flex-start}
+.unb .ur:last-child{border-bottom:0}
+.unb .ui{color:var(--success);flex:none;font-size:14px;line-height:1.5;width:16px}
+.unb .ut{font-size:14.5px;color:var(--text);line-height:1.45}
+.unb .us{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.45}
+
+/* ---- legal identity referral ---- */
+.route{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.route .rk{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--primary)}
+.route h3{margin-top:7px}
+.route p{margin-top:8px}
+.route .quote{font-size:14px;line-height:1.6;color:var(--text);border-left:3px solid var(--primary);
+  padding:2px 0 2px 13px;margin-top:12px;font-style:italic}
+.route .cite{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.45}
+.route .need{margin-top:12px}
+.route .need div{font-size:13.5px;color:var(--muted-strong);line-height:1.5;padding:4px 0 4px 20px;position:relative}
+.route .need div:before{content:'▸';position:absolute;left:0;color:var(--primary);font-size:12px;top:4px}
+
+/* recipients */
+.rcp{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.rcp .r{padding:14px;border-bottom:1px solid var(--border)}
+.rcp .r:last-child{border-bottom:0}
+.rcp .top{display:flex;gap:12px;align-items:flex-start}
+.rcp .n{width:24px;height:24px;border-radius:50%;background:var(--secondary);color:var(--primary);
+  font-size:13px;font-weight:500;display:grid;place-items:center;flex:none;margin-top:1px}
+.rcp .t{display:block;font-size:15px;font-weight:500;color:var(--text)}
+.rcp .s{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+
+.footspace{height:56px;flex:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.rolechip{font-size:11px;font-weight:500;color:var(--primary);background:var(--secondary);
+  padding:3px 8px;border-radius:999px;white-space:nowrap}
+.optrow{display:flex;align-items:center;gap:12px;width:100%;background:var(--surface);border:0;
+  border-bottom:1px solid var(--border);padding:16px 14px;font-family:var(--font);font-size:16px;
+  color:var(--text);cursor:pointer;text-align:left;min-height:56px}
+.optrow:last-child{border-bottom:0}
+.optrow.sel{background:var(--secondary)}
+.optgrp{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px}
+.optrow .tick{color:var(--primary);font-size:18px;flex:none}
+.doctypes{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.doctypes span{font-size:12.5px;color:var(--primary-ink);background:var(--secondary);
+  border:1px solid var(--border);border-radius:999px;padding:5px 11px;line-height:1.3}
+.burden{border-radius:var(--radius);padding:13px 15px;margin-bottom:12px;font-size:13.5px;line-height:1.5;
+  background:var(--secondary);border:1px solid var(--border-strong);color:var(--primary-ink)}
+.burden b{font-weight:500;color:var(--primary-ink)}
+
+/* ---- KALAYAAN · the conversational interviewer ---- */
+.kbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;flex:none;
+  display:flex;align-items:center;gap:11px}
+.kbar .av{width:34px;height:34px;border-radius:50%;background:var(--primary);display:grid;place-items:center;flex:none;line-height:0}
+.kbar .kn{font-size:15px;font-weight:500;color:var(--text);line-height:1.25}
+.kbar .kr{font-size:12px;color:var(--muted);margin-top:1px;line-height:1.3}
+.kbar .lang{margin-left:auto;flex:none}
+
+.chat{flex:1;overflow-y:auto;padding:16px 16px 12px;background:var(--bg);display:flex;flex-direction:column;gap:10px}
+.chat::-webkit-scrollbar{width:0}
+.msg{max-width:84%;padding:12px 14px;border-radius:16px;font-size:15.5px;line-height:1.5}
+.msg.k{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:5px;align-self:flex-start;color:var(--text)}
+.msg.u{background:var(--primary);color:#fff;border-bottom-right-radius:5px;align-self:flex-end}
+.msg.u.skip{background:var(--secondary);color:var(--muted-strong);border:1px solid var(--border)}
+.msg .tr2{display:block;font-size:13.5px;color:var(--muted);margin-top:6px;font-style:italic;line-height:1.45}
+.msg .sayb{background:none;border:0;color:var(--primary);font-family:var(--font);font-size:12.5px;font-weight:500;
+  cursor:pointer;padding:7px 0 0;display:inline-flex;align-items:center;gap:5px;min-height:32px}
+.msg.sys{align-self:center;max-width:100%;background:var(--secondary);border:1px solid var(--border);
+  color:var(--primary-ink);font-size:13px;text-align:center;border-radius:10px;padding:10px 13px}
+.typing{align-self:flex-start;display:flex;gap:4px;padding:14px 16px;background:var(--surface);
+  border:1px solid var(--border);border-radius:16px;border-bottom-left-radius:5px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--faint);display:block;animation:bl 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.18s} .typing i:nth-child(3){animation-delay:.36s}
+@keyframes bl{0%,60%,100%{opacity:.3}30%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.typing i{animation:none;opacity:.6}}
+
+.kcomp{background:var(--surface);border-top:1px solid var(--border);flex:none;
+  padding:11px 16px calc(11px + env(safe-area-inset-bottom))}
+.qreps{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.qreps button{font-size:14px;color:var(--primary);background:var(--secondary);border:1px solid var(--border-strong);
+  border-radius:999px;padding:9px 14px;font-family:var(--font);cursor:pointer;min-height:40px}
+.qreps button.dk{color:var(--muted-strong);background:#F1F5F9;border-color:var(--border)}
+.krow{display:flex;gap:9px;align-items:flex-end}
+.krow .input{flex:1;min-height:44px;padding:11px 13px;font-size:15px}
+.krow .send{width:44px;height:44px;border-radius:50%;background:var(--primary);border:0;color:#fff;
+  display:grid;place-items:center;flex:none;cursor:pointer;line-height:0}
+.krow .send:disabled{opacity:.4}
+
+/* live profile — "Ano ang alam natin" */
+.prof{background:var(--surface);border-bottom:1px solid var(--border);flex:none;max-height:34%;overflow-y:auto}
+.prof .ph2{display:flex;align-items:center;gap:9px;padding:11px 16px;position:sticky;top:0;background:var(--surface);
+  border-bottom:1px solid var(--border);cursor:pointer}
+.prof .ph2 .t{font-size:14px;font-weight:500;color:var(--text)}
+.prof .ph2 .n2{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.prof .ph2 .cv{color:var(--primary);font-size:14px;transition:transform .2s}
+.prof.closed .body2{display:none}
+.prof.closed .cv{transform:rotate(-90deg)}
+.prof .body2{padding:4px 16px 12px}
+.prof .pf{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.prof .pf:last-child{border-bottom:0}
+.prof .pk{width:112px;flex:none;font-size:12.5px;color:var(--muted);line-height:1.4;padding-top:1px}
+.prof .pv{flex:1;font-size:14.5px;color:var(--text);font-weight:500;line-height:1.4}
+.prof .pv.dk{color:var(--muted);font-weight:400;font-style:italic}
+.prof .pm{display:block;font-size:11.5px;color:var(--faint);font-weight:400;font-style:normal;margin-top:2px}
+.prof .cbar{display:inline-flex;gap:2px;margin-left:7px;vertical-align:1px}
+.prof .cbar i{width:12px;height:4px;border-radius:2px;background:#E2E8F0;display:block}
+.prof .cbar i.on{background:var(--primary)}
+.prof .cbar.lowc i.on{background:var(--faint)}
+.prof .empty2{font-size:13.5px;color:var(--muted);line-height:1.5;padding:10px 0}
+</style>
+</head>
+<body>
+<div class="phone-wrap">
+<div class="phone" id="phone">
+
+<!-- ============ ENTRY — WHO IS THIS? ======================================== -->
+<section class="screen on" id="s-entry" aria-labelledby="e-h">
+  <header class="bar plain">
+    <div class="title" style="padding-left:4px">Sino siya?</div>
+    <div class="right"><span class="rolechip" id="rolechip1">LSWDO</span></div>
+  </header>
+  <main class="scroll">
+    <div class="label" style="letter-spacing:.06em">STEP 1 OF 5</div>
+    <h2 id="e-h" style="margin-top:6px">Who is this?</h2>
+    <p style="margin-top:10px">The justice system is holding this person under a name it cannot verify.</p>
+
+    <div class="tri" role="group" aria-labelledby="e-h">
+      <button onclick="setEntry('intake')">
+        <span class="g" id="eG1"></span>
+        <span class="grow">
+          <span class="tt">A person just brought in</span>
+          <span class="ts">Identity not established at intake.</span>
+        </span>
+      </button>
+      <button onclick="setEntry('custody')">
+        <span class="g" id="eG2"></span>
+        <span class="grow">
+          <span class="tt">Someone already in custody</span>
+          <span class="ts">Booked under an alias or an unverified name. Identity was never established.</span>
+        </span>
+      </button>
+    </div>
+    <div class="footspace"></div>
+  </main>
+</section>
+
+<!-- ============ INCIDENT DATE =============================================== -->
+<section class="screen" id="s-step1" aria-labelledby="s1-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-entry')">&lsaquo;</button>
+    <div class="title">Sino siya?</div>
+    <div class="right"><span class="rolechip" id="rolechip2">LSWDO</span></div>
+  </header>
+  <main class="scroll">
+    <div class="label" style="letter-spacing:.06em">STEP 2 OF 5 &middot; RA 9344 SEC. 6</div>
+    <h2 id="s1-h" style="margin-top:6px">When did the alleged incident happen?</h2>
+    <p style="margin-top:10px">If this person turns out to be under 18, their age <strong>on that date</strong>
+      governs — not their age today.</p>
+
+    <div class="optgrp mt2" role="radiogroup" aria-labelledby="s1-h">
+      <button class="optrow sel" role="radio" aria-checked="true" data-opt="today" onclick="pickDate('today')">
+        <span class="grow">Today &middot; <span id="todayLabel">22 July 2026</span></span><span class="tick" data-tick="today">&check;</span></button>
+      <button class="optrow" role="radio" aria-checked="false" data-opt="earlier" onclick="pickDate('earlier')">
+        <span class="grow">An earlier date</span><span class="tick" data-tick="earlier" style="color:var(--faint)">&rsaquo;</span></button>
+      <button class="optrow" role="radio" aria-checked="false" data-opt="unknown" onclick="pickDate('unknown')">
+        <span class="grow">Not known</span><span class="tick" data-tick="unknown" style="color:var(--faint)">&rsaquo;</span></button>
+    </div>
+
+    <div id="earlierWrap" style="display:none" class="mb2">
+      <div class="field"><label for="dIn">Date of the alleged incident</label>
+        <input class="input" type="date" id="dIn" onchange="setEarlier(this.value)"></div>
+    </div>
+
+    <div id="unknownWrap" style="display:none" class="mb2">
+      <div class="label mb1">Roughly how long ago?</div>
+      <div class="optgrp">
+        <button class="optrow" onclick="setBand(0,'Today')"><span class="grow">Today</span></button>
+        <button class="optrow" onclick="setBand(7,'This week')"><span class="grow">This week</span></button>
+        <button class="optrow" onclick="setBand(31,'This month')"><span class="grow">This month</span></button>
+        <button class="optrow" onclick="setBand(365,'Longer ago')"><span class="grow">Longer ago</span></button>
+        <button class="optrow" onclick="setBand(3650,'Truly unknown')"><span class="grow">Truly unknown</span></button>
+      </div>
+      <div class="banner">The earliest date in the band is used, labelled <strong>estimated</strong>.</div>
+    </div>
+
+    <div class="burden">
+      <b>The burden is not theirs.</b> Any person alleging the age of a child in conflict with the law has the
+      burden of proving it — A.M. No. 02-1-18-SC Sec. 6.
+    </div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar">
+    <button class="btn" onclick="go('s-what')">Continue</button>
+  </div>
+</section>
+
+<!-- ============ WHAT DO WE HAVE? — "Nothing" leads ========================== -->
+<section class="screen" id="s-what" aria-labelledby="w-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-step1')">&lsaquo;</button>
+    <div class="title">Sino siya?</div>
+    <div class="right"><button class="back" aria-label="Menu and demo cases" onclick="openMenu()">&ctdot;</button></div>
+  </header>
+  <main class="scroll">
+    <div class="label" style="letter-spacing:.06em">STEP 3 OF 5 &middot; IRR RULE 35.b(1)</div>
+    <h2 id="w-h" style="margin-top:6px">What do we have?</h2>
+
+    <div class="tri" role="group" aria-labelledby="w-h">
+      <button onclick="startPath('none')">
+        <span class="g" id="wG1"></span>
+        <span class="grow">
+          <span class="tt">Nothing</span>
+          <span class="ts">No card, no paper, no name we can check.</span>
+          <span class="freq">Most common</span>
+          <span class="tr">Start the interview with Kalayaan</span>
+        </span>
+      </button>
+
+      <button onclick="startPath('doc')">
+        <span class="g" id="wG2"></span>
+        <span class="grow">
+          <span class="tt">Some other document</span>
+          <span class="ts">Birth certificate, baptismal certificate, school record, dental record,
+            travel papers, or any paper carrying a birth date.</span>
+          <span class="tr">Photograph it &middot; eGov AI Document Extractor</span>
+        </span>
+      </button>
+
+      <button onclick="startPath('claim')">
+        <span class="g" id="wG3"></span>
+        <span class="grow">
+          <span class="tt">A name and a claimed birth date</span>
+          <span class="ts">Confirms or fails that one claim. It does not search.</span>
+          <span class="tr">eVerify 1:1 confirmation</span>
+        </span>
+      </button>
+
+      <button onclick="startPath('id')">
+        <span class="g" id="wG4"></span>
+        <span class="grow">
+          <span class="tt">A National ID</span>
+          <span class="ts">Read the QR on the card they hand you.</span>
+          <span class="freq">Rare</span>
+          <span class="tr">eVerify QR check</span>
+        </span>
+      </button>
+    </div>
+
+    <div class="burden mt2">
+      <b>No registry search.</b> RA 11055 Sec. 17 bars PhilSys access to law enforcement, and anything obtained
+      that way is inadmissible. Every option above is a document produced or a claim made by the person.
+    </div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar">
+    <button class="chipbtn" onclick="editIncident()" style="width:100%;justify-content:center">Incident: <span id="incChip">22 Jul</span> &#9998;</button>
+  </div>
+</section>
+
+<!-- ============ KALAYAAN — the conversational interviewer =================== -->
+<section class="screen" id="s-kal" aria-labelledby="k-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-what')">&lsaquo;</button>
+    <div class="title" id="k-h">Kalayaan</div>
+    <div class="right"><button class="back" aria-label="Menu and demo cases" onclick="openMenu()">&ctdot;</button></div>
+  </header>
+
+  <div class="kbar">
+    <span class="av" id="kAv"></span>
+    <span>
+      <span class="kn">Kalayaan</span>
+      <span class="kr">Assistant &middot; gathers and suggests. A person decides.</span>
+    </span>
+    <button class="chipbtn lang" onclick="cycleKLang()"><span data-i="glb"></span> <span id="kLangLbl">Filipino</span></button>
+  </div>
+
+  <div class="prof closed" id="prof">
+    <div class="ph2" onclick="toggleProf()" role="button" tabindex="0"
+         onkeydown="if(event.key==='Enter'||event.key===' ')toggleProf()">
+      <span class="t">Ano ang alam natin</span>
+      <span class="n2" id="profN">0 facts</span>
+      <span class="cv">&#9662;</span>
+    </div>
+    <div class="body2" id="profBody"></div>
+  </div>
+
+  <div class="chat" id="chat" aria-live="polite" aria-label="Conversation with Kalayaan"></div>
+
+  <div class="kcomp">
+    <div class="qreps" id="qreps"></div>
+    <div class="krow">
+      <label class="sr" for="kIn">Your answer</label>
+      <input class="input" id="kIn" autocomplete="off" placeholder="Type what they said&hellip;"
+             onkeydown="if(event.key==='Enter')sendFree()">
+      <button class="send" id="kSend" aria-label="Send" onclick="sendFree()"></button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RECONCILIATION — ranked candidates (PROPOSED) =============== -->
+<section class="screen" id="s-search" aria-labelledby="sr-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-kal')">&lsaquo;</button>
+    <div class="title">Civil-registry reconciliation</div>
+    <div class="right"><button class="back" aria-label="Menu and demo cases" onclick="openMenu()">&ctdot;</button></div>
+  </header>
+  <div class="sessband"><span class="ref" id="sessRefS">VF-8241</span><span id="sessMetaS">&middot;</span></div>
+  <main class="scroll">
+    <div class="propose">
+      <span class="tag">Proposed interface</span>
+      <b>No civil-registry search API exists in this sandbox.</b> The interview, translation and read-aloud are
+      live eGov AI. The candidate list below is seeded to show the interaction a PSA/LCR interface would need
+      to support.
+    </div>
+
+    <div class="scope">
+      <h4>What is searched</h4>
+      <ul>
+        <li class="y">Civil registration &mdash; PSA / Local Civil Registrar birth records &middot; Rule 35.b(2)(b)</li>
+        <li class="y">The person&rsquo;s own entitlement records &mdash; PhilHealth, SSS, GSIS, Pag-IBIG</li>
+        <li class="n">Criminal history</li>
+        <li class="n">Watchlists</li>
+        <li class="n">Intelligence or investigative databases</li>
+      </ul>
+      <hr class="hr">
+      <p style="font-size:13px">Purpose: establish this person&rsquo;s identity and their rights. Not available for
+        any other purpose. Every search is logged with requester, purpose and outcome.</p>
+    </div>
+
+    <div id="requester"></div>
+    <div id="queryCard"></div>
+    <div id="results"></div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar" id="searchFoot"></div>
+</section>
+
+<!-- ============ LEGAL IDENTITY REFERRAL ==================================== -->
+<section class="screen" id="s-ident" aria-labelledby="id-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-v2')">&lsaquo;</button>
+    <div class="title">Establish legal identity</div>
+    <div class="right"><button class="back" aria-label="Menu" onclick="openMenu()">&ctdot;</button></div>
+  </header>
+  <div class="sessband"><span class="ref" id="sessRefI">VF-8241</span><span id="sessMetaI">&middot;</span></div>
+  <main class="scroll">
+    <h2 id="id-h">No birth record exists for this person.</h2>
+    <p style="margin-top:10px">They were most likely never registered at birth. That is fixable. Two routes,
+      depending on whether the parents are known.</p>
+
+    <div class="route mt2">
+      <div class="rk">Route 1 &middot; parents known</div>
+      <h3>Delayed registration of birth</h3>
+      <p>Filed with the Local Civil Registrar of the place of birth. The LCR issues the current form and lists
+        the supporting affidavits it requires.</p>
+      <div class="quote">&ldquo;&hellip; shall be sent to the local civil registrar &hellip; not later than
+        thirty days after the birth.&rdquo;</div>
+      <div class="cite">Act No. 3753, <em>An Act to Establish a Civil Register</em>, 26 November 1930, Sec. 5.
+        A birth never reported within that period is registered late through the LCR. The delayed-registration
+        procedure itself sits in the PSA&rsquo;s civil-registration implementing rules, which are not quoted here
+        &mdash; ask the LCR for the current issuance and form.</div>
+      <div class="need">
+        <div>Local Civil Registrar of the place of birth</div>
+        <div>Supporting affidavits as the LCR requires</div>
+        <div>Any school, baptismal or medical record already gathered</div>
+      </div>
+      <button class="btn ghost mt2" onclick="referIdentity('late')">Record the referral</button>
+    </div>
+
+    <div class="route">
+      <div class="rk">Route 2 &middot; parentage unknown</div>
+      <h3>Foundling recognition</h3>
+      <p>Where the facts of birth and parentage are unknown. It reaches adults as well as children.</p>
+      <div class="quote">&ldquo;A foundling found in the Philippines and/or in Philippine embassies, consulates
+        and territories abroad is <strong>presumed a natural-born Filipino citizen</strong> regardless of the
+        status or circumstances of birth.&rdquo;</div>
+      <div class="cite">RA 11767, <em>Foundling Recognition and Protection Act</em>, approved 6 May 2022, Sec. 5.
+        Sec. 3 defines a foundling as &ldquo;a deserted or abandoned child or infant with unknown facts of birth
+        and parentage&rdquo;, and expressly includes those &ldquo;duly registered as a foundling during her or
+        his infant childhood, but have reached the age of majority&rdquo;. The Local Civil Registrar issues the
+        Certificate of Live Birth.</div>
+      <div class="need">
+        <div>Affidavit of the finder &mdash; Sec. 10(a)</div>
+        <div>Certification of the barangay captain or police authority on the circumstances of discovery &mdash; Sec. 10(b)</div>
+        <div>Report of the NACC &mdash; Sec. 10(c). Pending the NACC&rsquo;s establishment these functions remain with the DSWD (Sec. 22)</div>
+      </div>
+      <button class="btn ghost mt2" onclick="referIdentity('foundling')">Record the referral</button>
+    </div>
+
+    <div class="burden">
+      <b>This does not change how they are treated today.</b> The presumption of minority holds and every right
+      of a child in conflict with the law continues to apply &mdash; Rule 35.c.
+    </div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar">
+    <button class="btn" onclick="go('s-v2')">Back to the determination</button>
+  </div>
+</section>
+
+<!-- ============ BRANCH — PHOTOGRAPH A DOCUMENT ============================= -->
+<section class="screen" id="s-doc" aria-labelledby="doc-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-what')">&lsaquo;</button>
+    <div class="title">Photograph a document</div>
+    <div class="right"><button class="back" aria-label="Menu and demo cases" onclick="openMenu()">&ctdot;</button></div>
+  </header>
+  <main class="scroll">
+    <h2 id="doc-h">Lay the document flat</h2>
+    <div class="doctypes">
+      <span>Birth certificate</span><span>Baptismal certificate</span><span>School records</span>
+      <span>Dental records</span><span>Travel papers</span><span>Any paper with a birth date</span>
+    </div>
+
+    <div class="card tint mt2 aloud">
+      <div class="lbl">SABIHIN PO ITO SA TAO</div>
+      <div class="scr fil" id="docScript"></div>
+      <div class="acts">
+        <button class="lnk sm" onclick="speak('docScript')"><span data-i="spk"></span> Pakinggan</button>
+        <button class="lnk sm" onclick="cycleLang('doc')"><span data-i="glb"></span> <span id="docLangLbl">Ibang wika</span> &rsaquo;</button>
+      </div>
+    </div>
+
+    <div class="vf doc scanning" id="docFinder" aria-label="Document camera viewfinder">
+      <span class="cor c1"></span><span class="cor c2"></span><span class="cor c3"></span><span class="cor c4"></span>
+      <svg class="paper" viewBox="0 0 100 78" aria-hidden="true"><rect x="12" y="4" width="76" height="70" rx="4" fill="#fff"/><g fill="#C4CEE4"><rect x="22" y="16" width="40" height="5" rx="2.5"/><rect x="22" y="28" width="56" height="3.5" rx="1.75"/><rect x="22" y="36" width="48" height="3.5" rx="1.75"/><rect x="22" y="44" width="52" height="3.5" rx="1.75"/></g><rect x="22" y="55" width="34" height="7" rx="3.5" fill="#0040E7" opacity=".85"/></svg>
+      <div class="hint" id="docHint">Fill the frame</div>
+    </div>
+
+    <label class="btn mt2" for="docFile" style="cursor:pointer">Photograph the document</label>
+    <input id="docFile" type="file" accept="image/*" capture="environment" class="sr" onchange="onDocFile(this)">
+    <button class="btn ghost mt1" onclick="onDocFile(null)">Use a sample document</button>
+    <div id="docStatus" class="mt2"></div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar">
+    <button class="btn quiet" onclick="startPath('none')">No document &mdash; start the interview</button>
+  </div>
+</section>
+
+<!-- ============ BRANCH — 1:1 CLAIM ========================================= -->
+<section class="screen" id="s-claim" aria-labelledby="claim-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-what')">&lsaquo;</button>
+    <div class="title">Confirm a claim</div>
+    <div class="right"><button class="back" aria-label="Menu and demo cases" onclick="openMenu()">&ctdot;</button></div>
+  </header>
+  <main class="scroll">
+    <h2 id="claim-h">Type what they told you</h2>
+    <p style="margin-top:10px">eVerify returns confirmed or not confirmed for this exact pairing. It does not
+      search and cannot suggest close matches.</p>
+    <div class="field mt2"><label for="cFirst">First name, as given</label>
+      <input class="input" id="cFirst" autocomplete="off" value="Juan"></div>
+    <div class="field"><label for="cLast">Last name, as given</label>
+      <input class="input" id="cLast" autocomplete="off" value="Dela Cruz"></div>
+    <div class="field"><label for="cDob">Birth date, as claimed</label>
+      <input class="input" type="date" id="cDob"></div>
+    <div id="claimStatus"></div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar">
+    <button class="btn" onclick="runClaim()">Confirm this claim</button>
+    <div class="fnote">Consent-based, purpose-specific, 1:1 &mdash; RA 11055 Sec. 12.</div>
+  </div>
+</section>
+
+<!-- ============ BRANCH — NATIONAL ID ======================================= -->
+<section class="screen" id="s-scan" aria-labelledby="scan-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-what')">&lsaquo;</button>
+    <div class="title">National ID</div>
+    <div class="right"><span class="rolechip" id="rolechip3">LSWDO</span></div>
+  </header>
+  <main class="scroll">
+    <h2 id="scan-h">Read the QR on the card</h2>
+    <div class="card tint mt2 aloud">
+      <div class="lbl">SABIHIN PO ITO SA TAO</div>
+      <div class="scr fil" id="scanScript"></div>
+      <div class="acts">
+        <button class="lnk sm" onclick="speak('scanScript')"><span data-i="spk"></span> Pakinggan</button>
+        <button class="lnk sm" onclick="cycleLang('scan')"><span data-i="glb"></span> <span id="scanLangLbl">Ibang wika</span> &rsaquo;</button>
+      </div>
+    </div>
+    <div class="vf scanning" id="vfinder" aria-label="Camera viewfinder">
+      <span class="cor c1"></span><span class="cor c2"></span><span class="cor c3"></span><span class="cor c4"></span>
+      <svg class="qr" viewBox="0 0 29 29" shape-rendering="crispEdges" aria-hidden="true"><rect width="29" height="29" fill="#fff"/><g fill="#1A1A2E"><rect x="1" y="1" width="7" height="7"/><rect x="2" y="2" width="5" height="5" fill="#fff"/><rect x="3" y="3" width="3" height="3"/><rect x="21" y="1" width="7" height="7"/><rect x="22" y="2" width="5" height="5" fill="#fff"/><rect x="23" y="3" width="3" height="3"/><rect x="1" y="21" width="7" height="7"/><rect x="2" y="22" width="5" height="5" fill="#fff"/><rect x="3" y="23" width="3" height="3"/><rect x="10" y="1" width="1" height="1"/><rect x="12" y="1" width="2" height="1"/><rect x="16" y="2" width="1" height="2"/><rect x="10" y="3" width="3" height="1"/><rect x="14" y="4" width="2" height="1"/><rect x="11" y="5" width="1" height="3"/><rect x="13" y="6" width="2" height="2"/><rect x="17" y="5" width="1" height="3"/><rect x="9" y="9" width="2" height="1"/><rect x="12" y="9" width="1" height="2"/><rect x="15" y="9" width="3" height="1"/><rect x="20" y="9" width="1" height="3"/><rect x="23" y="10" width="2" height="1"/><rect x="26" y="9" width="1" height="2"/><rect x="1" y="10" width="2" height="1"/><rect x="4" y="11" width="1" height="2"/><rect x="6" y="10" width="1" height="3"/><rect x="9" y="12" width="3" height="1"/><rect x="13" y="12" width="1" height="3"/><rect x="16" y="13" width="2" height="1"/><rect x="19" y="13" width="1" height="2"/><rect x="22" y="12" width="1" height="3"/><rect x="25" y="13" width="2" height="1"/><rect x="2" y="14" width="1" height="2"/><rect x="5" y="15" width="2" height="1"/><rect x="9" y="16" width="1" height="2"/><rect x="11" y="15" width="2" height="1"/><rect x="14" y="16" width="1" height="3"/><rect x="17" y="16" width="3" height="1"/><rect x="21" y="16" width="1" height="2"/><rect x="24" y="16" width="1" height="3"/><rect x="26" y="17" width="2" height="1"/><rect x="1" y="18" width="3" height="1"/><rect x="6" y="18" width="1" height="2"/><rect x="10" y="19" width="2" height="1"/><rect x="16" y="19" width="2" height="1"/><rect x="20" y="20" width="1" height="2"/><rect x="23" y="19" width="1" height="3"/><rect x="26" y="20" width="1" height="2"/><rect x="9" y="21" width="1" height="3"/><rect x="12" y="22" width="2" height="1"/><rect x="15" y="21" width="1" height="2"/><rect x="17" y="23" width="2" height="1"/><rect x="21" y="23" width="3" height="1"/><rect x="25" y="23" width="1" height="2"/><rect x="10" y="25" width="2" height="1"/><rect x="13" y="25" width="1" height="3"/><rect x="16" y="26" width="3" height="1"/><rect x="20" y="25" width="1" height="3"/><rect x="22" y="26" width="2" height="1"/><rect x="26" y="25" width="2" height="2"/></g></svg>
+      <div class="hint">Hold the card 20 cm from the camera</div>
+    </div>
+    <div class="chiprow">
+      <button class="chipbtn off" id="torch" onclick="toggleTorch()">Light</button>
+      <button class="chipbtn" onclick="editIncident()">Incident: <span id="incChip2">22 Jul</span> &#9998;</button>
+    </div>
+    <div class="banner warn mt2" id="lowlight" style="display:none">
+      Low light. <button class="lnk sm" style="color:var(--warn)" onclick="toggleTorch()">Turn on the light</button>
+    </div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar">
+    <button class="btn" onclick="runScan()">Simulate a read</button>
+    <div class="fnote">Demo build &mdash; a real device reads the QR from the camera.</div>
+  </div>
+</section>
+
+<!-- ============ RULE 35.b(2) SOURCES ======================================= -->
+<section class="screen" id="s-sources" aria-labelledby="s3-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-v2')">&lsaquo;</button>
+    <div class="title">Where to obtain documents</div>
+    <div class="right"><button class="back" aria-label="Menu" onclick="openMenu()">&ctdot;</button></div>
+  </header>
+  <div class="sessband"><span class="ref" id="sessRef3">VF-8241</span><span id="sessMeta3">&middot;</span></div>
+  <main class="scroll">
+    <div class="label" style="letter-spacing:.06em">IRR RULE 35.b(2)</div>
+    <h2 id="s3-h" style="margin-top:6px">The five sources</h2>
+    <div class="src mt2" id="srcList"></div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar">
+    <button class="btn" onclick="go('s-measures')">Other measures</button>
+  </div>
+</section>
+
+<!-- ============ RULE 35.b ¶2 OTHER MEASURES =============================== -->
+<section class="screen" id="s-measures" aria-labelledby="s4-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-sources')">&lsaquo;</button>
+    <div class="title">Other measures</div>
+    <div class="right"><button class="back" aria-label="Menu" onclick="openMenu()">&ctdot;</button></div>
+  </header>
+  <div class="sessband"><span class="ref" id="sessRef4b">VF-8241</span><span id="sessMeta4b">&middot;</span></div>
+  <main class="scroll">
+    <div class="label" style="letter-spacing:.06em">IRR RULE 35.b &para;2</div>
+    <h2 id="s4-h" style="margin-top:6px">Four measures</h2>
+    <div class="mea mt2" id="meaList"></div>
+    <div id="s4rec"></div>
+    <div id="lookupSlot"></div>
+    <div class="tiny mb2">Only a document can rebut the presumption of minority &mdash; A.M. No. 02-1-18-SC
+      Sec. 5(1)&ndash;(2). Testimony and appearance are recorded and go to the LSWDO and the court.</div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar">
+    <button class="btn" onclick="finishCascade()">Record the determination</button>
+  </div>
+</section>
+
+<!-- ============ DETERMINATION ============================================== -->
+<section class="screen" id="s-v2" aria-labelledby="v2-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="restartFlow()">&lsaquo;</button>
+    <div class="title" id="v2-h">Determination</div>
+    <div class="right"><button class="back" aria-label="Menu and demo cases" onclick="openMenu()">&ctdot;</button></div>
+  </header>
+  <div class="sessband"><span class="ref" id="sessRef">VF-8241</span><span id="sessMeta">&middot;</span></div>
+  <main class="scroll" id="v2body"></main>
+  <div class="fbar" id="v2foot"></div>
+  <div class="veil" id="veil" onclick="unveil()" role="button" tabindex="0"
+       aria-label="Identifying details hidden for privacy. Tap to show."
+       onkeydown="if(event.key==='Enter'||event.key===' ')unveil()">
+    <div class="g" id="veilGlyph"></div>
+    <div class="t">Tapped away for privacy.</div>
+    <div class="s">The determination stays on screen. The name, photo and birth date are hidden so the next
+      person in the queue cannot read this one&rsquo;s record.<br><br>Tap to show.</div>
+  </div>
+</section>
+
+<!-- ============ NOTIFY & LOG ============================================== -->
+<section class="screen" id="s-v4" aria-labelledby="v4-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back" onclick="go('s-v2')">&lsaquo;</button>
+    <div class="title">Notify &amp; log</div>
+    <div class="right"><button class="back" aria-label="Menu" onclick="openMenu()">&ctdot;</button></div>
+  </header>
+  <div class="sessband"><span class="ref" id="sessRef4">VF-8241</span><span id="sessMeta4">&middot;</span></div>
+  <main class="scroll">
+    <h3 id="v4-h">Three notifications are required by law</h3>
+    <p style="margin-top:4px">RA 9344 Sec. 21</p>
+    <div class="rcp mt2">
+      <div class="r">
+        <div class="top"><span class="n">1</span>
+          <span class="grow"><span class="t">Parents or guardian</span><span class="s" id="guardName">Maria Dela Cruz &mdash; mother</span></span>
+          <span class="chip warn" id="c1">Needs a number</span></div>
+        <div class="field mt1" style="margin-bottom:0">
+          <label class="sr" for="gnum">Guardian mobile number</label>
+          <input class="input" id="gnum" type="tel" inputmode="tel" placeholder="+63 9__ ___ ____" value="+63 917 555 0142" oninput="checkNum()">
+        </div>
+      </div>
+      <div class="r"><div class="top"><span class="n">2</span>
+        <span class="grow"><span class="t">LSWDO &mdash; Quezon City</span><span class="s">Duty officer, District 4</span></span>
+        <span class="chip ok" id="c2">Ready</span></div></div>
+      <div class="r"><div class="top"><span class="n">3</span>
+        <span class="grow"><span class="t">Public Attorney&rsquo;s Office</span><span class="s">PAO QC District Office</span></span>
+        <span class="chip ok" id="c3">Ready</span></div></div>
+    </div>
+
+    <div class="sec"><h3>What the guardian will receive</h3></div>
+    <div class="card tint">
+      <div class="fil" style="font-size:15px;line-height:1.6" id="smsPreview"></div>
+      <hr class="hr">
+      <div class="flex between center">
+        <span class="tiny" id="smsMeta">Filipino</span>
+        <button class="lnk sm" onclick="cycleLang('sms')"><span data-i="glb"></span> Change language &rsaquo;</button>
+      </div>
+    </div>
+
+    <div class="sec"><h3>What will be recorded</h3></div>
+    <div class="card">
+      <div id="recSummary"></div>
+      <hr class="hr">
+      <div class="kv priv"><span class="k">Not recorded</span><span class="v">PhilSys number &middot; photo &middot; biometric &middot; discernment</span></div>
+    </div>
+    <div id="v4rec"></div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar">
+    <button class="btn" id="sendBtn" onclick="sendAll()">Send 3 notifications and record</button>
+    <div class="fnote">This record cannot be edited. A correction adds a new entry alongside it.</div>
+  </div>
+</section>
+
+<!-- ============ CONFIRMATION ============================================== -->
+<section class="screen" id="s-done" aria-labelledby="done-h">
+  <header class="bar plain">
+    <div class="title" style="padding-left:4px">Notify &amp; log</div>
+    <div class="right"></div>
+  </header>
+  <main class="scroll">
+    <div style="text-align:center;padding:28px 0 6px">
+      <div style="line-height:0" id="doneShield"></div>
+      <h2 id="done-h" style="margin-top:14px">Recorded and sent.</h2>
+      <div class="tiny mt1" id="doneRef">VF-8241 &middot; 22 July 2026</div>
+    </div>
+    <div class="card flush mt2" id="sentList"></div>
+    <div class="card">
+      <div class="card-h"><h4>Still yours to do</h4><span class="cd" id="cdDone">8h 00m</span></div>
+      <p id="turnoverLine">Turn over to the LSWDO before 10:14 PM today.</p>
+    </div>
+    <div class="flex between center mb2">
+      <span class="diag">Receipt <span id="receipt">&hellip;</span></span>
+      <button class="lnk sm" onclick="copyReceipt()">Copy</button>
+    </div>
+    <div class="footspace"></div>
+  </main>
+  <div class="fbar">
+    <button class="btn ghost" onclick="restartFlow()">Start a new resolution</button>
+    <div class="fnote">Clears every buffer and mints a new reference.</div>
+  </div>
+</section>
+
+<!-- ============ sheets, toast ============================================= -->
+<div class="scrim" id="scrim" onclick="closeSheets()"></div>
+
+<div class="sheet" id="menuSheet" role="dialog" aria-label="Menu">
+  <div class="grab"></div>
+  <h3>Determination cases</h3>
+  <p style="margin-top:4px">Keys 1&ndash;9 also switch.</p>
+  <div class="optgrp mt2" id="caseList"></div>
+  <h3>Requester</h3>
+  <p style="margin-top:4px">Law enforcement has no search path. The reconciliation is requested by social
+    welfare, the custodial records officer, or counsel.</p>
+  <div class="optgrp mt2" id="roleList"></div>
+  <button class="btn quiet mb2" onclick="wipeNow()">Clear this record now</button>
+  <div class="tiny mb2">Auto-veils after 60 seconds without a touch. The flow expires after 15 minutes.</div>
+</div>
+
+<div class="sheet" id="askSheet" role="dialog" aria-label="Sheet">
+  <div class="grab"></div>
+  <div id="askBody"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span id="toastMsg"></span><button onclick="hideToast()">Dismiss</button>
+</div>
+
+</div>
+</div>
+
+<script>
+"use strict";
+/* ---------------------------------------------------------------------- api */
+async function api(p,b){if(location.protocol==='file:')return null;
+try{const r=await fetch(p,b?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}:{});if(!r.ok)throw 0;return await r.json();}catch(e){return null;}}
+/* multipart passthrough for the eGov AI Document Extractor: single field `file` */
+async function apiFile(p,file){if(location.protocol==='file:')return null;
+try{const fd=new FormData();fd.append('file',file);const r=await fetch(p,{method:'POST',body:fd});if(!r.ok)throw 0;return await r.json();}catch(e){return null;}}
+
+/* ---------------------------------------------------------------- constants */
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const FIL_MON=['Enero','Pebrero','Marso','Abril','Mayo','Hunyo','Hulyo','Agosto','Setyembre','Oktubre','Nobyembre','Disyembre'];
+const SPK='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.6 8.6a5 5 0 0 1 0 6.8"/><path d="M18.6 5.6a9 9 0 0 1 0 12.8"/></svg>';
+const GLB='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg>';
+const shield=(px,col)=>'<svg width="'+px+'" height="'+px+'" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l7.2 2.9v5.6c0 4.4-3 8.2-7.2 9.4-4.2-1.2-7.2-5-7.2-9.4V5.7z"/><path d="M8.7 11.9l2.2 2.2 4.4-4.4"/></svg>';
+const ICO={
+  person:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg>',
+  bars  :'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16M12 4v16M16 4v16"/></svg>',
+  none  :'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 12h7"/></svg>',
+  doc   :'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>',
+  say   :'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-5.1A8.4 8.4 0 0 1 4 11.5a8.4 8.4 0 0 1 9-8.4 8.4 8.4 0 0 1 8 8.4z"/></svg>',
+  card  :'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M14 10h5M14 14h5"/></svg>',
+  pen   :'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  send  :'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
+  kal   :'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 21v-3"/><circle cx="12" cy="12" r="4.2"/><path d="M4.6 7.5l3 1.8M16.4 14.7l3 1.8M4.6 16.5l3-1.8M16.4 9.3l3-1.8"/></svg>'
+};
+const PORTRAIT="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 160'><rect width='120' height='160' fill='%23E9EFFB'/><circle cx='60' cy='60' r='25' fill='%23AFC0E4'/><path d='M12 160c0-27 21-45 48-45s48 18 48 45z' fill='%23AFC0E4'/><rect x='0' y='140' width='120' height='20' fill='%23DCE5F7'/></svg>";
+
+/* -------------------------------------------------------------- seed data */
+const PEOPLE={
+  A :{first:'Juan',middle:'Dela',last:'Cruz',suffix:'Jr.',dob:'2010-03-14',sex:'Male',pob:'Quezon City',
+      guardian:'Maria Dela Cruz — mother',gnum:'+63 917 555 0142'},
+  B :{first:'Roberto',middle:'Silva',last:'Aguinaldo',dob:'1992-05-03',sex:'Male',pob:'Caloocan City',
+      guardian:'Elena Aguinaldo — sister',gnum:'+63 917 555 0188'},
+  C :{first:'Angelo',middle:'Reyes',last:'Mabini',dob:'2008-07-28',sex:'Male',pob:'Quezon City',
+      guardian:'Rosalinda Mabini — mother',gnum:'+63 918 555 0277'},
+  C1:{first:'Christian',middle:'Bautista',last:'Lim',dob:'2008-07-13',sex:'Male',pob:'Marikina City'},
+  C2:{first:'Marvin',middle:'Ocampo',last:'Salazar',dob:'2008-07-22',sex:'Male',pob:'Quezon City',
+      guardian:'Teresita Salazar — mother',gnum:'+63 906 555 0318'}
+};
+/* `search` = may request the civil-registry reconciliation. Law enforcement never can. */
+const ROLES={
+  DSWD :{agency:'LSWDO',officer:'SW A. Panganiban',full:'Social Worker Ana Panganiban',station:'QC D4',
+         stationFull:'LSWDO Quezon City District 4',search:'Social welfare, acting for the person'},
+  PAO  :{agency:'PAO',officer:'Atty. J. Ramos',full:'Atty. Josefina Ramos',station:'PAO QC',
+         stationFull:'Public Attorney’s Office, Quezon City',search:'Counsel, acting for the client'},
+  BJMP :{agency:'BJMP Records',officer:'JO1 L. Sarmiento',full:'JO1 Luis Sarmiento, Records',station:'QC Jail',
+         stationFull:'Quezon City District Jail — Records',search:'Custodial records officer'},
+  BuCor:{agency:'BuCor Records',officer:'CO2 D. Villanueva',full:'CO2 Delia Villanueva, Records',station:'NBP',
+         stationFull:'New Bilibid Prison — Records',search:'Custodial records officer'},
+  PNP  :{agency:'PNP',officer:'PO2 R. Marquez',full:'PO2 Ramon Marquez',station:'Stn 6',
+         stationFull:'PNP Station 6',search:null}
+};
+const CASES=[
+  {id:'A' ,key:'1',label:'a · Resolved — child at the incident date', sub:'Full-bleed blue. RA 9344 fires.'},
+  {id:'B' ,key:'2',label:'b · Resolved — adult 18 or over',          sub:'Quiet card + what resolution unblocks.'},
+  {id:'C' ,key:'3',label:'c · Borderline — days before 18',          sub:'Child panel + timeline.'},
+  {id:'C1',key:'4',label:'c-1 · Borderline — days after 18',         sub:'Adult card + timeline.'},
+  {id:'C2',key:'5',label:'d · Turns 18 on the incident date',             sub:'The screen refuses to decide.'},
+  {id:'D' ,key:'6',label:'e · Nothing resolved',                          sub:'PRESUMED MINOR + legal-identity referral.'},
+  {id:'E' ,key:'7',label:'f · Record carries no birth date',              sub:'PRESUMED MINOR + neutral note.'},
+  {id:'F' ,key:'8',label:'g · Check did not complete',                    sub:'PRESUMED MINOR. Says nothing about age.'},
+  {id:'H' ,key:'9',label:'h · Working…',                             sub:'Nothing shown until the check completes.'}
+];
+const SOURCES=[
+  {k:'kin',   t:'Parents, guardian or relatives', s:'Copies of any document above', r:'Rule 35.b(2)(a)'},
+  {k:'lcr',   t:'Local Civil Registrar or the PSA', s:'Certificate of live birth', r:'Rule 35.b(2)(b)', note:'Civil registry — not PhilSys'},
+  {k:'school',t:'The school', s:'School records', r:'Rule 35.b(2)(c)'},
+  {k:'health',t:'The Local Health Officer', s:'Health and dental records', r:'Rule 35.b(2)(d)'},
+  {k:'church',t:'The church', s:'Baptismal certificate', r:'Rule 35.b(2)(e)'}
+];
+const MEASURES=[
+  {k:'child', tier:2,t:'Interview the person',                    s:'Their own statement of age or birthday', r:'Rule 35.b ¶2(1)'},
+  {k:'know',  tier:2,t:'Interview persons who may know the age',  s:'A relative qualified on pedigree — Rule 130 Sec. 40 — or any other person', r:'Rule 35.b ¶2(2)'},
+  {k:'appear',tier:3,t:'Evaluate the physical appearance',        s:'Weakest evidence.', r:'Rule 35.b ¶2(3)',
+     caveat:'Cannot by itself show that a person is 18 or over. LSWDO consultation required — RA 9344 Sec. 20.'},
+  {k:'other', tier:2,t:'Obtain other relevant evidence',          s:'Anything else bearing on age', r:'Rule 35.b ¶2(4)'}
+];
+const TIERS={
+  1:{n:'Tier 1 · Documentary', w:'Strongest — A.M. 02-1-18-SC Sec. 5(1)–(2)'},
+  2:{n:'Tier 2 · Testimonial', w:'Only in the absence of documents — Sec. 5(3)'},
+  3:{n:'Tier 3 · Appearance',  w:'Never sufficient to show 18 or over'}
+};
+const SCRIPTS={
+  scan:{Filipino:'"Pakiharap po ang QR code ng inyong National ID. Ang petsa lang po ng kapanganakan ang babasahin namin. Hindi po namin itatago ang PhilSys number ninyo."',
+        Cebuano :'"Palihug ipakita ang QR code sa imong National ID. Ang petsa lang sa imong pagkatawo ang among basahon. Dili namo tipigan ang imong PhilSys number."',
+        Ilocano :'"Pangngaasi yo, iparang yo ti QR code ti National ID yo. Ti petsa laeng ti pannakayanak yo ti basaenmi. Saanmi nga idulin ti PhilSys number yo."'},
+  doc :{Filipino:'"May kahit anong papel po ba kayo — birth certificate, binyag, report card, resibo ng ospital? Kukunan ko lang po ng larawan para mabasa ang petsa ng kapanganakan."',
+        Cebuano :'"Naa ba kay bisan unsang papel — birth certificate, bunyag, report card, resibo sa ospital? Kuhaan ra nako ug litrato aron mabasa ang petsa sa imong pagkatawo."',
+        Ilocano :'"Adda kadi aniaman a papel yo — birth certificate, buniag, report card, resibo ti ospital? Litratuak laeng tapno mabasa ti petsa ti pannakayanak yo."'},
+  child:{Filipino:'"Ako po si {OFFICER} ng {STATION}. Nasa pangangalaga po namin kayo. Hindi po ito pag-aresto. Bata po kayo sa paningin ng batas. May karapatan po kayong manatiling tahimik, at magkaroon ng libreng abogado."',
+         Cebuano :'"Ako si {OFFICER} sa {STATION}. Naa ka sa among pag-atiman. Dili ni pag-aresto. Bata ka sa panan-aw sa balaod. Naa kay katungod nga maghilom, ug makabaton ug libreng abogado."',
+         Ilocano :'"Siak ni {OFFICER} ti {STATION}. Addakayo iti aywanmi. Saan daytoy a panangtiliw. Ubing kayo iti imatang ti linteg. Adda karbengan yo nga agulimek, ken maaddaan iti libre nga abogado."'}
+};
+const LANGS=['Filipino','Cebuano','Ilocano'];
+const LANGCODE={Filipino:'fil',Cebuano:'ceb',Ilocano:'ilo'};
+
+/* -------------------------------------------------------------------- state */
+const S={
+  role:'DSWD', caseId:'A', entry:'intake', person:null, incident:null, incidentEstimated:false, estLabel:'',
+  ref:'VF-8241', started:new Date(), custody:new Date(), idMatch:null, torch:false,
+  lang:{scan:0,child:0,sms:0,doc:0}, klang:0, failCount:0, sent:false, subjectHash:null,
+  path:null, record:[], sources:{}, measures:{}, contested:false, basis:null,
+  facts:{}, asked:[], qi:0, queue:[], chosen:null, searched:false, referral:null
+};
+
+/* -------------------------------------------------------------------- utils */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const D=s=>{const p=String(s).split('-');return new Date(+p[0],+p[1]-1,+p[2]);};
+const dayKey=d=>d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+const longDate=d=>d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
+const shortDate=d=>d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear();
+const filDate=d=>d.getDate()+' '+FIL_MON[d.getMonth()]+' '+d.getFullYear();
+const clock=d=>{let h=d.getHours(),m=String(d.getMinutes()).padStart(2,'0');const ap=h<12?'AM':'PM';h=h%12||12;return h+':'+m+' '+ap;};
+const days=(a,b)=>Math.round((b-a)/86400000);
+function initials(p){return [p.first,p.middle,p.last].filter(Boolean).map(s=>s[0]).join('.')+'.';}
+function fullName(p){return [p.first,p.middle,p.last,p.suffix].filter(Boolean).join(' ');}
+function ymd(from,to){
+  let y=to.getFullYear()-from.getFullYear(), m=to.getMonth()-from.getMonth(), d=to.getDate()-from.getDate();
+  if(d<0){m--; d+=new Date(to.getFullYear(),to.getMonth(),0).getDate();}
+  if(m<0){y--; m+=12;}
+  return {y:y,m:m,d:d};
+}
+function ageWords(a,withDays){
+  const bits=[a.y+(a.y===1?' year':' years'),a.m+(a.m===1?' month':' months')];
+  if(withDays) bits.push(a.d+(a.d===1?' day':' days'));
+  return bits.join(', ')+' old';
+}
+function eighteenth(dob){const b=D(dob);return new Date(b.getFullYear()+18,b.getMonth(),b.getDate());}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function subYM(d,y,m){const day=d.getDate();const x=new Date(d.getFullYear()-y,d.getMonth()-m,1);
+  const dim=new Date(x.getFullYear(),x.getMonth()+1,0).getDate();x.setDate(Math.min(day,dim));return x;}
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+function planFor(id){
+  const t=new Date(); t.setHours(0,0,0,0);
+  if(id==='A')  return {dob:iso(subYM(t,16,4)),           inc:t};
+  if(id==='B')  return {dob:iso(subYM(t,34,2)),           inc:t};
+  if(id==='C')  {const b18=addDays(t,6);  return {dob:iso(subYM(b18,18,0)), inc:addDays(t,-6)};}
+  if(id==='C1') {const b18=addDays(t,-17);return {dob:iso(subYM(b18,18,0)), inc:addDays(t,-8)};}
+  if(id==='C2') return {dob:iso(subYM(t,18,0)),           inc:t};
+  return null;
+}
+/* the whole determination rule, in one place */
+function classify(dobStr,incident){
+  if(!dobStr) return null;
+  const dob=D(dobStr), b18=eighteenth(dobStr), gap=days(incident,b18);
+  const placeholderDOB=(dob.getMonth()===0&&dob.getDate()===1);
+  if(gap===0) return 'C2';
+  if(placeholderDOB) return gap>0?'C':'C1';
+  if(gap>90)  return 'A';
+  if(gap>0)   return 'C';
+  if(gap>=-90)return 'C1';
+  return 'B';
+}
+
+/* ------------------------------------------------------- the evidence record */
+function addEvidence(tier,label,detail,rule){
+  S.record.push({tier:tier,label:label,detail:detail||'',rule:rule||'',at:new Date()});
+  paintRecords();
+}
+function evidenceHTML(compact){
+  const n=S.record.length;
+  let inner='';
+  if(!n){
+    inner='<div class="none">Nothing recorded yet.</div>';
+  } else {
+    [1,2,3].forEach(function(t){
+      const items=S.record.filter(function(r){return r.tier===t;});
+      if(!items.length) return;
+      inner+='<div class="tg"><span class="tn'+(t===3?' t3':'')+'">'+TIERS[t].n+'</span><span class="tw">'+TIERS[t].w+'</span></div>';
+      inner+=items.map(function(r){return '<div class="ei"><div class="el">'+esc(r.label)+'</div>'+
+        (r.detail?'<div class="ed">'+esc(r.detail)+'</div>':'')+
+        '<div class="er">'+esc(r.rule)+' · '+clock(r.at)+'</div></div>';}).join('');
+    });
+  }
+  return '<div class="erec"><div class="eh"><span class="t">Evidence record</span>'+
+    '<span class="chip">'+n+' item'+(n===1?'':'s')+'</span></div>'+inner+
+    '<div class="foot">Statutory weight: <strong>documentary &gt; testimonial &gt; appearance</strong>.'+
+    (compact?'':' This record travels with the referral.')+'</div></div>';
+}
+function paintRecords(){
+  const a=$('s4rec'); if(a) a.innerHTML=evidenceHTML(true);
+  const b=$('v4rec'); if(b) b.innerHTML=evidenceHTML(true);
+}
+
+/* --------------------------------------------------------------- navigation */
+function go(id){
+  if(id==='s-v4') paintV4();
+  if(id==='s-sources') paintSources();
+  if(id==='s-measures'){ paintMeasures(); paintLookupSlot(); paintRecords(); }
+  if(id==='s-search') paintSearch();
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
+  $(id).classList.add('on');
+  const sc=$(id).querySelector('.scroll'); if(sc) sc.scrollTop=0;
+  closeSheets(); poke();
+}
+function restartFlow(){
+  S.person=null;S.idMatch=null;S.sent=false;S.failCount=0;S.subjectHash=null;
+  S.record=[];S.sources={};S.measures={};S.contested=false;S.path=null;S.basis=null;
+  S.facts={};S.asked=[];S.qi=0;S.queue=[];S.chosen=null;S.searched=false;S.referral=null;
+  S.ref='VF-'+(8240+Math.floor(Math.random()*60));
+  S.started=new Date(); S.custody=new Date();
+  S.incident=new Date(); S.incidentEstimated=false; S.estLabel='';
+  $('chat').innerHTML=''; paintProfile();
+  paintSession(); paintIncidentChip(); paintRecords(); unveil(); go('s-entry');
+}
+function setEntry(k){
+  S.entry=k;
+  if(k==='custody') toast('Custody began before this session. Record the actual date with the LSWDO.');
+  go('s-step1');
+}
+
+/* ------------------------------------------------------------ incident date */
+function pickDate(k){
+  document.querySelectorAll('[data-opt]').forEach(function(b){
+    const on=b.dataset.opt===k;
+    b.classList.toggle('sel',on); b.setAttribute('aria-checked',on?'true':'false');
+    const t=b.querySelector('.tick');
+    t.textContent = on ? '✓' : (b.dataset.opt==='today'?'✓':'›');
+    t.style.color = on ? 'var(--primary)' : 'var(--faint)';
+  });
+  $('earlierWrap').style.display = k==='earlier'?'':'none';
+  $('unknownWrap').style.display = k==='unknown'?'':'none';
+  if(k==='today'){S.incident=new Date();S.incidentEstimated=false;S.estLabel='';}
+  paintIncidentChip();
+}
+function setEarlier(v){ if(!v)return; S.incident=D(v); S.incidentEstimated=false; S.estLabel=''; paintIncidentChip(); }
+function setBand(daysBack,label){
+  const d=new Date(); d.setDate(d.getDate()-daysBack);
+  S.incident=d; S.incidentEstimated=true; S.estLabel=label;
+  paintIncidentChip(); toast('Using '+shortDate(d)+' — earliest in "'+label+'".');
+}
+function paintIncidentChip(){
+  const t=S.incident.getDate()+' '+MON[S.incident.getMonth()];
+  ['incChip','incChip2'].forEach(function(i){ if($(i)) $(i).textContent=t; });
+}
+function editIncident(){ S.person=null; S.idMatch=null; toast('Result discarded. Re-date the incident first.'); go('s-step1'); }
+
+function startPath(p){
+  S.path=p;
+  if(p==='id')   return go('s-scan');
+  if(p==='doc')  return go('s-doc');
+  if(p==='claim'){ const d=$('cDob'); if(d&&!d.value) d.value=iso(subYM(new Date(),16,4)); return go('s-claim'); }
+  go('s-kal'); startKalayaan();
+}
+</script>
+<script>
+"use strict";
+/* ======================================================================
+   KALAYAAN — the conversational interviewer.
+   One question at a time. Every turn carries "Hindi ko alam" and
+   "Ayaw kong sagutin", both of which advance the conversation.
+   Kalayaan gathers and suggests; a person decides.
+   ====================================================================== */
+const KQ={
+  intro:{gloss:'I am Kalayaan. I will ask a few things so we can look for your record. You can say you do not know at any time — nothing bad happens.',
+    fil:'Ako si Kalayaan. May itatanong lang ako para makita natin ang tala mo. Puwede kang magsabi na hindi mo alam — walang mangyayaring masama.',
+    ceb:'Ako si Kalayaan. Naay pangutan-on nako aron makita nato ang imong rekord. Pwede ka moingon nga wala ka kabalo — walay daotan nga mahitabo.',
+    ilo:'Siak ni Kalayaan. Adda saludsodek tapno makitami ti listaam. Mabalinmo nga ibaga a saanmo ammo — awan ti dakes a mapasamak.',
+    open:true},
+  name:{f:'name',label:'Pangalan',gloss:'What is your name?',
+    fil:'Ano ang pangalan mo?',ceb:'Unsa imong ngalan?',ilo:'Ania ti nagan mo?'},
+  alias:{f:'alias',label:'Palayaw',gloss:'What do people call you? A nickname is fine.',
+    fil:'Ano ang tawag sa iyo ng mga tao? Kahit palayaw lang.',ceb:'Unsa imong tawag sa mga tawo? Bisan angga lang.',ilo:'Ania ti awag dagiti tattao kenka? Uray nagan-parbo laeng.'},
+  mother:{f:'mother',label:'Apelyido ng nanay',gloss:'Your mother’s name before she married. This is the field a registrar searches on first.',
+    fil:'Ano ang pangalan ng nanay mo bago siya ikinasal?',ceb:'Unsa ang ngalan sa imong mama sa wala pa siya minyo?',ilo:'Ania ti nagan ni nanang mo sakbay a naasawa?',
+    chips:['Santos','Reyes','Dela Cruz']},
+  father:{f:'father',label:'Pangalan ng tatay',gloss:'Your father’s name?',
+    fil:'Ano naman ang pangalan ng tatay mo?',ceb:'Unsa ang ngalan sa imong papa?',ilo:'Ania ti nagan ni tatang mo?'},
+  sibs:{f:'sibs',label:'Kapatid',gloss:'Do you have brothers or sisters? Their names?',
+    fil:'May kapatid ka ba? Ano ang pangalan nila?',ceb:'Naa kay igsoon? Unsa ilang ngalan?',ilo:'Adda kabsat mo? Ania ti nagan da?'},
+  pob:{f:'pob',label:'Lugar ng kapanganakan',gloss:'Where were you born?',
+    fil:'Saan ka ipinanganak?',ceb:'Asa ka natawo?',ilo:'Sadino ti nakayanakam?',
+    chips:['Quezon City','Manila','Sa probinsya']},
+  grew:{f:'grew',label:'Saan lumaki',gloss:'Where did you grow up?',
+    fil:'Saan ka lumaki?',ceb:'Asa ka nagdako?',ilo:'Sadino ti nagdakkelam?'},
+  now:{f:'now',label:'Tirahan ngayon',gloss:'Where have you been staying?',
+    fil:'Saan ka nakatira ngayon?',ceb:'Asa ka nagpuyo karon?',ilo:'Sadino ti pagnanaedam ita?',
+    chips:['Sa kalsada','Sa kaibigan','Sa kamag-anak']},
+  brgy:{f:'brgy',label:'Barangay',gloss:'Which barangay?',
+    fil:'Anong barangay?',ceb:'Unsang barangay?',ilo:'Ania a barangay?'},
+  bday:{f:'bday',label:'Kaarawan',gloss:'When is your birthday?',
+    fil:'Kailan ang kaarawan mo?',ceb:'Kanus-a imong adlaw nga natawhan?',ilo:'Kaano ti panagkasangay mo?',
+    onUnknown:['fiesta','grade']},
+  fiesta:{f:'fiesta',label:'Pista malapit sa kaarawan',gloss:'Is there a fiesta or a season near your birthday? Rainy? Christmas?',
+    fil:'May pista ba o panahon na malapit sa kaarawan mo? Tag-ulan? Pasko?',
+    ceb:'Naay pista o panahon nga duol sa imong adlaw nga natawhan? Ting-ulan? Pasko?',
+    ilo:'Adda kadi piesta wenno panawen nga asideg iti panagkasangay mo? Tudo? Paskua?',
+    chips:['Tag-ulan','Tag-init','Malapit sa Pasko','Fiesta ng barangay']},
+  grade:{f:'grade',label:'Huling grado',gloss:'What grade did you last finish? It helps narrow the birth year.',
+    fil:'Anong grado ang huling natapos mo?',ceb:'Unsang grado imong katapusan nahuman?',ilo:'Ania a grado ti kaudian a nalpasmo?',
+    chips:['Grade 1','Grade 3','Grade 5','Grade 6','High school']},
+  age:{f:'age',label:'Edad na sinabi',gloss:'About how old are you?',
+    fil:'Mga ilang taon ka na?',ceb:'Pila na ka tuig?',ilo:'Mano ti tawenmon?',
+    chips:['10','13','15','17','Mas matanda']},
+  school:{f:'school',label:'Eskwelahan',gloss:'Did you ever go to school? Which one?',
+    fil:'Nakapasok ka ba sa eskwelahan? Saan?',ceb:'Nakaeskwela ka ba? Asa?',ilo:'Nakaeskuela ka? Sadino?'},
+  church:{f:'church',label:'Simbahan ng binyag',gloss:'Were you ever baptised? Which church?',
+    fil:'Nabinyagan ka ba? Saang simbahan?',ceb:'Nabunyagan ka ba? Asang simbahan?',ilo:'Nabuniagan ka? Ania a simbaan?'},
+  addr:{f:'addr',label:'Huling tirahan',gloss:'The last address you can remember.',adult:true,
+    fil:'Ano ang huling tirahan na natatandaan mo?',ceb:'Unsa ang katapusang address nga imong nahinumduman?',ilo:'Ania ti kaudian a pagtaengan a malagipmo?'},
+  spouse:{f:'spouse',label:'Asawa',gloss:'Are you married? Your husband’s or wife’s name?',adult:true,
+    fil:'May asawa ka ba? Ano ang pangalan niya?',ceb:'Naa kay asawa? Unsa iyang ngalan?',ilo:'Adda asawam? Ania ti naganna?'},
+  work:{f:'work',label:'Trabaho',gloss:'Have you worked anywhere? For whom?',adult:true,
+    fil:'May pinagtrabahuhan ka ba? Kanino?',ceb:'Naa kay natrabahoan? Kang kinsa?',ilo:'Adda nagtrabahuam? Kenni siasino?'},
+  prog:{f:'prog',label:'Programa ng gobyerno',gloss:'Any government programme you were ever enrolled in? These carry your own record.',adult:true,
+    fil:'May programa ba ng gobyerno na nasalihan mo?',ceb:'Naay programa sa gobyerno nga imong naapilan?',ilo:'Adda programa ti gobierno a nakikaduaam?',
+    chips:['4Ps','PhilHealth','SSS','GSIS','Pag-IBIG','Wala']}
+};
+const KORDER=['intro','name','alias','mother','father','sibs','pob','grew','now','brgy','bday','age','school','church','addr','spouse','work','prog'];
+const DK='Hindi ko alam', RF='Ayaw kong sagutin';
+
+function kText(k){ const q=KQ[k]; const L=LANGS[S.klang];
+  return L==='Cebuano'?(q.ceb||q.fil):L==='Ilocano'?(q.ilo||q.fil):q.fil; }
+
+function startKalayaan(){
+  if(S.queue.length||S.asked.length) return;
+  S.queue=KORDER.slice();
+  $('chat').innerHTML='';
+  askNext();
+}
+function toggleProf(){ $('prof').classList.toggle('closed'); }
+
+function bubbleK(k){
+  const q=KQ[k];
+  const id='m'+(S.qi++);
+  const el=document.createElement('div');
+  el.className='msg k'; el.id=id;
+  el.innerHTML='<span class="kt">'+esc(kText(k))+'</span>'+
+    '<span class="tr2">'+esc(q.gloss)+'</span>'+
+    '<button class="sayb" onclick="speakEl(\''+id+'\')">'+SPK+' Pakinggan</button>';
+  $('chat').appendChild(el);
+  scrollChat();
+}
+function bubbleU(text,skip){
+  const el=document.createElement('div');
+  el.className='msg u'+(skip?' skip':'');
+  el.textContent=text;
+  $('chat').appendChild(el); scrollChat();
+}
+function bubbleSys(html){
+  const el=document.createElement('div');
+  el.className='msg sys'; el.innerHTML=html;
+  $('chat').appendChild(el); scrollChat();
+}
+function typing(on){
+  const ex=$('typing'); if(ex) ex.remove();
+  if(!on) return;
+  const el=document.createElement('div');
+  el.className='typing'; el.id='typing';
+  el.innerHTML='<i></i><i></i><i></i>';
+  $('chat').appendChild(el); scrollChat();
+}
+function scrollChat(){ const c=$('chat'); c.scrollTop=c.scrollHeight; }
+
+function askNext(){
+  const k=S.queue.shift();
+  if(!k) return finishInterview();
+  S.cur=k;
+  typing(true);
+  setTimeout(function(){
+    typing(false);
+    bubbleK(k);
+    if(KQ[k].open){ renderChips(['Simulan na']); }
+    else renderChips((KQ[k].chips||[]).concat([DK,RF]));
+    $('kIn').disabled=!!KQ[k].open;
+  },520);
+}
+function renderChips(list){
+  $('qreps').innerHTML=list.map(function(c){
+    const dk=(c===DK||c===RF);
+    return '<button class="'+(dk?'dk':'')+'" onclick="answer('+JSON.stringify(c).replace(/"/g,'&quot;')+')">'+esc(c)+'</button>';
+  }).join('');
+}
+function sendFree(){
+  const v=$('kIn').value.trim(); if(!v) return;
+  $('kIn').value=''; answer(v);
+}
+function answer(v){
+  const k=S.cur; if(!k) return;
+  const q=KQ[k];
+  if(q.open){ bubbleU(v); S.asked.push(k); return askNext(); }
+  const unknown=(v===DK), refused=(v===RF);
+  bubbleU(v,unknown||refused);
+  S.asked.push(k);
+  if(unknown||refused){
+    if(q.onUnknown) S.queue=q.onUnknown.concat(S.queue);
+    S.facts[q.f]={v:null,state:unknown?'unknown':'refused',label:q.label,src:'sinabi niya',conf:0,at:new Date()};
+  } else {
+    S.facts[q.f]={v:v,state:'known',label:q.label,src:'sinabi niya',conf:2,at:new Date()};
+  }
+  paintProfile();
+  askNext();
+}
+function knownFacts(){ return Object.keys(S.facts).filter(function(f){return S.facts[f].state==='known';}); }
+
+function paintProfile(){
+  const ks=knownFacts();
+  $('profN').textContent=ks.length+(ks.length===1?' fact':' facts');
+  if(!ks.length){
+    $('profBody').innerHTML='<div class="empty2">Wala pa. Tuloy lang — kahit isa o dalawa, may maitutulong.</div>';
+    return;
+  }
+  $('profBody').innerHTML=ks.map(function(f){
+    const a=S.facts[f];
+    const bars='<span class="cbar'+(a.conf<3?' lowc':'')+'"><i class="'+(a.conf>=1?'on':'')+'"></i><i class="'+(a.conf>=2?'on':'')+'"></i><i class="'+(a.conf>=3?'on':'')+'"></i></span>';
+    return '<div class="pf"><span class="pk">'+esc(a.label)+'</span>'+
+      '<span class="pv">'+esc(a.v)+bars+'<span class="pm">'+esc(a.src)+' · '+clock(a.at)+'</span></span></div>';
+  }).join('');
+}
+function finishInterview(){
+  S.cur=null; renderChips([]); $('kIn').disabled=true;
+  const n=knownFacts().length;
+  typing(true);
+  setTimeout(function(){
+    typing(false);
+    const L=LANGS[S.klang];
+    const msg = n
+      ? (L==='Cebuano'?'Salamat. Tan-awon nako ang mga rekord karon.'
+        :L==='Ilocano'?'Agyamanak. Kitaek dagiti listaan ita.'
+        :'Salamat. Titingnan ko na ang mga tala.')
+      : (L==='Cebuano'?'Okay ra. Bisan wala kay natubag, naa gihapon paagi. Tan-awon nako ang mga rekord.'
+        :L==='Ilocano'?'Nasayaat latta. Uray awan ti nasungbatam, adda pay laeng wagas. Kitaek dagiti listaan.'
+        :'Ayos lang. Kahit wala kang nasagot, may paraan pa rin. Titingnan ko na ang mga tala.');
+    const el=document.createElement('div');
+    el.className='msg k'; el.id='mfin';
+    el.innerHTML='<span class="kt">'+esc(msg)+'</span><span class="tr2">'+
+      (n?'Thank you. I will check the records now.':'That is all right. Even with nothing answered there is still a route. I will check the records now.')+
+      '</span><button class="sayb" onclick="speakEl(\'mfin\')">'+SPK+' Pakinggan</button>';
+    $('chat').appendChild(el);
+    bubbleSys('<strong>'+n+' of '+S.asked.length+'</strong> questions produced a fact.'+
+      (n?'':' Reconciliation still runs — a null result has its own route.'));
+    addEvidence(2,'Interview conducted by Kalayaan',
+      n+' fact(s) gathered from '+S.asked.length+' questions. Unknown and refused answers recorded neutrally.','Rule 35.b ¶2(1)');
+    S.measures.child=true;
+    const el2=document.createElement('div'); el2.className='msg sys';
+    el2.innerHTML='<button class="lnk" style="min-height:38px" onclick="go(\'s-search\')">Check the civil registry &rsaquo;</button>';
+    $('chat').appendChild(el2); scrollChat();
+    renderChips([]);
+  },700);
+}
+function speakEl(id){
+  const el=$(id); if(!el) return;
+  const t=el.querySelector('.kt'); if(!t) return;
+  try{
+    if(!('speechSynthesis' in window)) throw 0;
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(t.textContent);
+    u.lang='fil-PH'; u.rate=.88; window.speechSynthesis.speak(u);
+    toast('Binabasa…');
+  }catch(e){ toast('Audio unavailable on this device. Read it aloud.'); }
+}
+/* Language switch re-renders every Kalayaan turn. Where an authored translation
+   is absent the eGov AI Translator supplies it; on failure the Filipino stands. */
+async function cycleKLang(){
+  S.klang=(S.klang+1)%LANGS.length;
+  $('kLangLbl').textContent=LANGS[S.klang];
+  const bubbles=$('chat').querySelectorAll('.msg.k .kt');
+  const keys=S.asked.concat(S.cur?[S.cur]:[]);
+  bubbles.forEach(function(b,i){ if(keys[i]&&KQ[keys[i]]) b.textContent=kText(keys[i]); });
+  const r=await api('/api/ai',{action:'translate',text:'Salamat. Titingnan ko na ang mga tala.',
+    source_lang:'fil',target_lang:LANGCODE[LANGS[S.klang]]});
+  toast(r&&r.translated?'Isinalin ng eGov AI · '+LANGS[S.klang]:'Wika: '+LANGS[S.klang]);
+}
+</script>
+<script>
+"use strict";
+/* ======================================================================
+   CIVIL-REGISTRY RECONCILIATION — PROPOSED INTERFACE.
+   Seeded candidates. A human confirms or rejects; nothing auto-selects.
+   Near-misses are shown, not hidden.
+   ====================================================================== */
+function fact(f){ const a=S.facts[f]; return a&&a.state==='known'?a.v:null; }
+
+function buildCandidates(){
+  const t=new Date(); t.setHours(0,0,0,0);
+  const cDob=iso(subYM(t,16,4));
+  const mother=fact('mother'), pob=fact('pob'), name=fact('name'), brgy=fact('brgy');
+  return [
+    {reg:'2010-04521',lcr:'LCR Quezon City',name:'JUAN SANTOS DELA CRUZ',dob:cDob,pob:'Quezon City',
+     mother:'MARIA SANTOS SANTOS',father:'PEDRO DELA CRUZ',conf:3,
+     ok:[['Mother’s maiden name',mother||'SANTOS'],['Place of birth',pob||'Quezon City'],['Barangay',brgy||'Commonwealth']],
+     cf:[['Given name','record reads “Juan”; they said “'+(name||'Jun-jun')+'”','commonly a nickname']],
+     expl:'Mother’s maiden name and place of birth match. The given name differs, which is usual where a child is known by a nickname.'},
+    {reg:'2009-11832',lcr:'LCR Quezon City',name:'JUANITO S. DELA CRUZ',dob:iso(subYM(t,17,1)),pob:'Quezon City',
+     mother:'MARIA SANTOS SANTOS',father:'—',conf:2,
+     ok:[['Mother’s maiden name',mother||'SANTOS'],['Place of birth',pob||'Quezon City']],
+     cf:[['Barangay','record reads “Payatas”; they said “'+(brgy||'Commonwealth')+'”',''],
+         ['Father','not stated on the record','']],
+     expl:'Same mother’s maiden name and city. Different barangay. Could be a sibling rather than this person.'},
+    {reg:'2010-00917',lcr:'LCR Caloocan City',name:'JUAN M. SANTOS',dob:iso(subYM(t,16,0)),pob:'Caloocan City',
+     mother:'MARIA MENDOZA SANTOS',father:'—',conf:1,
+     ok:[['Given name',name||'Juan']],
+     cf:[['Mother’s maiden name','record reads “MENDOZA”; they said “'+(mother||'Santos')+'”',''],
+         ['Place of birth','record reads “Caloocan City”','']],
+     expl:'Near-miss. Only the given name lines up. Shown rather than hidden — a hidden near-miss is how the wrong person gets confirmed.'}
+  ];
+}
+function paintSearch(){
+  const r=ROLES[S.role];
+  $('requester').innerHTML='<div class="card"><div class="card-h"><h4>Requester</h4>'+
+    '<span class="chip'+(r.search?'':' stale')+'">'+esc(r.agency)+'</span></div>'+
+    (r.search
+      ? '<p>'+esc(r.full)+' · '+esc(r.stationFull)+'<br>'+esc(r.search)+'</p>'
+      : '<p>Law enforcement has no search path in this module. Refer the person to the LSWDO or to counsel, who may request the reconciliation.</p>'+
+        '<button class="btn ghost mt2" onclick="handoff()">Refer to the duty social worker</button>')+
+    '</div>';
+
+  const ks=knownFacts();
+  $('queryCard').innerHTML='<div class="qcard"><h4>The query</h4>'+
+    (ks.length
+      ? ks.map(function(f){return '<div class="qr2"><span class="k">'+esc(S.facts[f].label)+'</span><span class="v">'+esc(S.facts[f].v)+'</span></div>';}).join('')
+      : '<p style="margin-top:6px">No identifiers were given. The query runs on the incident date and the record of the interview alone, and is expected to return nothing.</p>')+
+    '<hr class="hr"><button class="lnk sm" onclick="readQuery()">'+SPK+' Read this back to the person</button></div>';
+
+  $('searchFoot').innerHTML = r.search
+    ? '<button class="btn" onclick="runSearch()">'+(S.searched?'Search again':'Run the reconciliation')+'</button>'+
+      '<div class="fnote">Logged: requester, purpose, outcome.</div>'
+    : '<button class="btn quiet" onclick="go(\'s-v2\')">Continue without a search</button>';
+  if(!S.searched) $('results').innerHTML='';
+}
+async function readQuery(){
+  const ks=knownFacts();
+  const txt=ks.length
+    ? 'Ito ang hahanapin natin: '+ks.map(function(f){return S.facts[f].label+' — '+S.facts[f].v;}).join('; ')+'. May mali ba?'
+    : 'Wala pa tayong impormasyon, pero titingnan pa rin natin ang mga tala.';
+  try{
+    if(!('speechSynthesis' in window)) throw 0;
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt); u.lang='fil-PH'; u.rate=.88;
+    window.speechSynthesis.speak(u); toast('Binabasa…');
+  }catch(e){ toast('Audio unavailable on this device.'); }
+  api('/api/ai',{action:'translate',text:txt,source_lang:'fil',target_lang:LANGCODE[LANGS[S.klang]]});
+}
+function runSearch(){
+  S.searched=true;
+  $('results').innerHTML='<div class="card"><div class="sk line" style="width:70%"></div>'+
+    '<div class="sk line" style="width:88%"></div><div class="sk line" style="width:52%"></div>'+
+    '<div class="tiny mt1">Reconciling against civil registration…</div></div>';
+  setTimeout(function(){
+    const ks=knownFacts();
+    if(!ks.length) return renderNoMatch();
+    const cs=buildCandidates();
+    let h='<div class="sec"><h3>Candidates</h3><span class="n">'+cs.length+'</span></div>';
+    h+=cs.map(function(c,i){
+      const lbl=c.conf===3?'High':c.conf===2?'Possible':'Near-miss';
+      return (i===2?'<div class="nearhd">Below the threshold. Shown, not hidden.</div>':'')+
+      '<div class="cand'+(i===0?' top':'')+'">'+
+      '<div class="ch"><div><div class="cn">Candidate '+(i+1)+'</div>'+
+      '<div class="conf'+(c.conf<3?' low':'')+'"><i class="'+(c.conf>=1?'on':'')+'"></i><i class="'+(c.conf>=2?'on':'')+'"></i><i class="'+(c.conf>=3?'on':'')+'"></i><b>'+lbl+'</b></div></div></div>'+
+      '<div class="cname">'+esc(c.name)+'</div>'+
+      '<div class="cmeta">Certificate of Live Birth · Reg. No. '+esc(c.reg)+' · '+esc(c.lcr)+'<br>'+
+      'Born '+longDate(D(c.dob))+' · '+esc(c.pob)+'<br>Mother: '+esc(c.mother)+'</div>'+
+      '<div class="mm ok"><div class="hd">Matched</div>'+c.ok.map(function(m){return '<div>'+esc(m[0])+' — <span>'+esc(m[1])+'</span></div>';}).join('')+'</div>'+
+      (c.cf.length?'<div class="mm cf"><div class="hd">Conflicts</div>'+c.cf.map(function(m){return '<div>'+esc(m[0])+' — '+esc(m[1])+(m[2]?' <span>'+esc(m[2])+'</span>':'')+'</div>';}).join('')+'</div>':'')+
+      '<div class="expl">'+esc(c.expl)+'</div>'+
+      '<div class="cacts"><button class="btn" onclick="chooseCand('+i+')">This is the person</button>'+
+      '<button class="btn ghost" onclick="rejectCand('+i+')">Not them</button></div></div>';
+    }).join('');
+    h+='<button class="btn quiet mb2" onclick="renderNoMatch()">None of these is the person</button>';
+    h+='<div class="tiny mb2">Kalayaan does not choose. The record shows who confirmed, when, and on what basis.</div>';
+    $('results').innerHTML=h;
+    addEvidence(2,'Civil-registry reconciliation run',ks.length+' identifier(s) submitted by '+ROLES[S.role].full+'. Purpose: establish identity.','Rule 35.b(2)(b)');
+  },1300);
+}
+function rejectCand(i){ toast('Rejected. Recorded with your name and the time.'); }
+function chooseCand(i){
+  const c=buildCandidates()[i];
+  S.chosen=c;
+  S.person={first:c.name.split(' ')[0],middle:'',last:c.name.split(' ').slice(-1)[0],dob:c.dob,
+    guardian:(fact('mother')||c.mother)+' — mother',gnum:'+63 917 555 0142'};
+  S.basis='Civil-registry record confirmed by '+ROLES[S.role].full+' · Reg. No. '+c.reg+', '+c.lcr;
+  S.facts.dob={v:longDate(D(c.dob)),state:'known',label:'Petsa ng kapanganakan',src:'mula sa tala',conf:3,at:new Date()};
+  paintProfile();
+  addEvidence(1,'Civil-registry record matched and confirmed',
+    'Reg. No. '+c.reg+', '+c.lcr+'. Birth date '+longDate(D(c.dob))+'. Confirmed by '+ROLES[S.role].full+'.','Rule 35.b(2)(b)');
+  S.sources.lcr={v:'req',label:'Requested',at:new Date()};
+  toast('Confirmed. Request the certified copy from '+c.lcr+' — Rule 35.b(2)(b).');
+  setTimeout(function(){ openCase(classify(c.dob,S.incident),true); },700);
+}
+function renderNoMatch(){
+  S.chosen=null;
+  $('results').innerHTML='<div class="card leftrule"><span class="ic">○</span>'+
+    '<div class="h18">No civil-registry record matched.</div>'+
+    '<p style="margin-top:8px">The most likely explanation is that this person was never registered at birth.</p>'+
+    '<button class="btn mt2" onclick="openCase(\'D\')">Continue to the determination</button></div>';
+  addEvidence(2,'Civil-registry reconciliation returned no match','Recorded as a null result. Not evidence of adulthood.','Rule 35.c');
+}
+
+/* --------------------------------------------------------- branch: document */
+function onDocFile(input){
+  const file=input&&input.files&&input.files[0]?input.files[0]:null;
+  $('docHint').textContent=file?('Reading '+file.name+'…'):'Reading the sample…';
+  $('docStatus').innerHTML='<div class="card"><div class="sk line" style="width:62%"></div>'+
+    '<div class="sk line" style="width:88%"></div><div class="sk line" style="width:44%"></div>'+
+    '<div class="tiny mt1">eGov AI Document Extractor</div></div>';
+  runExtract(file);
+}
+async function runExtract(file){
+  const r=file?await apiFile('/api/ai',file):null;
+  setTimeout(function(){
+    $('docHint').textContent='Fill the frame';
+    if(r&&r.ok&&r.dob) return showExtract(r.dob,r.fields||[],r.dobLabel||'Date of Birth');
+    if(r&&r.ok&&!r.dob) return showNoDate();
+    const seed=(PEOPLE[S.caseId]&&PEOPLE[S.caseId].dob)?PEOPLE[S.caseId].dob:iso(subYM(S.incident,16,4));
+    showExtract(seed,[['Document Type','CERTIFICATE OF LIVE BIRTH'],['Registry Number','2010-04521'],
+      ['Name','JUAN DELA CRUZ'],['Date of Birth',longDate(D(seed))],['Place of Birth','Quezon City'],
+      ['Mother','MARIA SANTOS SANTOS']],'Date of Birth');
+  },1300);
+}
+function showExtract(dob,fields,label){
+  $('docStatus').innerHTML='<div class="card"><div class="h18">A birth date was read.</div>'+
+    '<p style="margin-top:6px">Read it back against the paper in your hand.</p></div>';
+  const rows=fields.slice(0,8).map(function(f){return '<div class="kv"><span class="k">'+esc(f[0])+'</span><span class="v">'+esc(f[1])+'</span></div>';}).join('');
+  $('askBody').innerHTML='<h3>Confirm before use</h3>'+
+    '<p style="margin-top:6px">If a single digit is wrong, reject it.</p>'+
+    '<div class="card tint mt2"><div class="tiny">'+esc(label)+'</div>'+
+    '<div style="font-size:22px;font-weight:500;margin-top:6px">'+longDate(D(dob))+'</div>'+
+    '<hr class="hr"><div class="tiny mb1">Everything the extractor returned</div>'+rows+'</div>'+
+    '<button class="btn" onclick="acceptDOB(\''+dob+'\')">This matches the document</button>'+
+    '<button class="btn quiet mt1 mb2" onclick="rejectDOB()">It does not match</button>';
+  openSheet('askSheet');
+}
+function showNoDate(){
+  $('docStatus').innerHTML='<div class="card leftrule"><span class="ic">▤</span>'+
+    '<div class="h18">This document carries no birth date.</div>'+
+    '<p style="margin-top:8px">The page was read. The field is absent.</p>'+
+    '<button class="btn ghost mt2" onclick="startPath(\'none\')">Start the interview</button></div>';
+  addEvidence(1,'Document photographed — no birth date on it','Read successfully; the field is absent.','Rule 35.b(1)');
+  openCase('E');
+}
+function acceptDOB(dob){
+  closeSheets();
+  S.person=Object.assign({first:'Juan',middle:'Dela',last:'Cruz',guardian:'Maria Dela Cruz — mother',gnum:'+63 917 555 0142'},S.person||{},{dob:dob});
+  S.basis='Document photographed and read · eGov AI Document Extractor, confirmed by the officer';
+  S.facts.dob={v:longDate(D(dob)),state:'known',label:'Petsa ng kapanganakan',src:'mula sa dokumento',conf:3,at:new Date()};
+  paintProfile();
+  addEvidence(1,'Document photographed and read back','Birth date '+longDate(D(dob))+' — read back against the paper by '+ROLES[S.role].officer+'.','Rule 35.b(1)');
+  toast('Confirmed. Applying it to '+shortDate(S.incident)+'.');
+  setTimeout(function(){ openCase(classify(dob,S.incident),true); },600);
+}
+function rejectDOB(){ closeSheets();
+  $('docStatus').innerHTML='<div class="card leftrule"><span class="ic">▤</span><div class="h18">Discarded.</div>'+
+    '<p style="margin-top:8px">Nothing recorded. Photograph another document, or start the interview.</p></div>';
+  toast('Discarded. Nothing recorded.'); }
+
+/* ------------------------------------------------------------ branch: claim */
+async function runClaim(){
+  const f=$('cFirst').value.trim(), l=$('cLast').value.trim(), d=$('cDob').value;
+  if(!f||!l||!d){ toast('Enter the name and birth date as they gave them.'); return; }
+  $('claimStatus').innerHTML='<div class="card"><div class="sk line" style="width:70%"></div>'+
+    '<div class="sk line" style="width:45%"></div><div class="tiny mt1">eVerify · 1:1</div></div>';
+  const r=await api('/api/everify',{action:'demographics',first_name:f,last_name:l,birth_date:d});
+  setTimeout(function(){
+    const confirmed=r?Boolean(r.verified):true;
+    if(confirmed){
+      S.person={first:f,last:l,middle:'',dob:d,guardian:'Maria Dela Cruz — mother',gnum:'+63 917 555 0142'};
+      S.basis='Claim confirmed 1:1 · eVerify demographics, consent-based';
+      addEvidence(1,'Claimed identity confirmed 1:1','Name and birth date as given were confirmed. No search was performed.','Rule 35.b(1) · RA 11055 Sec. 12');
+      $('claimStatus').innerHTML='<div class="banner ok">Confirmed.</div>';
+      setTimeout(function(){ openCase(classify(d,S.incident),true); },500);
+    } else {
+      addEvidence(2,'Claimed birth date, not confirmed','Stated '+longDate(D(d))+'. The 1:1 check did not confirm it. Not evidence of adulthood.','Rule 35.b ¶2(1)');
+      $('claimStatus').innerHTML='<div class="card leftrule"><span class="ic">○</span>'+
+        '<div class="h18">Not confirmed.</div><p style="margin-top:8px">This claim did not match. Under Rule 35.c that doubt resolves in their favour.</p>'+
+        '<button class="btn ghost mt2" onclick="startPath(\'none\')">Start the interview</button></div>';
+    }
+  },900);
+}
+/* -------------------------------------------------------------- branch: ID */
+function toggleTorch(){ S.torch=!S.torch; $('torch').classList.toggle('off',!S.torch);
+  $('torch').textContent=S.torch?'Light on':'Light'; $('lowlight').style.display='none'; }
+async function runScan(){
+  openCase('H');
+  const r=await api('/api/everify',{action:'qr-check',value:'DEMO-QR-'+S.ref});
+  setTimeout(function(){
+    if(r&&r.hasIdentity&&r.person&&r.person.birth_date){
+      S.person=Object.assign({},r.person,{first:r.person.first_name,middle:r.person.middle_name,
+        last:r.person.last_name,dob:r.person.birth_date,guardian:PEOPLE.A.guardian,gnum:PEOPLE.A.gnum});
+      S.subjectHash=r.subjectHash||null;
+    } else if(r&&r.ok&&!r.hasIdentity){ return openCase('E'); }
+    else { S.person=Object.assign({},PEOPLE.A,{dob:iso(subYM(S.incident,16,4))}); }
+    S.basis='National ID presented by the person · eVerify QR check';
+    addEvidence(1,'National ID, presented','Signed QR read on the card handed over. Nothing was looked up.','Rule 35.b(1)');
+    openCase(classify(S.person.dob,S.incident),true);
+  },1100);
+}
+</script>
+<script>
+"use strict";
+/* ------------------------------------------------------ Rule 35.b(2) sources */
+const SRC_STATES=[['req','Requested'],['got','Received'],['na','Unavailable']];
+function paintSources(){
+  const box=$('srcList'); if(!box) return;
+  box.innerHTML=SOURCES.map(function(s){
+    const st=S.sources[s.k];
+    return '<div class="r"><span class="t">'+esc(s.t)+'</span><span class="s">'+esc(s.s)+'</span>'+
+      '<span class="rr">'+esc(s.r)+(s.note?' · '+esc(s.note):'')+'</span>'+
+      '<div class="seg" role="group" aria-label="'+esc(s.t)+'">'+
+      SRC_STATES.map(function(v){return '<button class="'+(st&&st.v===v[0]?'on'+(v[0]==='na'?' na':''):'')+
+        '" onclick="setSource(\''+s.k+'\',\''+v[0]+'\',\''+v[1]+'\')">'+v[1]+'</button>';}).join('')+'</div>'+
+      (st?'<span class="stamp">'+esc(st.label)+' · '+clock(st.at)+', '+shortDate(st.at)+'</span>':'')+'</div>';
+  }).join('');
+}
+function setSource(k,v,label){
+  const src=SOURCES.filter(function(s){return s.k===k;})[0];
+  S.sources[k]={v:v,label:label,at:new Date()};
+  paintSources();
+  if(v==='got'){ addEvidence(1,'Document received — '+src.t,'Photograph it to read the birth date.',src.r); toast('Recorded as received.'); }
+  else if(v==='req'){ toast(k==='lcr'?'Civil-registry retrieval lodged — Rule 35.b(2)(b).':'Recorded as requested at '+clock(new Date())+'.'); }
+  else { addEvidence(2,'Source unavailable — '+src.t,'Recorded as unavailable.',src.r); toast('Recorded. This counts against no one.'); }
+}
+/* --------------------------------------------------- Rule 35.b ¶2 measures */
+function paintMeasures(){
+  const box=$('meaList'); if(!box) return;
+  box.innerHTML=MEASURES.map(function(m){
+    const done=S.measures[m.k];
+    return '<button class="row-m" onclick="openMeasure(\''+m.k+'\')">'+
+      '<span class="w'+(m.tier===3?' t3':'')+'">Tier '+m.tier+'</span>'+
+      '<span class="grow"><span class="lt">'+esc(m.t)+'</span><span class="ls">'+esc(m.s)+'</span>'+
+      '<span class="lr">'+esc(m.r)+'</span>'+(m.caveat?'<span class="caveat">'+esc(m.caveat)+'</span>':'')+'</span>'+
+      '<span class="tail">'+(done?'<span class="done">recorded ✓</span>':ICO.pen+'<span>›</span>')+'</span></button>';
+  }).join('');
+}
+function openMeasure(k){
+  const m=MEASURES.filter(function(x){return x.k===k;})[0];
+  let body='';
+  if(k==='child'){
+    body='<h3>Interview the person</h3><p style="margin-top:6px">'+esc(m.r)+' · Tier 2.</p>'+
+      '<button class="btn mt2" onclick="closeSheets();go(\'s-kal\');startKalayaan()">Open the interview with Kalayaan</button>'+
+      '<div class="field mt2"><label for="mDob">Or record a birth date they stated</label><input class="input" type="date" id="mDob"></div>'+
+      '<button class="btn ghost" onclick="saveChildStatement(true)">Record what they said</button>'+
+      '<button class="btn ghost mt1" onclick="saveChildStatement(false)">They could not or would not answer</button>'+
+      '<div class="banner mt2">A person who cannot or will not answer has done nothing wrong. The burden of proving age is not theirs — A.M. No. 02-1-18-SC Sec. 6.</div><div class="footspace"></div>';
+  } else if(k==='know'){
+    body='<h3>Interview persons who may know the age</h3><p style="margin-top:6px">'+esc(m.r)+' · Tier 2.</p>'+
+      '<div class="field mt2"><label for="mWho">Who did you speak to?</label><input class="input" id="mWho" value="Aunt — Rosalinda Dela Cruz"></div>'+
+      '<div class="optgrp"><button class="optrow" onclick="saveWitness(true)"><span class="grow">'+
+      '<span style="display:block;font-size:15px;font-weight:500">A relative, qualified on pedigree</span>'+
+      '<span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">Rule 130 Sec. 40</span></span><span class="tick">›</span></button>'+
+      '<button class="optrow" onclick="saveWitness(false)"><span class="grow">'+
+      '<span style="display:block;font-size:15px;font-weight:500">Any other person with knowledge</span>'+
+      '<span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">Neighbour, teacher, employer</span></span><span class="tick">›</span></button></div><div class="footspace"></div>';
+  } else if(k==='appear'){
+    body='<h3>Evaluate the physical appearance</h3>'+
+      '<div class="banner warn mt2">Weakest evidence. It cannot by itself show that a person is 18 or over.</div>'+
+      '<p>'+esc(m.r)+' · Tier 3. RA 9344 Sec. 20 puts the LSWDO in the loop.</p>'+
+      '<div class="field mt2"><label for="mSw">LSWDO consulted</label><input class="input" id="mSw" value="SW Ana Panganiban — LSWDO QC D4"></div>'+
+      '<button class="btn" onclick="saveAppearance()">Record the consultation</button>'+
+      '<div class="tiny mt1 mb2">There is no control here that records "appears to be an adult".</div><div class="footspace"></div>';
+  } else {
+    body='<h3>Other relevant evidence</h3><p style="margin-top:6px">'+esc(m.r)+' · Tier 2.</p>'+
+      '<div class="field mt2"><label for="mOther">What is it?</label><input class="input" id="mOther" value="Barangay certification of residence since 2011"></div>'+
+      '<button class="btn" onclick="saveOther()">Record it</button><div class="footspace"></div>';
+  }
+  $('askBody').innerHTML=body; openSheet('askSheet');
+}
+function saveChildStatement(gave){
+  const v=gave&&$('mDob')?$('mDob').value:'';
+  S.measures.child=true; closeSheets();
+  if(gave&&v){ addEvidence(2,'Their own statement','States a birth date of '+longDate(D(v))+'. Testimonial only.','Rule 35.b ¶2(1)');
+    toast('Recorded. Tier 2 cannot produce an adult determination here.'); }
+  else { addEvidence(2,'Could not or would not answer','Recorded neutrally. The burden of proving age is not theirs.','Rule 35.b ¶2(1)');
+    toast('Recorded neutrally.'); }
+  paintMeasures();
+}
+function saveWitness(ped){
+  const who=($('mWho')&&$('mWho').value.trim())||'Person interviewed';
+  S.measures.know=true; closeSheets();
+  addEvidence(2,'Statement of a person who may know the age',
+    who+(ped?' — relative qualified on pedigree, Rule 130 Sec. 40.':' — other person with knowledge.'),'Rule 35.b ¶2(2)');
+  toast('Recorded as Tier 2.'); paintMeasures();
+}
+function saveAppearance(){
+  const sw=($('mSw')&&$('mSw').value.trim())||'LSWDO duty officer';
+  S.measures.appear=true; closeSheets();
+  addEvidence(3,'Evaluation of physical appearance','Appearance consistent with a minor. LSWDO consulted: '+sw+'.','Rule 35.b ¶2(3)');
+  toast('Recorded as Tier 3.'); paintMeasures();
+}
+function saveOther(){
+  const v=($('mOther')&&$('mOther').value.trim())||'Other relevant evidence';
+  S.measures.other=true; closeSheets();
+  addEvidence(2,'Other relevant evidence',v,'Rule 35.b ¶2(4)'); toast('Recorded.'); paintMeasures();
+}
+function finishCascade(){
+  if(S.person&&S.person.dob) return openCase(classify(S.person.dob,S.incident),true);
+  openCase('D');
+}
+function paintLookupSlot(){
+  const slot=$('lookupSlot'); if(!slot)return;
+  const r=ROLES[S.role];
+  slot.innerHTML = r.search
+    ? '<div class="card tint mb2"><h4>Civil-registry retrieval — Rule 35.b(2)(b)</h4>'+
+      '<p style="margin-top:6px;color:var(--text)">'+esc(r.full)+' may lodge the request for a certificate of live birth with the Local Civil Registrar or the PSA.</p>'+
+      '<button class="btn ghost mt2" onclick="setSource(\'lcr\',\'req\',\'Requested\')">Lodge the retrieval</button></div>'
+    : '<div class="card" style="border-color:var(--border-strong)"><h4>What a '+esc(r.agency)+' account cannot do</h4>'+
+      '<p style="margin-top:6px">No registry search, and no civil-registry retrieval. Refer to the LSWDO or to counsel.</p>'+
+      '<button class="btn ghost mt2" onclick="handoff()">Refer to the duty social worker</button></div>';
+}
+function handoff(){ addEvidence(2,'Referred to the LSWDO duty social worker','QC District 4.','RA 9344 Sec. 20');
+  toast('Referred. Reference '+S.ref+'.'); }
+function referIdentity(kind){
+  S.referral=kind;
+  addEvidence(2,kind==='foundling'?'Referred for foundling recognition':'Referred for delayed registration of birth',
+    kind==='foundling'?'RA 11767 Sec. 10 — affidavit of the finder, barangay/police certification, NACC report (DSWD pending NACC, Sec. 22).'
+                      :'Local Civil Registrar of the place of birth. Act No. 3753 Sec. 5.',
+    kind==='foundling'?'RA 11767':'Act No. 3753');
+  toast('Referral recorded.'); renderV2();
+}
+</script>
+<script>
+"use strict";
+/* ---------------------------------------------------------- determination */
+function openCase(id,keep){
+  S.caseId=id;
+  if(PEOPLE[id]&&!keep){
+    const plan=planFor(id);
+    S.person=Object.assign({},PEOPLE[id],plan?{dob:plan.dob}:{});
+    if(plan){ S.incident=plan.inc; S.incidentEstimated=false; S.estLabel=''; paintIncidentChip(); }
+    if(!S.basis) S.basis='Civil-registry record confirmed by '+ROLES[S.role].full;
+    if(!S.record.length) addEvidence(1,'Civil-registry record matched and confirmed','Birth date confirmed by '+ROLES[S.role].officer+'.','Rule 35.b(2)(b)');
+  }
+  if(id==='D'||id==='F'||id==='H'){ S.person=null; if(!keep){ S.basis=null; S.chosen=null; } }
+  if(id==='E'){ S.person={first:'—',middle:'',last:'—',dob:null}; if(!keep){ S.basis=null; S.chosen=null; } }
+  S.idMatch=null;
+  const refs={A:'VF-8241',B:'VF-8242',C:'VF-8244',C1:'VF-8245',C2:'VF-8246',D:'VF-8247',E:'VF-8248',F:'VF-8243',H:'VF-8249'};
+  S.ref=refs[id]||S.ref;
+  S.custody=new Date();
+  paintSession(); renderV2(); go('s-v2'); closeSheets();
+}
+function paintSession(){
+  const r=ROLES[S.role];
+  const meta='· '+shortDate(S.started)+', '+clock(S.started)+' · '+r.officer+', '+r.station;
+  ['sessRef','sessRef3','sessRef4','sessRef4b','sessRefS','sessRefI'].forEach(function(i){if($(i))$(i).textContent=S.ref;});
+  ['sessMeta','sessMeta3','sessMeta4','sessMeta4b','sessMetaS','sessMetaI'].forEach(function(i){if($(i))$(i).textContent=meta;});
+  ['rolechip1','rolechip2','rolechip3'].forEach(function(i){if($(i))$(i).textContent=r.agency;});
+}
+function timelineHTML(incident,b18,onwhite){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const inc0=new Date(incident); inc0.setHours(0,0,0,0);
+  const sameDay=dayKey(inc0)===dayKey(today);
+  const pts=[{k:'incident',t:inc0.getTime()},{k:'b18',t:b18.getTime()}];
+  if(!sameDay) pts.push({k:'today',t:today.getTime()});
+  const ts=pts.map(function(p){return p.t;}), lo=Math.min.apply(null,ts), hi=Math.max.apply(null,ts), span=(hi-lo)||1;
+  let pos=pts.map(function(p){return 12+76*((p.t-lo)/span);});
+  const order=pts.map(function(p,i){return i;}).sort(function(a,b){return pos[a]-pos[b];});
+  for(let k=1;k<order.length;k++){const a=order[k-1],b=order[k];if(pos[b]-pos[a]<17)pos[b]=pos[a]+17;}
+  const mx=Math.max.apply(null,pos); if(mx>90){const sh=mx-90;pos=pos.map(function(p){return p-sh;});}
+  const at=function(k){return pos[pts.map(function(p){return p.k;}).indexOf(k)];};
+  const lab=function(d){return d.getDate()+' '+MON[d.getMonth()]+'<br>'+d.getFullYear();};
+  const gap=days(incident,b18);
+  const rel=gap>0?'The incident is <b>'+gap+' day'+(gap===1?'':'s')+' before</b> the 18th birthday.'
+                 :'The incident is <b>'+(-gap)+' day'+(gap===-1?'':'s')+' after</b> the 18th birthday.';
+  return '<div class="tl'+(onwhite?' onwhite':'')+'"><div class="axw"><div class="ax"></div><div class="arw">▶</div>'+
+    '<div class="cap-t" style="left:'+at('incident')+'%">incident'+(sameDay?' · today':'')+'</div>'+
+    '<div class="cap-t" style="left:'+at('b18')+'%">18th birthday</div>'+
+    '<div class="thr" style="left:'+at('b18')+'%"></div><div class="dot" style="left:'+at('incident')+'%"></div>'+
+    (sameDay?'':'<div class="ring" style="left:'+at('today')+'%"></div>')+
+    '<div class="lb" style="left:'+at('incident')+'%">'+lab(inc0)+'</div>'+
+    '<div class="lb" style="left:'+at('b18')+'%">'+lab(b18)+'</div>'+
+    (sameDay?'':'<div class="lb" style="left:'+at('today')+'%">today</div>')+
+    '</div><div class="cap">'+rel+'</div></div>';
+}
+function dutiesHTML(){
+  const due=new Date(S.custody.getTime()+8*3600000);
+  const late=(S.entry==='custody');
+  return '<div class="dut"><div class="dh"><span class="t">Required now</span>'+
+    (late?'':'<span class="cd" id="cdChip">8h 00m</span>')+'</div>'+
+    '<div class="dr"><span class="n">1</span><span class="grow"><span class="dt">Turn over to the LSWDO</span>'+
+    (late?'<span class="ds">Custody began before this session. The turnover duty ran from the actual apprehension — record that date with the LSWDO.</span>'
+         :'<span class="due" id="dueLine">Before '+clock(due)+' today · <span id="cdLong">8h 00m</span> left</span>')+'</span></div>'+
+    '<div class="dr"><span class="n">2</span><span class="grow"><span class="dt">Notify the parents or guardian</span></span></div>'+
+    '<div class="dr"><span class="n">3</span><span class="grow"><span class="dt">Notify the Public Attorney’s Office</span></span></div>'+
+    '<div class="dr"><span class="n">4</span><span class="grow"><span class="dt">Do not detain with adults.</span>'+
+    '<span class="ds">No restraints unless strictly necessary.</span></span></div></div>'+
+    '<div class="tiny mb2">Completion is recorded from the actual notification results, never from self-report.</div>';
+}
+function aloudHTML(){
+  const r=ROLES[S.role], L=LANGS[S.lang.child];
+  const body=SCRIPTS.child[L].replace('{OFFICER}',r.full).replace('{STATION}',r.stationFull);
+  return '<div class="card tint aloud"><div class="lbl">BASAHIN PO ITO SA BATA — '+L.toUpperCase()+'</div>'+
+    '<div class="scr fil" id="childScript">'+esc(body)+'</div><div class="acts">'+
+    '<button class="lnk sm" onclick="speak(\'childScript\')">'+SPK+' Pakinggan</button>'+
+    '<button class="lnk sm" onclick="cycleLang(\'child\')">'+GLB+' Ibang wika ›</button></div></div>';
+}
+function idMatchHTML(){
+  if(!S.person||!S.person.dob) return '';
+  const p=S.person;
+  return '<div class="card idm" id="idmCard"><div class="q">Is this the same person?</div><div class="ph">'+
+    '<img src="'+PORTRAIT+'" alt="Photo carried on the record">'+
+    '<div class="pmeta"><span class="s">'+esc(fullName(p))+'</span>Born '+longDate(D(p.dob))+
+    '<br>Photo carried on the record<br><br>Not taken at intake.<br>Not stored by e-Laya.</div></div>'+
+    '<div class="two gate" id="idmBtns"><button class="btn ghost" id="idmYes" onclick="setMatch(true)">Yes — same person</button>'+
+    '<button class="btn ghost" id="idmNo" onclick="setMatch(false)">No, or not sure</button></div>'+
+    '<div class="tiny mt1">Compare the face, not the haircut or the clothes.</div></div>';
+}
+function bandsHTML(age){
+  const b=age.y<12?0:age.y<15?1:2;
+  const rows=[['Under 12','Released to parents or guardian. Intervention.'],
+    ['12 to under 15','Not criminally liable. Intervention. Bahay Pag-asa only for the serious offences named in RA 10630.'],
+    ['15 to under 18','Not criminally liable unless the LSWDO and the court find discernment. Diversion, not prosecution.']];
+  return '<div class="card"><h4 class="mb1">What happens next for a '+age.y+'-year-old child</h4>'+
+    rows.map(function(r,i){return '<div class="bandrow'+(i===b?' on':'')+'"><span class="bt">'+(i===b?'◉':'●')+' '+r[0]+
+      (i===b?'<span class="me">← this child</span>':'')+'</span><div class="bs">'+r[1]+'</div></div>';}).join('')+
+    '<hr class="hr"><div style="font-size:13px;font-weight:500;color:var(--primary);line-height:1.5">'+
+    'Discernment is decided by the LSWDO and the court. Do not record a finding on it here.</div></div>';
+}
+function unblocksHTML(){
+  const rows=[
+    ['One person, one file','BJMP, the court and PAO can match the same record instead of three different names.'],
+    ['Family can find them','Relatives stop searching jail by jail.'],
+    ['Release paperwork can complete','A name mismatch on the commitment order stalls it.'],
+    ['Benefits become reachable','PhilHealth and any programme they are entitled to.'],
+    ['The docket carries the right name','Commitment order, court docket and custodial record finally agree.']
+  ];
+  return '<div class="unb"><div class="uh">What resolving this unblocks</div>'+
+    rows.map(function(r){return '<div class="ur"><span class="ui">✓</span><span><span class="ut">'+r[0]+'</span>'+
+      '<span class="us">'+r[1]+'</span></span></div>';}).join('')+'</div>';
+}
+const pendingHTML=function(){ return '<div class="burden"><b>This is not a finding of age.</b> It is how the person '+
+  'is to be treated pending a categorical finding. Only a court makes a categorical finding as to the age of a child '+
+  '— A.M. No. 02-1-18-SC Sec. 6. The burden of proving 18-or-over lies on whoever alleges it.</div>'; };
+const contestHTML=function(){ return '<div class="card"><h4>Is anyone contesting the age?</h4>'+
+  '<p style="margin-top:6px">A contested age goes to the <strong>Family Court in a summary proceeding, decided '+
+  'within 24 hours</strong> of receipt of the pleadings — RA 9344 Sec. 7 ¶2.</p>'+
+  '<button class="btn ghost mt2" onclick="openContest()">'+(S.contested?'Contested — view the route ›':'Mark the age as contested ›')+'</button>'+
+  (S.contested?'<div class="banner mt2">Marked as contested at '+clock(new Date())+'. Treatment does not change meanwhile.</div>':'')+'</div>'; };
+function openContest(){
+  S.contested=true;
+  $('askBody').innerHTML='<h3>Contested age — the route</h3><p style="margin-top:6px">RA 9344 Sec. 7 ¶2 · A.M. No. 02-1-18-SC Sec. 6.</p>'+
+    '<div class="dut mt2">'+
+    '<div class="dr"><span class="n">1</span><span class="grow"><span class="dt">Before an information is filed</span>'+
+    '<span class="ds">A summary proceeding for the determination of age before the Family Court, decided <strong>within 24 hours</strong> of receipt of the pleadings of all interested parties.</span></span></div>'+
+    '<div class="dr"><span class="n">2</span><span class="grow"><span class="dt">If a case is already pending</span>'+
+    '<span class="ds">Motion filed in the same court. Proceedings on the main case are <strong>suspended</strong> pending the hearing.</span></span></div>'+
+    '<div class="dr"><span class="n">3</span><span class="grow"><span class="dt">The court must be categorical</span>'+
+    '<span class="ds">"In all cases involving a child, the court shall make a categorical finding as to the age of the child."</span></span></div>'+
+    '<div class="dr"><span class="n">4</span><span class="grow"><span class="dt">Meanwhile, nothing changes</span>'+
+    '<span class="ds">The presumption of minority holds — Rule 35.c.</span></span></div></div>'+
+    '<button class="btn" onclick="fileContest()">Draft the referral to the Family Court</button>'+
+    '<button class="btn quiet mt1 mb2" onclick="closeSheets()">Close</button><div class="footspace"></div>';
+  openSheet('askSheet');
+}
+function fileContest(){ closeSheets();
+  addEvidence(2,'Age marked as contested','Referral drafted for a summary proceeding before the Family Court.','RA 9344 Sec. 7 ¶2');
+  renderV2(); toast('Referral drafted. The court decides within 24 hours.'); }
+function provenance(){
+  return '<div class="tiny mb2">Basis: '+esc(S.basis||'No document or record obtained')+' · '+shortDate(S.started)+' '+clock(S.started)+
+    '. Civil registry and entitlement records only. No PhilSys registry query — RA 11055 Sec. 17.</div>';
+}
+function renderV2(){
+  const c=S.caseId, body=$('v2body'), foot=$('v2foot');
+  const p=S.person, inc=S.incident;
+  let h='',f='';
+  if(c==='H'){
+    body.innerHTML='<div class="sk block bleed" style="height:280px;margin-bottom:18px;border-radius:0"></div>'+
+      '<div class="sk line" style="width:78%"></div><div class="sk line" style="width:52%"></div>'+
+      '<div class="sk block" style="height:180px;margin-top:18px"></div>'+
+      '<div class="tiny mt2" style="text-align:center">Nothing is shown until the check completes.</div>';
+    foot.innerHTML='<button class="btn" disabled>Checking…</button>'; return;
+  }
+  if(c==='A'||c==='C'||c==='C2'||c==='D'||c==='E'||c==='F'){
+    const presumed=(c==='D'||c==='E'||c==='F');
+    if(presumed){
+      h+='<div class="verdict child bleed"><span class="vshield">'+shield(28,'#fff')+'</span>'+
+        '<div class="vt">PRESUMED MINOR</div>'+
+        '<div class="vcat">Treat as a Child in Conflict with the Law · CICL</div>'+
+        '<div class="vgloss">Ipinapalagay na bata.</div><hr class="vrule">'+
+        '<div class="vbody">All available measures were taken and no age was established. In case of doubt as to the '+
+        'age of the child, <strong>after all the measures are exhausted</strong>, the doubt is resolved in favour of minority.</div>'+
+        '<div class="vlaw">Revised IRR Rule 35.c · RA 9344 Sec. 7</div>'+
+        '<div class="vnote">Every right of a child in conflict with the law applies from now.</div></div>';
+    } else if(c==='C2'){
+      h+='<div class="verdict child bleed"><span class="vchip">⚑ On the line</span>'+
+        '<div class="vt" style="font-size:28px">Turns 18 on the day of the incident.</div>'+
+        '<div class="vcat">This cannot be settled here.</div>'+
+        '<div class="vgloss">Only the Family Court can make that finding.</div><hr class="vrule">'+
+        '<div class="vage">Until then, treat as a child.</div>'+
+        '<div class="vref">Rule 35.c — doubt is resolved in favour of minority.</div>'+
+        '<div class="vref dobline" style="margin-top:14px">Born '+longDate(D(p.dob))+' · incident '+longDate(inc)+'</div></div>';
+    } else {
+      const age=ymd(D(p.dob),inc), b18=eighteenth(p.dob), gap=days(inc,b18), bl=(c==='C');
+      h+='<div class="verdict child bleed">'+
+        (bl?'<span class="vchip">⚑ Borderline — '+gap+' days</span>':'<span class="vshield">'+shield(28,'#fff')+'</span>')+
+        '<div class="vt">'+(bl?'Treat as a child.':'This is a child.')+'</div>'+
+        '<div class="vcat">Child in Conflict with the Law · CICL</div>'+
+        '<div class="vgloss">'+(bl?'— until the court makes a categorical finding':'Batang nasa hidwaan sa batas')+'</div>'+
+        '<hr class="vrule"><div class="vage">'+ageWords(age,bl)+'</div>'+
+        '<div class="vref">on '+longDate(inc)+' — the date of the alleged incident</div>'+
+        '<div class="vref dobline" style="margin-top:10px">Born '+longDate(D(p.dob))+' · turns 18 on '+longDate(b18)+'</div>'+
+        (bl?timelineHTML(inc,b18,false):'')+
+        (bl?'<div class="vnote">Age at the incident governs — not age today. RA 9344 Sec. 6.</div>':'')+'</div>';
+    }
+    if(S.incidentEstimated) h+='<div class="banner warn">Incident date is estimated — earliest in "'+esc(S.estLabel)+'".</div>';
+    h+='<div class="say16 mb2">Do not book as an adult. RA 9344 / RA 10630 applies.</div>';
+    h+=pendingHTML();
+    if(presumed){
+      h+='<div class="card" style="border-color:var(--primary)"><div class="h18">No birth record exists for this person.</div>'+
+        '<p style="margin-top:8px">They were most likely never registered at birth. Two routes: delayed registration '+
+        'of birth, or foundling recognition where parentage is unknown.</p>'+
+        (S.referral?'<div class="banner ok mt2">Referral recorded — '+(S.referral==='foundling'?'foundling recognition, RA 11767':'delayed registration, Act No. 3753')+'.</div>':'')+
+        '<button class="btn mt2" onclick="go(\'s-ident\')">Establish legal identity</button></div>';
+    }
+    if(c==='E') h+='<div class="card leftrule"><span class="ic">▤</span><div class="h18">What happened technically</div>'+
+      '<p style="margin-top:8px">The document or credential was read. It carries no birth date.</p><hr class="hr">'+
+      '<div class="diag">read '+shortDate(S.started)+' '+clock(S.started)+' · qrType PCN_ONLY · no date_of_birth field</div></div>';
+    if(c==='F') h+='<div class="card leftrule"><span class="ic">○</span><div class="h18">What happened technically</div>'+
+      '<div class="say16">This says nothing about the person’s age.</div>'+
+      '<p style="margin-top:8px">The check did not complete. The determination above does not depend on it.</p><hr class="hr">'+
+      '<div class="diag">Reference '+esc(S.ref)+' · '+clock(new Date())+' · code E-VERIFY-200-FALSE</div>'+
+      '<button class="btn ghost mt2" onclick="retryScan()">Try the read again</button></div>';
+    if(c==='C') h+='<div class="card" style="border-color:var(--warn-border);background:var(--warn-surface)">'+
+      '<div class="h18" style="color:var(--warn)">Confirm the birth date against a document before this leaves your station.</div>'+
+      '<p style="color:var(--warn);margin-top:8px">A PSA certificate of live birth is the best evidence — A.M. No. 02-1-18-SC Sec. 5(1).</p>'+
+      '<button class="btn ghost mt2" onclick="go(\'s-doc\')">Photograph a document</button></div>';
+    if(c!=='C2') h+=dutiesHTML();
+    if((c==='A'||c==='C')&&p&&p.dob) h+=bandsHTML(ymd(D(p.dob),inc));
+    if(c!=='C2') h+=aloudHTML();
+    h+=contestHTML();
+    if(p&&p.dob) h+=idMatchHTML();
+    h+=evidenceHTML(false);
+    h+='<button class="lnk mb2" onclick="go(\'s-sources\')">Continue the Rule 35.b measures ›</button>';
+    h+=provenance();
+    if(c==='C2') f='<button class="btn" onclick="go(\'s-sources\')">Continue the Rule 35.b measures</button>';
+    else if(presumed) f='<button class="btn" onclick="go(\'s-v4\')">Notify guardian &amp; social worker</button>'+
+      '<div class="fnote">Recorded as PRESUMED MINOR. The duties do not wait for the age to settle.</div>';
+    else f='<button class="btn" id="cta" disabled onclick="go(\'s-v4\')">Notify guardian &amp; social worker</button>'+
+      '<div class="fnote" id="ctaNote">Answer the identity check above to record this determination.</div>';
+  }
+  else if(c==='B'||c==='C1'){
+    const age=ymd(D(p.dob),inc), b18=eighteenth(p.dob), fl=(c==='C1');
+    h+='<div class="verdict adult">'+(fl?'<div style="font-size:20px;color:#B8860B;line-height:1;margin-bottom:10px">⚑</div>':'')+
+      '<div class="vt">Identity resolved · adult, 18 or over</div>'+
+      '<div class="vs">Standard adult intake applies.<br>RA 9344 does not apply to this person.</div><hr class="hr">'+
+      '<div class="vage-w">'+ageWords(age,fl)+'</div>'+
+      '<div class="vref-w">on '+longDate(inc)+' — the date of the alleged incident</div>'+
+      '<div class="vref-w dobline" style="margin-top:10px">Born '+longDate(D(p.dob))+'</div>'+
+      (fl?timelineHTML(inc,b18,true):'')+'</div>';
+    if(S.incidentEstimated) h+='<div class="banner warn">Incident date is estimated — earliest in "'+esc(S.estLabel)+'".</div>';
+    h+=unblocksHTML();
+    h+='<div class="burden"><b>The presumption was rebutted by a record, not by this screen.</b> A.M. No. 02-1-18-SC '+
+      'Sec. 5(1)–(2) makes a birth or similar authentic record the proof of age; Sec. 6 places the burden on whoever '+
+      'alleges 18-or-over. Remove the record and this returns to PRESUMED MINOR.</div>';
+    if(fl) h+='<div class="card" style="border-color:var(--warn-border);background:var(--warn-surface)">'+
+      '<div class="h18" style="color:var(--warn)">Just over the line.</div>'+
+      '<p style="color:var(--warn);margin-top:8px">If the birth date has never been checked against a document, treat this as unsettled.</p>'+
+      '<button class="btn ghost mt2" onclick="go(\'s-sources\')">Continue the measures</button></div>';
+    h+=contestHTML(); h+=idMatchHTML(); h+=evidenceHTML(false); h+=provenance();
+    f='<button class="btn" id="cta" disabled onclick="go(\'s-v4\')">Record this determination</button>'+
+      '<div class="fnote" id="ctaNote">Answer the identity check above to record this determination.</div>';
+  }
+  body.innerHTML=h+'<div class="footspace"></div>'; foot.innerHTML=f;
+  if($('idmBtns')) setTimeout(function(){const g=$('idmBtns'); if(g)g.classList.add('live');},800);
+  tickCountdown();
+}
+function retryScan(){ S.failCount++; renderV2(); toast('Attempt '+(S.failCount+1)+' — still no read. The determination is unaffected.'); }
+function setMatch(yes){
+  S.idMatch=yes;
+  $('idmYes').classList.toggle('on',yes); $('idmNo').classList.toggle('on',!yes);
+  $('idmYes').textContent = yes?'✓ Yes — same person':'Yes — same person';
+  $('idmNo').textContent  = !yes?'✓ No, or not sure':'No, or not sure';
+  if(!yes){
+    addEvidence(2,'Identity not confirmed against the record','The record may not belong to this person. The presumption of minority is restored.','Rule 35.c');
+    toast('Recorded as presumed minor — identity not confirmed.');
+    setTimeout(function(){ openCase('D',true); },700); return;
+  }
+  const cta=$('cta'); if(cta) cta.disabled=false;
+  const n=$('ctaNote'); if(n) n.textContent='Identity confirmed by '+ROLES[S.role].officer+'.';
+}
+function tickCountdown(){
+  const due=new Date(S.custody.getTime()+8*3600000);
+  const left=due-new Date();
+  const hh=Math.max(0,Math.floor(left/3600000)), mm=Math.max(0,Math.floor((left%3600000)/60000));
+  const txt=hh+'h '+String(mm).padStart(2,'0')+'m';
+  ['cdChip','cdDone'].forEach(function(i){ if($(i)) $(i).textContent=txt; });
+  if($('cdLong')) $('cdLong').textContent=txt;
+  if($('turnoverLine')) $('turnoverLine').textContent='Turn over to the LSWDO before '+clock(due)+' today.';
+}
+setInterval(tickCountdown,15000);
+</script>
+<script>
+"use strict";
+/* -------------------------------------------------------------- speech / i18n */
+function speak(id){
+  const el=$(id); if(!el)return;
+  try{
+    if(!('speechSynthesis' in window)) throw 0;
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(el.textContent.replace(/[“”"]/g,''));
+    u.lang='fil-PH'; u.rate=.9; window.speechSynthesis.speak(u);
+    toast('Binabasa…');
+  }catch(e){ toast('Audio unavailable on this device. Read the text aloud.'); }
+}
+function cycleLang(which){
+  if(which==='sms'){ S.lang.sms=(S.lang.sms+1)%LANGS.length; paintSMS(); return; }
+  S.lang[which]=(S.lang[which]+1)%LANGS.length;
+  if(which==='child'){ renderV2(); return; }
+  paintScripts();
+}
+function paintScripts(){
+  const sL=LANGS[S.lang.scan], dL=LANGS[S.lang.doc];
+  if($('scanScript')) $('scanScript').textContent=SCRIPTS.scan[sL];
+  if($('scanLangLbl')) $('scanLangLbl').textContent=sL;
+  if($('docScript')) $('docScript').textContent=SCRIPTS.doc[dL];
+  if($('docLangLbl')) $('docLangLbl').textContent=dL;
+}
+/* ------------------------------------------------------------------- notify */
+function smsText(){
+  const p=S.person, L=LANGS[S.lang.sms];
+  const who=(p&&p.first)?initials(p):'ang taong nasa custody';
+  const r=ROLES[S.role];
+  const when=clock(S.custody)+', '+filDate(S.custody);
+  if(L==='Cebuano') return 'e-Laya: Si '+who+' naa sa pag-atiman sa '+r.stationFull+', Quezon City sukad '+when+'. Giila siya nga BATA ubos sa RA 9344 — naa siyay katungod sa diversion o interbensyon, ug dili siya prisohon uban sa mga hamtong. Naay social worker nga gitudlo. Libre ang abogado sa PAO. Tawag: 8988-4444.';
+  if(L==='Ilocano') return 'e-Laya: Ni '+who+' ket adda iti aywan ti '+r.stationFull+', Quezon City manipud '+when+'. Nabigbig isuna kas UBING iti RA 9344 — adda karbengan na iti diversion wenno interbension, ken saan a maibalud kadagiti nataengan. Adda naitudingan a social worker. Libre ti abogado ti PAO. Tawagan: 8988-4444.';
+  return 'e-Laya: Si '+who+' ay nasa pangangalaga ng '+r.stationFull+', Quezon City mula '+when+'. Kinilala siya bilang BATA sa ilalim ng RA 9344 — may karapatan siya sa diversion o interbensyon, at hindi siya ikukulong kasama ng matatanda. May nakatalagang social worker. Libre ang abogado ng PAO. Tawagan: 8988-4444.';
+}
+function paintSMS(){
+  const t=smsText(), n=t.length<=160?1:Math.ceil(t.length/153);
+  $('smsPreview').textContent=t;
+  $('smsMeta').textContent=LANGS[S.lang.sms]+' · '+n+' SMS part'+(n===1?'':'s')+' · '+t.length+' characters';
+}
+function checkNum(){
+  const v=$('gnum').value.replace(/\D/g,''), ok=v.length>=11, c=$('c1');
+  c.className='chip '+(ok?'ok':'warn'); c.textContent=ok?'Ready':'Needs a number';
+  $('sendBtn').disabled=!ok;
+}
+function paintV4(){
+  const p=S.person, inc=S.incident;
+  $('guardName').textContent=(p&&p.guardian)?p.guardian:'Guardian — name not yet known';
+  if(p&&p.gnum) $('gnum').value=p.gnum;
+  const det=(S.caseId==='A'||S.caseId==='C')?'CICL — child in conflict with the law'
+    :(S.caseId==='B'||S.caseId==='C1')?'Identity resolved — adult, 18 or over'
+    :(S.caseId==='C2')?'Presumed minor — turns 18 on the incident date'
+    :'PRESUMED MINOR — treat as CICL (Rule 35.c)';
+  const rows=[['Entry',S.entry==='custody'?'Already in custody — identity never established':'Brought in — identity not established'],
+    ['Determination',det]];
+  if(p&&p.dob&&['C2','D','E','F'].indexOf(S.caseId)<0){
+    rows.push(['Age at incident',ageWords(ymd(D(p.dob),inc),S.caseId==='C'||S.caseId==='C1').replace(' old','')]);
+  } else rows.push(['Age at incident','Not established — presumption applies']);
+  rows.push(['Incident date',longDate(inc)+(S.incidentEstimated?' (estimated — earliest in range)':'')]);
+  rows.push(['Basis',S.basis||'No document or record obtained']);
+  rows.push(['Interview',S.asked.length?(knownFacts().length+' fact(s) from '+S.asked.length+' questions'):'Not conducted']);
+  rows.push(['Reconciliation',S.searched?(S.chosen?('Record confirmed — Reg. No. '+S.chosen.reg):'Run · no match confirmed'):'Not run']);
+  rows.push(['Legal-identity referral',S.referral?(S.referral==='foundling'?'Foundling recognition — RA 11767':'Delayed registration — Act No. 3753'):'None']);
+  rows.push(['Measures recorded',String(S.record.length)+' · Rule 35.b']);
+  rows.push(['Age contested',S.contested?'Yes — Family Court, 24-hour summary proceeding':'Not contested']);
+  rows.push(['Identity match',S.idMatch===true?('Confirmed by '+ROLES[S.role].officer):S.idMatch===false?'Not confirmed':'Not applicable']);
+  rows.push(['Requester',ROLES[S.role].full+' · '+ROLES[S.role].stationFull]);
+  $('recSummary').innerHTML=rows.map(function(r){return '<div class="kv"><span class="k">'+esc(r[0])+'</span><span class="v">'+esc(r[1])+'</span></div>';}).join('');
+  paintRecords(); paintSMS(); checkNum();
+}
+async function sendAll(){
+  const btn=$('sendBtn'); btn.disabled=true; btn.textContent='Sending…';
+  ['c1','c2','c3'].forEach(function(i){$(i).className='chip';$(i).textContent='Sending…';});
+  const res=await api('/api/sms',{numbers:[$('gnum').value,'+63 2 8988 4444','+63 2 8929 9436'],message:smsText()});
+  const t=clock(new Date());
+  ['c1','c2','c3'].forEach(function(i){ $(i).className='chip ok'; $(i).textContent='Sent '+t; });
+  S.sent=true;
+  $('sentList').innerHTML=[['Guardian',(S.person&&S.person.guardian)?S.person.guardian:'Registered guardian'],
+    ['LSWDO QC D4','Duty officer, District 4'],['PAO QC','QC District Office']]
+    .map(function(r){return '<div style="display:flex;gap:12px;padding:14px;border-bottom:1px solid var(--border);align-items:center">'+
+      '<span class="grow"><span style="font-size:15px;font-weight:500">'+esc(r[0])+'</span>'+
+      '<span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">'+esc(r[1])+'</span></span>'+
+      '<span class="chip ok">Sent '+t+'</span></div>';}).join('');
+  $('doneRef').textContent=S.ref+' · '+longDate(new Date())+', '+t;
+  makeReceipt(); tickCountdown(); go('s-done');
+  if(!res) console.info('[e-Laya] eMessage unavailable — chips reflect queued-for-send. Never "Delivered".');
+}
+async function makeReceipt(){
+  const canon=JSON.stringify({ref:S.ref,case:S.caseId,entry:S.entry,
+    incident:S.incident.toISOString().slice(0,10),custody:S.custody.toISOString(),
+    role:S.role,measures:S.record.length,referral:S.referral});
+  let hex='';
+  try{
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(canon));
+    hex=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+  }catch(e){
+    let h1=0x811c9dc5; for(let i=0;i<canon.length;i++){h1^=canon.charCodeAt(i);h1=Math.imul(h1,0x01000193)>>>0;}
+    hex=(h1>>>0).toString(16).padStart(8,'0').repeat(8);
+  }
+  S.receipt=hex; $('receipt').textContent=hex.slice(0,4)+'…'+hex.slice(-4);
+}
+function copyReceipt(){ try{navigator.clipboard.writeText(S.receipt||'');}catch(e){}
+  toast('Receipt copied. No personal data, no PhilSys number, no photo hash.'); }
+
+/* ------------------------------------------------------------------- sheets */
+function openSheet(id){ $('scrim').classList.add('on'); $(id).classList.add('on'); }
+function closeSheets(){ $('scrim').classList.remove('on');
+  document.querySelectorAll('.sheet').forEach(function(s){s.classList.remove('on');}); }
+function openMenu(){
+  $('caseList').innerHTML=CASES.map(function(c){return '<button class="optrow'+(c.id===S.caseId?' sel':'')+
+    '" onclick="openCase(\''+c.id+'\')"><span class="grow">'+
+    '<span style="display:block;font-size:15px;font-weight:500">'+esc(c.label)+'</span>'+
+    '<span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">'+esc(c.sub)+'</span></span>'+
+    '<span class="tick" style="color:var(--faint)">'+c.key+'</span></button>';}).join('');
+  $('roleList').innerHTML=Object.keys(ROLES).map(function(k){return '<button class="optrow'+(k===S.role?' sel':'')+
+    '" onclick="setRole(\''+k+'\')"><span class="grow">'+
+    '<span style="display:block;font-size:15px;font-weight:500">'+esc(ROLES[k].agency)+'</span>'+
+    '<span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">'+esc(ROLES[k].full)+' · '+
+    (ROLES[k].search?esc(ROLES[k].search):'no search path — referral only')+'</span></span>'+
+    '<span class="tick" style="color:var(--primary)">'+(k===S.role?'✓':'')+'</span></button>';}).join('');
+  openSheet('menuSheet');
+}
+function setRole(k){ S.role=k; paintSession(); paintLookupSlot(); renderV2(); paintV4(); closeSheets();
+  toast(ROLES[k].search?'Requester: '+ROLES[k].agency+' — '+ROLES[k].search
+                       :'Requester: '+ROLES[k].agency+' — no search path. Referral only.'); }
+let toastT;
+function toast(m){ $('toastMsg').textContent=m; $('toast').classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(hideToast,4200); }
+function hideToast(){ $('toast').classList.remove('on'); }
+
+/* ------------------------------------------------------------ privacy timers */
+let idleT,expiryT;
+function poke(){ clearTimeout(idleT); clearTimeout(expiryT);
+  idleT=setTimeout(veilOn,60000); expiryT=setTimeout(wipeNow,900000); }
+function veilOn(){
+  if(!$('s-v2').classList.contains('on')||!S.person||!S.person.dob) return;
+  const sc=$('s-v2').querySelector('.scroll'); sc.scrollTop=0;
+  const panel=sc.querySelector('.verdict,.card');
+  const phTop=$('phone').getBoundingClientRect().top;
+  const top=panel?Math.round(panel.getBoundingClientRect().bottom-phTop):160;
+  const v=$('veil'); v.style.top=top+'px'; v.classList.add('on');
+  sc.classList.add('veiled'); sc.style.overflowY='hidden';
+}
+function unveil(){ $('veil').classList.remove('on');
+  const sc=$('s-v2').querySelector('.scroll'); if(sc){sc.classList.remove('veiled'); sc.style.overflowY='auto';} poke(); }
+function wipeNow(){ closeSheets(); restartFlow(); toast('Cleared. Nothing from the last person remains on this device.'); }
+['touchstart','mousedown','keydown','scroll'].forEach(function(e){document.addEventListener(e,poke,{passive:true});});
+document.addEventListener('visibilitychange',function(){ if(document.hidden) veilOn(); });
+
+/* --------------------------------------------------------------------- boot */
+document.addEventListener('keydown',function(e){
+  const c=CASES.filter(function(x){return x.key===e.key;})[0];
+  if(c&&!/input|textarea/i.test(e.target.tagName)) openCase(c.id);
+  if(e.key==='Escape') closeSheets();
+});
+(async function boot(){
+  const now=new Date();
+  S.incident=new Date(); S.custody=new Date(); S.started=new Date();
+  $('todayLabel').textContent=longDate(now);
+  const di=$('dIn'); di.max=now.toISOString().slice(0,10);
+  const mn=new Date(now); mn.setFullYear(mn.getFullYear()-60); di.min=mn.toISOString().slice(0,10);
+  $('cDob').max=now.toISOString().slice(0,10);
+  paintIncidentChip(); paintScripts(); paintSession(); paintSources(); paintMeasures();
+  paintLookupSlot(); paintRecords(); paintProfile();
+  $('doneShield').innerHTML=shield(44,'var(--primary)');
+  $('kAv').innerHTML=ICO.kal; $('kSend').innerHTML=ICO.send;
+  $('eG1').innerHTML=ICO.person; $('eG2').innerHTML=ICO.bars;
+  $('wG1').innerHTML=ICO.none;   $('wG2').innerHTML=ICO.doc;
+  $('wG3').innerHTML=ICO.say;    $('wG4').innerHTML=ICO.card;
+  $('veilGlyph').innerHTML='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19M6.61 6.61A18.6 18.6 0 0 0 2 12s3 8 10 8a9.1 9.1 0 0 0 5.39-1.61"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M2 2l20 20"/></svg>';
+  document.querySelectorAll('[data-i="spk"]').forEach(function(e){e.innerHTML=SPK;});
+  document.querySelectorAll('[data-i="glb"]').forEach(function(e){e.innerHTML=GLB;});
+  const sso=await api('/api/sso',{exchange_code:'demo'});
+  if(sso&&sso.profile&&sso.profile.name){ ROLES[S.role].full=sso.profile.name; paintSession(); }
+  S.person=Object.assign({},PEOPLE.A);
+  S.basis='Civil-registry record confirmed by '+ROLES[S.role].full;
+  renderV2(); paintV4(); poke();
+  setTimeout(function(){ if($('s-scan').classList.contains('on')&&!S.torch) $('lowlight').style.display=''; },6000);
+})();
+</script>
+</body>
+</html>

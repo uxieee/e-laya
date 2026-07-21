@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>e-Laya · Welfare status</title>
+<link rel="stylesheet" href="elaya.css">
+<style>
+/* ------------------------------------------------------------------
+   Additive layout only. New classes for components the shared
+   stylesheet does not carry (roster row, progress meter, status sheet).
+   Nothing in elaya.css is overridden.
+   ------------------------------------------------------------------ */
+.fac{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px 12px;flex:none}
+.fac .f1{font-size:16px;font-weight:500;color:var(--text)}
+.fac .f2{font-size:13px;color:var(--muted);margin-top:2px}
+
+.meter{height:6px;border-radius:999px;background:var(--secondary);overflow:hidden;margin-top:12px}
+.meter i{display:block;height:100%;background:var(--primary);border-radius:999px;transition:width .18s cubic-bezier(.22,.61,.36,1)}
+.mrow{display:flex;justify-content:space-between;align-items:baseline;margin-top:7px;gap:10px}
+.mrow .a{font-size:13px;font-weight:500;color:var(--primary);font-variant-numeric:tabular-nums}
+.mrow .b{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.nobulk{font-size:13px;color:var(--faint);margin-top:6px;line-height:1.45}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+
+.srch{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex:none;position:relative}
+.srch input{width:100%;min-height:48px;border:1px solid var(--border);border-radius:var(--radius);
+  background:var(--surface);padding:12px 44px 12px 14px;font-family:var(--font);font-size:16px;color:var(--text)}
+.srch input:focus{outline:2px solid var(--primary);outline-offset:-2px}
+.srch .mag{position:absolute;right:28px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none;line-height:0}
+
+.rgroup{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin-bottom:16px}
+.rrow{display:flex;align-items:stretch;border-bottom:1px solid var(--border);min-height:72px;
+  transition:opacity .3s,max-height .3s;max-height:220px;overflow:hidden}
+.rrow:last-child{border-bottom:0}
+.rrow.leaving{opacity:0;max-height:0;border-bottom-width:0}
+.rrow .rail{width:4px;flex:none;align-self:stretch;border-radius:0 2px 2px 0;background:var(--border-strong)}
+.rrow .rail.warn{background:var(--accent)}
+.rrow .rail.ok{background:var(--success)}
+.rrow.justset .rail{animation:railgo .22s ease}
+@keyframes railgo{from{background:var(--border-strong)}to{background:var(--success)}}
+.rmain{display:flex;align-items:center;gap:12px;flex:1;min-width:0;background:none;border:0;
+  padding:12px 4px 12px 12px;font-family:var(--font);text-align:left;cursor:pointer;min-height:72px}
+.nm{display:block;font-size:16px;font-weight:500;color:var(--text);line-height:1.3;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agechip{display:inline-flex;align-items:center;gap:5px;max-width:100%;background:var(--warn-surface);
+  border:1px solid var(--warn-border);color:var(--warn);font-size:12px;font-weight:500;
+  padding:2px 8px;border-radius:999px;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reachline{display:block;font-size:13px;color:var(--success);margin-top:4px;line-height:1.35;
+  animation:fadein .2s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+.qact{min-height:44px;min-width:64px;align-self:center;border:1px solid var(--border-strong);border-radius:999px;
+  background:var(--surface);color:var(--primary);font-family:var(--font);font-size:14px;font-weight:500;
+  cursor:pointer;padding:0 14px;margin-right:12px;flex:none;white-space:nowrap;
+  transition:background .15s ease}
+.qact:active{background:var(--secondary)}
+.qact.quiet{color:var(--muted-strong);border-color:var(--border)}
+.donechip{flex:none;padding:0 14px 0 4px;display:flex;align-items:center}
+.queued{font-size:13px;color:var(--faint);flex:none;padding-right:8px;align-self:center}
+
+.sechead{display:flex;align-items:center;justify-content:space-between;margin:8px 2px 10px;gap:10px;min-height:24px}
+.sechead .h{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sechead .n,.collapser .cn{flex:none;min-width:22px;height:20px;padding:0 8px;border-radius:999px;
+  background:var(--secondary);color:var(--primary);font-size:12px;font-weight:500;
+  display:inline-grid;place-items:center;font-variant-numeric:tabular-nums;line-height:1}
+.collapser{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;padding:12px 2px;
+  font-family:var(--font);font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);cursor:pointer;min-height:44px}
+.collapser .h{flex:1;text-align:left}
+.collapser .tri{color:var(--primary);font-size:13px;letter-spacing:0}
+
+/* sheet */
+.scrim{position:absolute;inset:0;background:rgba(26,26,46,.4);z-index:40;opacity:0;pointer-events:none;transition:.2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:24px 24px 0 0;
+  z-index:41;transform:translateY(102%);transition:transform .24s cubic-bezier(.22,.61,.36,1);
+  max-height:92%;overflow-y:auto;padding:10px 16px calc(18px + env(safe-area-inset-bottom))}
+.sheet.on{transform:none}
+.sheet::-webkit-scrollbar{width:0}
+.grab{width:36px;height:4px;border-radius:2px;background:#CBD5E1;margin:0 auto 14px}
+
+.opt{display:flex;align-items:center;gap:12px;width:100%;background:var(--surface);border:0;
+  border-bottom:1px solid var(--border);padding:10px 14px;min-height:56px;font-family:var(--font);
+  text-align:left;cursor:pointer}
+.opt:last-child{border-bottom:0}
+.opt .lb{display:block;font-size:16px;font-weight:500;color:var(--text);line-height:1.3}
+.opt .gl{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.35}
+.opt .chev{color:var(--primary);font-size:18px;flex:none}
+.opt:hover{background:var(--secondary)}
+.grp{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px}
+
+/* status chip grid (W-2) */
+.stgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 12px}
+.stopt{display:flex;align-items:center;gap:9px;min-height:56px;padding:8px 10px;
+  border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);
+  font-family:var(--font);text-align:left;cursor:pointer;min-width:0;
+  transition:background .15s ease,border-color .15s ease}
+.stopt.wide{grid-column:1/-1}
+.stopt .ic{color:var(--primary);flex:none;line-height:0}
+.stopt .lb{display:block;font-size:15px;font-weight:500;color:var(--text);line-height:1.25}
+.stopt .gl{display:block;font-size:12px;color:var(--muted);margin-top:1px;line-height:1.3;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stopt[aria-checked="true"]{background:var(--secondary);border-color:var(--primary)}
+.stopt:hover{background:var(--secondary)}
+
+.prev{background:var(--secondary);border-radius:var(--radius);padding:14px;margin-top:6px}
+.prev .pl{font-size:12px;font-weight:500;color:var(--primary);letter-spacing:.03em}
+.prev .ps{font-size:15px;color:var(--text);margin-top:8px;line-height:1.45}
+.prev .pf{font-size:13px;color:var(--muted-strong);margin-top:4px;font-style:italic;line-height:1.45}
+.reach{display:flex;gap:8px;align-items:flex-start;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-strong)}
+.reach .rt{font-size:13px;color:var(--primary-ink);line-height:1.45}
+
+.snack{position:absolute;left:16px;right:16px;bottom:16px;background:var(--text);color:#fff;
+  border-radius:var(--radius);padding:14px 16px;font-size:14px;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;
+  opacity:0;transform:translateY(10px);transition:.22s;pointer-events:none}
+.snack.on{opacity:1;transform:none;pointer-events:auto}
+.snack button{background:none;border:0;color:#fff;font-family:var(--font);font-size:15px;
+  font-weight:500;cursor:pointer;flex:none;min-height:44px;padding:0 4px}
+.snack .st{line-height:1.35}
+
+.stat{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.footspace{height:20px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ico{line-height:0;display:inline-flex}
+.chipg{display:inline-flex;align-items:center;gap:5px}
+</style>
+</head>
+<body>
+<div class="phone-wrap">
+<div class="phone" id="phone">
+
+<!-- ================= W-1 · FACILITY ROSTER =================================== -->
+<section class="screen on" id="s-w1" aria-labelledby="w1-h">
+  <header class="bar plain">
+    <button class="back" aria-label="Back">‹</button>
+    <div class="title">Welfare status</div>
+    <div class="right"><button class="back" aria-label="Menu" onclick="openMenu()">⋯</button></div>
+  </header>
+
+  <div class="offline" id="offbar" style="display:none">Offline — <span id="qcount">0</span> waiting to send. Nothing is blocked.</div>
+
+  <div class="fac">
+    <div class="f1" id="w1-h">Quezon City District Jail · Dorm 4</div>
+    <div class="f2" id="facMeta">22 July 2026 · afternoon count</div>
+    <div class="meter" role="progressbar" aria-labelledby="w1-h" aria-valuemin="0" aria-valuemax="128" id="meterBar">
+      <i id="meterFill" style="width:0%"></i></div>
+    <div class="mrow"><span class="a" id="mA">0 of 128 updated today</span><span class="b" id="mB">128 left</span></div>
+    <div class="nobulk" id="nobulk">No mark-all. Every person is confirmed one at a time.</div>
+  </div>
+
+  <div class="srch">
+    <label class="sr" for="q">Find a name or cell</label>
+    <input id="q" type="search" placeholder="Find a name or cell" oninput="render()" autocomplete="off">
+    <span class="mag" id="magIcon"></span>
+  </div>
+
+  <main class="scroll" id="roster"></main>
+
+  <div class="snack" id="snack" role="status" aria-live="polite">
+    <span class="st" id="snackMsg"></span><button onclick="undo()">Undo</button>
+  </div>
+</section>
+
+<!-- ================= sheets ================================================== -->
+<div class="scrim" id="scrim" onclick="closeSheets()"></div>
+
+<!-- W-2 · set status -->
+<div class="sheet" id="w2" role="dialog" aria-modal="true" aria-labelledby="w2-name">
+  <div class="grab"></div>
+  <div id="w2head"></div>
+
+  <div class="stgrid" id="stGrid" role="radiogroup" aria-label="Status"></div>
+
+  <div class="prev" id="prev"></div>
+  <div class="tiny mt2 mb2">No notes, no free text. Nothing about a medical reason is recorded anywhere in this module.</div>
+</div>
+
+<!-- follow-up: destination / release date / reassurance -->
+<div class="sheet" id="fu" role="dialog" aria-modal="true" aria-label="One more detail">
+  <div class="grab"></div>
+  <div id="fuBody"></div>
+</div>
+
+<!-- menu -->
+<div class="sheet" id="menu" role="dialog" aria-label="Menu">
+  <div class="grab"></div>
+  <h3>This shift</h3>
+  <div class="card mt2" id="shiftStats"></div>
+  <h3>Demo controls</h3>
+  <div class="grp mt2">
+    <button class="opt" onclick="toggleOffline()"><span class="grow"><span class="lb">Simulate patchy facility Wi-Fi</span>
+      <span class="gl" id="offLbl">Currently online. Saves queue locally and nothing blocks.</span></span></button>
+    <button class="opt" onclick="ageEverything()"><span class="grow"><span class="lb">Advance the clock 24 hours</span>
+      <span class="gl">Shows the decay rule: today's statuses become "No update today".</span></span></button>
+    <button class="opt" onclick="resetShift()"><span class="grow"><span class="lb">Reset the roster</span>
+      <span class="gl">Back to 84 of 128 updated.</span></span></button>
+  </div>
+  <div class="banner mb2">A status expires after 24 hours. Past that, a family sees <strong>No update today</strong> —
+    never a stale "OK". A three-day-old "OK" manufactures reassurance the facility has not actually given, and that is
+    the one failure that would cost a family's trust for good.</div>
+</div>
+
+</div>
+</div>
+
+<script>
+"use strict";
+/* ------------------------------------------------------------------ api */
+async function api(p,b){if(location.protocol==='file:')return null;/* opened as a local file — no server to call */
+try{const r=await fetch(p,b?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}:{});if(!r.ok)throw 0;return await r.json();}catch(e){return null;}}
+
+/* ------------------------------------------------------------- constants */
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const HOUR=3600000, DAY=24*HOUR;
+const svg=(d,s)=>`<svg width="${s||20}" height="${s||20}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const I={
+  check :svg('<path d="M20 6L9 17l-5-5"/>'),
+  clinic:svg('<path d="M12 5v14M5 12h14"/>'),
+  hosp  :svg('<path d="M4 21h16M6 21V8l6-4 6 4v13M12 10.5v5M9.5 13h5"/>'),
+  court :svg('<path d="M12 3v18M7 21h10M6 8l12-3M6 8l-3 6a3 3 0 0 0 6 0zM18 5l3 6a3 3 0 0 1-6 0z"/>'),
+  prog  :svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor"/>'),
+  move  :svg('<path d="M4 12h14M13 6l6 6-6 6"/>'),
+  home  :svg('<path d="M3.5 11L12 4l8.5 7v9a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z"/>'),
+  clock :svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>'),
+  mag   :svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>'),
+  send  :svg('<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',16)
+};
+
+/* The vocabulary. Seven officer-settable values, plus one the officer cannot set. */
+const V={
+  ok      :{id:'ok',      label:'OK',                   gloss:'Present and doing fine',            fil:'Nasa maayos na kalagayan',   icon:I.check, chip:'ok'},
+  clinic  :{id:'clinic',  label:'In clinic',            gloss:'Being seen inside the facility',    fil:'Nasa klinika',               icon:I.clinic,chip:'',      flag:'in the clinic', since:true},
+  hospital:{id:'hospital',label:'In hospital',          gloss:'Taken outside for care',            fil:'Nasa ospital',               icon:I.hosp,  chip:'warn',  flag:'in hospital',   since:true},
+  court   :{id:'court',   label:'In court',             gloss:'Out for a hearing',                 fil:'Nasa hukuman',               icon:I.court, chip:'',      flag:'out at court',  since:true},
+  prog    :{id:'prog',    label:'Attending a programme',gloss:'At a session, class, or work detail',fil:'Nasa programa',             icon:I.prog,  chip:'',      flag:'on a programme',since:true},
+  moved   :{id:'moved',   label:'Transferred',          gloss:'Moved to another facility',         fil:'Inilipat sa ibang pasilidad',icon:I.move,  chip:'', more:true},
+  free    :{id:'free',    label:'Released',             gloss:'No longer in custody',              fil:'Nakalaya',                   icon:I.home,  chip:'solid', more:true},
+  none    :{id:'none',    label:'No update today',      gloss:'Set by the system, never by you',   fil:'Walang bagong update',       icon:I.clock, chip:'stale'}
+};
+const REASSURE=['Being seen by the facility nurse','Family may visit','The social worker has been told'];
+const FACILITIES=['Manila City Jail — Male Dorm','Caloocan City Jail','Marikina City Jail','Pasig City Jail',
+  'NBP Reception & Diagnostic Centre, Muntinlupa','Bahay Pag-asa, Quezon City','Valenzuela City Jail'];
+
+/* ------------------------------------------------------------- seed data */
+const FIRST=['Jose','Ana','Ramon','Elena','Pedro','Maria','Andres','Rosalinda','Emilio','Teresita','Rizal','Corazon',
+  'Danilo','Imelda','Ernesto','Lourdes','Rogelio','Nenita','Alfredo','Marilou','Benigno','Cecilia','Ferdinand','Divina',
+  'Gregorio','Erlinda','Hector','Josefina','Ignacio','Kristina','Leonardo','Marisol','Nestor','Perlita','Rodrigo',
+  'Susana','Teodoro','Virginia','Wilfredo','Yolanda','Arnel','Bernadette','Carlito','Dolores','Efren','Fely','Gerardo','Hilda'];
+const MI=['A','B','C','D','E','G','L','M','N','P','R','S','T','V'];
+const LAST=['Dela Cruz','Reyes','Santos','Bautista','Marquez','Villanueva','Ramos','Aguilar','Mercado','Salazar',
+  'Del Rosario','Panganiban','Ocampo','Fernandez','Castillo','Navarro','Espiritu','Gutierrez','Alvarez','Lacson',
+  'Maglaya','Bonifacio','Sarmiento','Tolentino','Umali','Yabut','Zamora','Cabrera','Dizon','Estrada','Ferrer','Gomez'];
+const CELLS=['4-A','4-B','4-C','4-D','4-E','4-F','4-G','4-H'];
+const KIN=[['mother','Maria'],['father','Ricardo'],['sister','Ana'],['wife','Lorna'],['brother','Nilo'],['aunt','Perla'],['daughter','Grace']];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let people=[], seq=0;
+
+function buildRoster(){
+  const rnd=mulberry32(20260722);
+  const now=Date.now();
+  people=[];
+  for(let i=0;i<128;i++){
+    const f=FIRST[Math.floor(rnd()*FIRST.length)], m=MI[Math.floor(rnd()*MI.length)],
+          l=LAST[Math.floor(rnd()*LAST.length)];
+    const kinN=1+Math.floor(rnd()*2.4);
+    const kin=[];
+    for(let k=0;k<kinN;k++){const K=KIN[Math.floor(rnd()*KIN.length)];kin.push({name:K[1]+' '+l,rel:K[0],num:'+63 9'+String(Math.floor(rnd()*99999999)).padStart(8,'0')});}
+    people.push({
+      id:i, first:f, mi:m, last:l,
+      name:`${f} ${m}. ${l}`,
+      cell:CELLS[Math.floor(rnd()*CELLS.length)],
+      kin, status:'ok', at:now-3*DAY, queued:false, leaving:false
+    });
+  }
+  // Two people who need a look — a non-OK status that has aged past 24 hours.
+  people[0]=Object.assign(people[0],{first:'Ramon',mi:'C',last:'Bautista',name:'Ramon C. Bautista',cell:'4-B',status:'clinic', at:now-30*HOUR});
+  people[1]=Object.assign(people[1],{first:'Elena',mi:'S',last:'Marquez',name:'Elena S. Marquez', cell:'4-D',status:'hospital',at:now-50*HOUR});
+  // 42 not updated on this shift — nearly all confirmed yesterday, three left too long.
+  for(let i=2;i<44;i++){ people[i].status='ok'; people[i].at=now-(20+Math.floor(rnd()*9))*HOUR; }
+  people[2] =Object.assign(people[2], {first:'Jose', mi:'D',last:'Dela Cruz',name:'Jose D. Dela Cruz',cell:'4-A',at:now-20*HOUR});
+  people[3] =Object.assign(people[3], {first:'Ana',  mi:'M',last:'Reyes',    name:'Ana M. Reyes',     cell:'4-A',at:now-20*HOUR});
+  people[4] =Object.assign(people[4], {first:'Pedro',mi:'C',last:'Santos',   name:'Pedro C. Santos',  cell:'4-A',at:now-3*DAY});
+  people[12].at=now-4*DAY; people[27].at=now-2*DAY-4*HOUR;
+  // 84 already done on this shift — all timestamped inside today.
+  const sod=(()=>{const d=new Date(now);d.setHours(0,0,0,0);return d.getTime();})();
+  const mix=['ok','ok','ok','ok','ok','ok','ok','ok','court','ok','ok','prog','ok','ok','ok','ok','clinic','ok','ok','prog'];
+  for(let i=44;i<128;i++){ people[i].status=mix[(i-44)%mix.length];
+    people[i].at=sod+Math.floor(rnd()*Math.max(60000,now-sod-60000)); }
+  // Registered family carry the person's own surname.
+  people.forEach(p=>p.kin.forEach(k=>{k.name=k.name.split(' ')[0]+' '+p.last;}));
+  seq=0; saveTimes=[]; pending=null;
+}
+
+/* ------------------------------------------------------------------ state */
+let offline=false, saveTimes=[], pending=null, snackT=null, openId=null, doneOpen=false, clockShift=0;
+
+/* ------------------------------------------------------------------ utils */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nowMs=()=>Date.now()+clockShift;
+const clock=d=>{let h=d.getHours(),m=String(d.getMinutes()).padStart(2,'0');const ap=h<12?'AM':'PM';h=h%12||12;return `${h}:${m} ${ap}`;};
+const startOfToday=()=>{const d=new Date(nowMs());d.setHours(0,0,0,0);return d.getTime();};
+
+function isFresh(p){ return nowMs()-p.at < DAY; }            // the 24-hour decay rule
+function updatedToday(p){ return p.at>=startOfToday() && isFresh(p); }
+function shown(p){ return isFresh(p)?V[p.status]:V.none; }   // what the FAMILY sees right now
+
+function whenWords(at){
+  const d=new Date(at), diff=nowMs()-at;
+  if(diff<60000) return 'just now';
+  if(at>=startOfToday()) return 'today, '+clock(d);
+  if(at>=startOfToday()-DAY) return 'yesterday, '+clock(d);
+  const dd=Math.floor(diff/DAY);
+  if(dd<7) return DAYS[d.getDay()]+', '+clock(d);
+  return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)}, ${clock(d)}`;
+}
+function spanDays(at){ return Math.max(1,Math.ceil((nowMs()-at)/DAY)); }
+function staleWords(p){
+  if(nowMs()-p.at < DAY) return null;
+  const w=V[p.status].flag;
+  if(w){ const d=spanDays(p.at); return `${d} day${d===1?'':'s'} ${w}`; }
+  const d=Math.max(1,Math.floor((nowMs()-p.at)/DAY));
+  return `no update for ${d} day${d===1?'':'s'}`;
+}
+
+/* -------------------------------------------------------------- rendering */
+function counts(){
+  const done=people.filter(updatedToday).length;
+  return {done,total:people.length,left:people.length-done};
+}
+/* A person carrying a non-OK status that has decayed past 24h is pinned to the
+   top of the roster every shift until it resolves. A stale plain "OK" stays in
+   "Not yet updated" with its own flag — it is late, not unresolved. */
+function needsLook(p){
+  if(updatedToday(p)) return false;
+  return !!V[p.status].since && (nowMs()-p.at)>=DAY;
+}
+
+function paintHeader(){
+  const c=counts(), pct=Math.round(c.done/c.total*100);
+  $('meterFill').style.width=pct+'%';
+  $('meterBar').setAttribute('aria-valuenow',c.done);
+  $('mA').textContent=`${c.done} of ${c.total} updated today`;
+  $('mB').textContent=`${c.left} left`;
+  const d=new Date(nowMs()), h=d.getHours();
+  const part=h<11?'morning count':h<17?'afternoon count':'evening count';
+  $('facMeta').textContent=`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()} · ${part}`;
+  const avg=avgSeconds();
+  $('nobulk').textContent = avg
+    ? `No mark-all. ${seq} confirmed this shift · ${avg}s average each.`
+    : 'No mark-all. Every person is confirmed one at a time.';
+  const q=people.filter(p=>p.queued).length;
+  $('offbar').style.display = (offline||q)?'':'none';
+  $('qcount').textContent=q;
+}
+function avgSeconds(){
+  if(saveTimes.length<2) return null;
+  const span=saveTimes[saveTimes.length-1]-saveTimes[0];
+  return (span/1000/(saveTimes.length-1)).toFixed(1);
+}
+
+function rowHTML(p){
+  const st=shown(p), stale=staleWords(p), done=updatedToday(p), look=needsLook(p);
+  const v=V[p.status];
+  const rail=done?'ok':look?'warn':'';
+  const sub=`Cell ${p.cell} · ${v.label} ${v.since&&!done?'since ':''}${whenWords(p.at)}`
+          + (p.extra?` · ${p.extra}`:'');
+  /* staleness is systematic: fresh = plain · ≥24h = amber tint chip · ≥72h = amber chip with a flag */
+  const ageH=(nowMs()-p.at)/HOUR;
+  const agechip=(!done&&stale)?`<span class="agechip">${ageH>=72?'⚑ ':''}${esc(stale)}</span>`:'';
+  const reach=(p.justSet&&p.kin.length)?`<span class="reachline">Aabot kay ${esc(p.kin[0].name)} ngayon</span>`:'';
+  const tail = done
+    ? `<span class="donechip"><span class="chip ${st.chip}"><span class="ico">${st.icon}</span>${esc(st.label)}</span></span>`
+    : look
+      ? `<button class="qact quiet" aria-label="Update status for ${esc(p.name)}" onclick="openStatus(${p.id})">Update</button>`
+      : `<button class="qact" aria-label="Mark ${esc(p.name)} OK" onclick="quickOK(${p.id})">OK ✓</button>`;
+  const q=p.queued?`<span class="queued" title="Waiting to send">⇡</span>`:'';
+  return `<div class="rrow${p.leaving?' leaving':''}${p.justSet?' justset':''}" id="row${p.id}">
+    <span class="rail ${rail}" aria-hidden="true"></span>
+    <button class="rmain" onclick="openStatus(${p.id})" aria-haspopup="dialog" aria-label="Set status for ${esc(p.name)}">
+      <span class="grow"><span class="nm">${esc(p.name)}</span><span class="sub">${esc(sub)}</span>${agechip}${reach}</span>
+    </button>${q}${tail}</div>`;
+}
+
+function render(){
+  paintHeader();
+  const term=($('q').value||'').trim().toLowerCase();
+  const match=p=>!term||p.name.toLowerCase().includes(term)||('cell '+p.cell).toLowerCase().includes(term)||p.cell.toLowerCase().includes(term);
+  const pool=people.filter(match);
+  /* a just-confirmed row holds its place for the 2s settle, then drains into "Done today" */
+  const look=pool.filter(p=>p.justSet?p.stay==='look':needsLook(p));
+  const todo=pool.filter(p=>p.justSet?p.stay==='todo':(!updatedToday(p)&&!needsLook(p)));
+  const done=pool.filter(p=>updatedToday(p)&&(!p.justSet||p.stay==='done'));
+  let h='';
+  if(look.length) h+=`<div class="sechead"><span class="h">Needs a look</span><span class="n">${look.length}</span></div>
+    <div class="rgroup">${look.map(rowHTML).join('')}</div>`;
+  if(todo.length) h+=`<div class="sechead"><span class="h">Not yet updated</span><span class="n">${todo.length}</span></div>
+    <div class="rgroup">${todo.map(rowHTML).join('')}</div>`;
+  h+=`<button class="collapser" onclick="doneOpen=!doneOpen;render()" aria-expanded="${doneOpen}">
+      <span class="tri">${doneOpen?'▾':'▸'}</span><span class="h">Done today</span><span class="cn">${done.length}</span></button>`;
+  if(doneOpen&&done.length) h+=`<div class="rgroup">${done.map(rowHTML).join('')}</div>`;
+  if(!pool.length) h+=`<div class="empty"><div class="ic">🔎</div>No one matches "${esc(term)}".</div>`;
+  h+='<div class="footspace"></div>';
+  $('roster').innerHTML=h;
+}
+
+/* ---------------------------------------------------------- set a status */
+function quickOK(id){ commit(id,'ok'); }
+
+function commit(id,statusId,extra){
+  const p=people.find(x=>x.id===id); if(!p) return;
+  const prev={status:p.status,at:p.at,extra:p.extra};
+  p.stay=updatedToday(p)?'done':needsLook(p)?'look':'todo';   // where the row holds its place
+  p.status=statusId; p.at=nowMs(); p.extra=extra||null; p.queued=offline; p.justSet=true;
+  seq++; saveTimes.push(Date.now());
+  closeSheets();
+  // The rail animates to green and the family-reach note shows for ~2s, then the row drains into "Done today".
+  render();
+  setTimeout(()=>{ if(!p.justSet) return;
+    const r=$('row'+p.id); if(r&&p.stay!=='done') r.classList.add('leaving'); },2000);
+  setTimeout(()=>{ if(!p.justSet) return; p.justSet=false; render(); },2300);
+  // Outbound family SMS is HELD for the 5s undo window.
+  pending={id, prev, timer:setTimeout(()=>{ dispatch(p); pending=null; },5000)};
+  showSnack(`${V[statusId].label} — ${p.name}`);
+}
+function undo(){
+  if(!pending) return;
+  clearTimeout(pending.timer);
+  const p=people.find(x=>x.id===pending.id);
+  Object.assign(p,pending.prev); p.queued=false; p.justSet=false;
+  seq=Math.max(0,seq-1); saveTimes.pop();
+  pending=null; hideSnack(); render();
+}
+async function dispatch(p){
+  const st=V[p.status];
+  const msg=`e-Laya: ${p.name} — ${st.fil} (${st.label}).${p.extra?' '+p.extra+'.':''} Kumpirmado ${whenWords(p.at)} ng ${OFFICER.short}, ${FACILITY}. Mag-e-expire ang update na ito pagkatapos ng 24 oras — hindi kayo makakakita ng lumang "OK".`;
+  const r=await api('/api/sms',{numbers:p.kin.map(k=>k.num),message:msg});
+  if(offline){ p.queued=true; }          // queued locally; the family timestamp stays the tap time
+  else { p.queued=false; }
+  render();
+}
+
+function showSnack(t){ $('snackMsg').textContent=t; $('snack').classList.add('on');
+  clearTimeout(snackT); snackT=setTimeout(hideSnack,5000); }
+function hideSnack(){ $('snack').classList.remove('on'); }
+
+/* ------------------------------------------------------------------- W-2 */
+function statusRow(v,cur,wide){
+  return `<button class="stopt${wide?' wide':''}" role="radio" aria-checked="${cur}" onclick="pick('${v.id}')"
+      onmouseenter="preview('${v.id}')" onfocus="preview('${v.id}')" onmouseleave="preview(null)"
+      ontouchstart="preview('${v.id}')">
+    <span class="ic">${v.icon}</span>
+    <span class="grow"><span class="lb">${esc(v.label)}${v.more?' ›':''}</span><span class="gl">${esc(v.gloss)}</span></span></button>`;
+}
+function openStatus(id){
+  openId=id;
+  const p=people.find(x=>x.id===id);
+  const stale=!isFresh(p);
+  $('w2head').innerHTML=`<h3 id="w2-name">${esc(p.name)}</h3>
+    <div class="tiny" style="margin-top:4px">Cell ${esc(p.cell)} · last set ${esc(V[p.status].label)} ${esc(whenWords(p.at))}</div>
+    ${stale?`<div class="banner warn mt2" style="margin-bottom:0">This has decayed. Their family currently sees
+      <strong>No update today</strong>, with the ${esc(whenWords(p.at))} confirmation kept underneath.</div>`:''}
+    <div style="height:14px"></div>`;
+  /* the 7-status grid — the person's current status arrives pre-highlighted */
+  $('stGrid').innerHTML=[V.ok,V.clinic,V.hospital,V.court,V.prog,V.moved,V.free]
+    .map((v,i)=>statusRow(v,v.id===p.status,i===0)).join('');
+  preview(p.status);
+  openSheet('w2');
+}
+function preview(vid){
+  const p=people.find(x=>x.id===openId); if(!p) return;
+  const v=V[vid||p.status]||V.ok, t=clock(new Date(nowMs()));
+  const kin=p.kin.map(k=>`${k.name} (${k.rel})`).join(', ');
+  $('prev').innerHTML=`<div class="pl">${esc(p.first.toUpperCase())}'S FAMILY WILL SEE</div>
+    <div class="ps">"${esc(v.label)} · confirmed today, ${t}"</div>
+    <div class="pf">"${esc(v.fil)} · kumpirmado ngayon, ${t}"</div>
+    <div class="reach"><span class="ico" style="color:var(--primary)">${I.send}</span>
+      <span class="rt">Reaches ${p.kin.length} registered ${p.kin.length===1?'contact':'contacts'} the moment you tap —
+      ${esc(kin)}. Held 5 seconds so you can undo.</span></div>`;
+}
+function pick(vid){
+  const p=people.find(x=>x.id===openId);
+  if(vid==='moved'){ askDestination(p); return; }
+  if(vid==='free'){ askRelease(p); return; }
+  if(vid==='clinic'||vid==='hospital'){ askReassurance(p,vid); return; }
+  commit(p.id,vid);
+}
+function askDestination(p){
+  $('fuBody').innerHTML=`<h3>Where has ${esc(p.first)} been moved to?</h3>
+    <p style="margin-top:6px">A family that travels to the wrong jail loses a day's wages. This is the one detail
+      the record cannot do without.</p>
+    <div class="grp mt2">${FACILITIES.map((f,i)=>`<button class="opt" onclick="commit(${p.id},'moved','${esc(f)}')">
+      <span class="grow"><span class="lb">${esc(f)}</span></span><span class="chev">›</span></button>`).join('')}</div>
+    <div class="footspace"></div>`;
+  openSheet('fu');
+}
+function askRelease(p){
+  const d=new Date(nowMs());
+  $('fuBody').innerHTML=`<h3>When was ${esc(p.first)} released?</h3>
+    <p style="margin-top:6px">The best news this module ever delivers. The family sees it as soon as you tap.</p>
+    <div class="grp mt2">
+      <button class="opt" onclick="commit(${p.id},'free','Today, ${clock(d)}')"><span class="grow">
+        <span class="lb">Today</span><span class="gl">${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${clock(d)}</span></span></button>
+      <button class="opt" onclick="commit(${p.id},'free','Yesterday')"><span class="grow">
+        <span class="lb">Yesterday</span><span class="gl">Backdated — the family timestamp says so</span></span></button>
+    </div><div class="footspace"></div>`;
+  openSheet('fu');
+}
+function askReassurance(p,vid){
+  $('fuBody').innerHTML=`<h3>Add one reassurance for the family</h3>
+    <p style="margin-top:6px">Fixed phrases only. None of them is a diagnosis, and nothing about the medical reason
+      is captured anywhere in this module.</p>
+    <div class="grp mt2">${REASSURE.map(r=>`<button class="opt" onclick="commit(${p.id},'${vid}','${esc(r)}')">
+      <span class="grow"><span class="lb">${esc(r)}</span></span></button>`).join('')}
+      <button class="opt" onclick="commit(${p.id},'${vid}')"><span class="grow">
+        <span class="lb" style="color:var(--muted-strong)">Skip — just the status</span></span></button></div>
+    <div class="footspace"></div>`;
+  openSheet('fu');
+}
+
+/* ---------------------------------------------------------------- sheets */
+function openSheet(id){ $('scrim').classList.add('on');
+  document.querySelectorAll('.sheet').forEach(s=>{ if(s.id!==id) s.classList.remove('on'); });
+  $(id).classList.add('on'); $(id).scrollTop=0; }
+function closeSheets(){ $('scrim').classList.remove('on');
+  document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on')); }
+
+function openMenu(){
+  const c=counts(), avg=avgSeconds(), q=people.filter(p=>p.queued).length;
+  const stale=people.filter(p=>!isFresh(p)).length;
+  $('shiftStats').innerHTML=[
+    ['Confirmed this shift',seq],
+    ['Updated today',`${c.done} of ${c.total}`],
+    ['Average per person',avg?avg+' seconds':'—'],
+    ['Showing "No update today" to a family',stale],
+    ['Waiting to send',q],
+    ['Officer',OFFICER.full]
+  ].map(r=>`<div class="flex between center" style="padding:7px 0;gap:12px">
+    <span style="font-size:13px;color:var(--muted)">${esc(r[0])}</span>
+    <span style="font-size:15px;font-weight:500" class="mono">${esc(r[1])}</span></div>`).join('');
+  openSheet('menu');
+}
+function toggleOffline(){ offline=!offline;
+  $('offLbl').textContent=offline
+    ? 'Currently offline. Saves queue locally; the family timestamp is your tap time, not the sync time.'
+    : 'Currently online. Saves queue locally and nothing blocks.';
+  if(!offline) people.forEach(p=>p.queued=false);
+  render(); }
+function ageEverything(){ clockShift+=DAY; closeSheets(); render();
+  showSnack('24 hours later — today\'s statuses have decayed to "No update today".'); }
+function resetShift(){ clockShift=0; offline=false; buildRoster(); closeSheets(); render(); }
+
+/* ------------------------------------------------------------------ boot */
+const OFFICER={full:'JO1 Luis Sarmiento · BJMP',short:'JO1 Sarmiento'};
+const FACILITY='Quezon City District Jail';
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheets(); });
+
+(async function boot(){
+  $('magIcon').innerHTML=I.mag;
+  buildRoster();
+  render();
+  const sso=await api('/api/sso',{exchange_code:'demo'});
+  if(sso&&sso.profile&&sso.profile.name){ OFFICER.full=sso.profile.name; }
+  setInterval(render,60000);   // keeps "no update for N days" and the decay honest
+})();
+</script>
+</body>
+</html>

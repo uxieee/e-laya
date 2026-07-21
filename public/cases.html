@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>e-Laya · PAO Caseload</title>
+<link rel="stylesheet" href="elaya.css">
+<style>
+/* =========================================================================
+   Professional surface components (C-1…C-3).
+   Extends elaya.css — no existing class is restyled, only extended with
+   additive modifiers (.bar.pro, .row.pro) and new component classes.
+   ========================================================================= */
+[hidden]{display:none!important}
+:where(button,a,input,select,[tabindex]):focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.row.pro:focus-visible,.fchip:focus-visible,.bandh:focus-visible,
+.opt:focus-visible,.more:focus-visible{outline-offset:-2px}
+/* Three-column grid: the two side tracks resolve to the SAME width, so the
+   title is optically centred no matter how many icons each side carries. */
+.bar.pro{padding:6px 8px;gap:0;display:grid;align-items:center;
+  grid-template-columns:minmax(44px,1fr) auto minmax(44px,1fr)}
+.bar.pro .side{display:flex;align-items:center;min-width:0}
+.bar.pro .side.end{justify-content:flex-end}
+.bar.pro .title{grid-column:2;font-size:17px;text-align:center;padding:0 8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{min-width:44px;height:44px;display:grid;place-items:center;background:none;border:none;
+  color:var(--primary);font-size:20px;line-height:1;cursor:pointer;border-radius:10px;
+  font-family:var(--font);padding:0 6px}
+.iconbtn{transition:background-color .18s ease}
+.iconbtn:hover,.iconbtn:active{background:var(--secondary)}
+.iconbtn.mut{color:var(--muted)}
+.iconbtn.txt{font-size:15px;font-weight:500}
+.iconbtn svg{display:block}
+
+.ctx{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px;flex:none;
+  padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)}
+.ctx .who{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+button.offline{display:block;width:100%;border:none;border-bottom:1px solid var(--warn-border);
+  font-family:var(--font);font-weight:500;cursor:pointer;min-height:36px}
+
+/* ---- search + filter chips (revealed by the 🔍 toggle) ---- */
+.searchwrap{margin-bottom:16px}
+.search{position:relative;margin-bottom:10px}
+.search input{width:100%;min-height:48px;border:1px solid transparent;border-radius:var(--radius);
+  background:var(--secondary);padding:12px 44px 12px 14px;font-family:var(--font);font-size:16px;color:var(--text)}
+.search input::placeholder{color:var(--muted)}
+.search input:focus{background:var(--surface);outline:2px solid var(--primary);outline-offset:-2px}
+.search .mag{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+.fchips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 2px;scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 14px,#000 calc(100% - 28px),transparent);
+  mask-image:linear-gradient(to right,transparent,#000 14px,#000 calc(100% - 28px),transparent)}
+.fchips::-webkit-scrollbar{display:none}
+.fchip{flex:none;min-height:32px;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:500;
+  background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:var(--font);
+  cursor:pointer;white-space:nowrap;transition:background-color .18s ease,border-color .18s ease,color .18s ease}
+.fchip:hover{border-color:var(--border-strong);color:var(--muted-strong)}
+.fchip[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* ---- triage band ----
+   One band = one card. The header row lives INSIDE the card with its rows
+   beneath a hairline, so a band reads as a contained object rather than a
+   floating label. Collapsed, the card is just its 64px header row. */
+.band{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin-bottom:12px}
+.bandh{display:flex;align-items:center;gap:10px;width:100%;min-height:64px;
+  padding:16px;background:none;border:none;font-family:var(--font);font-size:12px;font-weight:500;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted-strong);text-align:left;
+  transition:background-color .18s ease}
+button.bandh{cursor:pointer}
+button.bandh:hover{background:#0040E708}
+button.bandh:active{background:#0040E70D}
+.bandh .bt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bandh .bn{flex:none;font-size:12px;font-weight:500;letter-spacing:0;
+  color:var(--primary);background:var(--secondary);border:1px solid var(--border);border-radius:999px;
+  min-width:26px;padding:1px 8px;text-align:center;font-variant-numeric:tabular-nums;line-height:1.5}
+.bandh .cv{flex:none;font-size:15px;color:var(--primary);letter-spacing:0;line-height:1}
+.bandbody{border-top:1px solid var(--border)}
+.bandsub{font-size:11.5px;color:var(--faint);letter-spacing:0;text-transform:none;line-height:1.5;
+  padding:10px 16px;border-bottom:1px solid var(--border)}
+.bandcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+
+/* ---- dense row (ProRow) ---- */
+.row.pro{margin:0;border:0;border-radius:0;padding:10px 12px 10px 0;gap:0;align-items:stretch;
+  position:relative;background:var(--surface);min-height:64px;transition:background-color .18s ease}
+.row.pro+.row.pro::before{content:"";position:absolute;left:16px;right:0;top:0;height:1px;background:var(--border)}
+.row.pro:hover{background:#0040E708}
+.row.pro:active{background:#0040E70D}
+.row.pro[aria-current="true"]{background:#0040E714}
+.row.pro .rail{border-radius:0 2px 2px 0;margin-right:12px}
+.row.pro .rail.quiet{background:#CBD5E1}
+.pbody{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.pt{font-size:16px;font-weight:500;line-height:1.35;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt .age{font-size:14px;font-weight:400;color:var(--muted)}
+.ps{font-size:14px;line-height:1.35;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+.pm{display:flex;gap:6px;margin-top:6px;overflow:hidden;flex-wrap:nowrap;min-width:0}
+.mchip{display:inline-block;height:20px;line-height:18px;padding:0 8px;border-radius:999px;
+  font-size:12px;font-weight:500;background:transparent;border:1px solid var(--border-strong);
+  color:var(--muted);white-space:nowrap;flex:0 1 auto;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.mchip.blue{background:var(--secondary);border-color:var(--border);color:var(--primary)}
+.mchip.amber{background:var(--warn-surface);border-color:var(--warn-border);color:var(--text)}
+.mchip.slate{background:#F1F5F9;border-color:#E2E8F0;color:#334155}
+.mchip.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}
+.pchev{align-self:center;color:var(--primary);font-size:19px;flex:none;padding-left:8px;line-height:1}
+.ptime{width:56px;flex:none;text-align:right;padding-right:12px;align-self:center;line-height:1.2}
+.ptime .h{font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--text)}
+.ptime .m{font-size:11px;color:var(--muted)}
+.pcheck{width:24px;height:24px;border-radius:6px;border:2px solid var(--border-strong);flex:none;
+  align-self:center;margin-right:8px;display:grid;place-items:center;color:#fff;font-size:14px}
+.pcheck[data-on="1"]{background:var(--primary);border-color:var(--primary)}
+.more{display:block;width:100%;background:none;border:none;border-top:1px solid var(--border);
+  padding:13px 16px;font-family:var(--font);font-size:14px;color:var(--primary);text-align:left;
+  cursor:pointer;min-height:44px}
+.rowinner{padding:0 16px 14px 32px}
+
+/* ---- inline notices ---- */
+.note{display:flex;gap:8px;align-items:flex-start;border-radius:var(--radius);padding:10px 12px;font-size:13.5px;line-height:1.5}
+.note.amber{background:var(--warn-surface);border:1px solid var(--warn-border);color:var(--warn)}
+.note.amber b{font-weight:500}
+.note.info{background:#EBF6FF;border:1px solid var(--border-strong);color:#334155}
+.note.err{background:#FEF2F2;border:1px solid #CE112633;color:var(--text)}
+.note .g{flex:none;line-height:1.3}
+.errbanner{display:flex;gap:10px;align-items:flex-start;background:#FEF2F2;border:1px solid #CE112633;
+  border-radius:var(--radius);padding:12px 14px;margin-bottom:16px}
+.errbanner .t{display:block;font-size:14px;font-weight:500;color:var(--text)}
+.errbanner .s{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.45}
+.linkbtn{background:none;border:none;color:var(--primary);font-family:var(--font);font-size:14px;
+  font-weight:500;cursor:pointer;padding:6px 0;min-height:36px}
+
+/* ---- C-2 : flat document, one tinted element ---- */
+.dhead h2{font-size:22px;font-weight:500;line-height:1.25;letter-spacing:.01em}
+.dmeta{display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;margin-top:6px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:var(--muted)}
+.dmeta .v{color:var(--text)}
+.copy{background:none;border:none;color:var(--primary);font-size:14px;cursor:pointer;
+  width:28px;height:28px;margin:-4px 0;display:grid;place-items:center;border-radius:8px;
+  transition:background-color .18s ease}
+.copy:hover{background:var(--secondary)}
+.drow{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;margin-top:10px;font-size:13px;color:var(--muted)}
+.schip{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:999px;
+  font-size:12px;font-weight:500;background:#F1F5F9;color:#334155;border:1px solid var(--border)}
+.hr.dh{margin:18px 0}
+.dsec{margin:0 0 8px}
+.sdate{font-size:18px;font-weight:500;line-height:1.35;margin-top:4px}
+.smeta{font-size:14px;color:var(--muted);margin-top:4px}
+.dnote{font-size:14px;color:var(--muted-strong);margin-top:8px;line-height:1.55;max-width:68ch}
+.strip{background:var(--warn-surface);border:1px solid var(--warn-border);border-left:3px solid var(--accent);
+  border-radius:var(--radius);padding:14px 16px;margin:0 0 8px}
+.strip .stitle{font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--warn)}
+.strip .sdate{margin-top:6px}
+.strip .sprose{font-size:13.5px;line-height:1.55;color:var(--warn);margin-top:8px;max-width:68ch}
+.strip.sm{padding:9px 12px;margin:10px 0 0;font-size:13px;line-height:1.5;color:var(--warn)}
+.whyline{font-size:13px;line-height:1.6;color:var(--primary-ink);margin:14px 0 24px;max-width:68ch}
+.calc{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-variant-numeric:tabular-nums}
+.whyline .ws{font-size:13px;font-weight:500}
+.seclabel{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.acc{border-top:1px solid var(--border)}
+.acch{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:52px;
+  background:none;border:none;font-family:var(--font);font-size:18px;font-weight:500;color:var(--text);
+  cursor:pointer;text-align:left;padding:8px 2px}
+.acch .r{display:flex;align-items:center;gap:8px;flex:none}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.acch .cv{color:var(--primary);font-size:16px}
+.accb{padding:0 2px 16px}
+.tl{padding-left:0}
+.tlrow{position:relative;display:grid;grid-template-columns:90px 20px minmax(0,1fr);padding:0 0 18px}
+.tlrow::before{content:"";position:absolute;left:99px;top:17px;bottom:-3px;width:2px;background:var(--border)}
+.tlrow:last-child{padding-bottom:4px}
+.tlrow:last-child::before{display:none}
+.tlrow .nd{grid-column:2;grid-row:1;width:10px;height:10px;border-radius:50%;background:#CBD5E1;margin:5px auto 0}
+.tlrow.open .nd{background:var(--primary)}
+.tlrow.amber .nd{background:var(--accent);box-shadow:0 0 0 3px var(--warn-surface)}
+.tlrow.amber .l{color:var(--warn)}
+.tlrow .d{grid-column:1;grid-row:1;font-size:12px;font-weight:500;white-space:nowrap;text-align:right;
+  padding:3px 10px 0 0;font-variant-numeric:tabular-nums;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted-strong)}
+.tlrow .l{grid-column:3;grid-row:1;font-size:14px;color:var(--text);line-height:1.45;padding-left:10px}
+.tlrow .p{grid-column:3;grid-row:2;font-size:13px;color:var(--faint);margin-top:3px;line-height:1.45;padding-left:10px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}
+.kv:last-child{border-bottom:none}
+.kv .k{color:var(--muted)}
+.kv .v{font-weight:500;font-variant-numeric:tabular-nums;text-align:right}
+.btnrow{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btnrow .btn{width:auto;flex:1 1 auto;min-height:42px;font-size:14px;padding:9px 16px;white-space:nowrap}
+.foot{flex:none;background:var(--surface);border-top:1px solid var(--border);padding:12px 16px 16px}
+.foot .sum{font-size:12px;color:var(--muted);text-align:center;margin-bottom:8px}
+
+/* ---- C-3 ---- */
+.wknav{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;
+  background:var(--surface);border-bottom:1px solid var(--border);padding:0 8px;min-height:44px}
+.wknav .lbl{font-size:16px;font-weight:500}
+.pills{display:flex;gap:4px;padding:10px 16px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex:none}
+.pill{flex:1;min-width:0;height:56px;border-radius:var(--radius);border:1px solid var(--border);
+  background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-family:var(--font);cursor:pointer;padding:4px 0}
+.pill .w{font-size:11px;color:var(--muted);line-height:1}
+.pill .d{font-size:18px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.pill.we .d{color:var(--faint)}
+.pill.today{border:2px solid var(--primary);background:var(--secondary)}
+.pill[aria-pressed="true"]{background:var(--primary);border-color:var(--primary)}
+.pill[aria-pressed="true"] .w,.pill[aria-pressed="true"] .d{color:#fff}
+.pill .dots{display:flex;gap:2px;height:4px;align-items:center}
+.pill .dots i{width:3px;height:3px;border-radius:50%;background:var(--primary);display:block}
+.pill[aria-pressed="true"] .dots i{background:#fff}
+.pill .dots b{font-size:9px;font-weight:500;color:var(--primary);line-height:1}
+.dayh{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:28px;padding:6px 2px;
+  font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* ---- bulk bar ---- */
+.bulkbar{flex:none;display:flex;align-items:center;gap:8px;background:var(--surface);
+  border-top:1px solid var(--border);padding:8px 16px 14px}
+.bulkbar .n{font-size:16px;font-weight:500;flex:1}
+.bulkbar .btn{width:auto;min-height:36px;font-size:14px;padding:6px 12px}
+
+/* ---- sheet ---- */
+.scrim{position:absolute;inset:0;background:rgba(26,26,46,.42);opacity:0;pointer-events:none;
+  transition:opacity .2s;z-index:50}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:24px 24px 0 0;
+  padding:8px 16px 24px;z-index:60;transform:translateY(101%);transition:transform .22s ease;
+  max-height:86%;overflow-y:auto}
+.sheet.on{transform:none}
+.grab{width:36px;height:4px;border-radius:2px;background:#CBD5E1;margin:6px auto 14px}
+.sheet h3{margin-bottom:4px}
+.sheet .lead{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;background:none;border:none;
+  border-top:1px solid var(--border);font-family:var(--font);font-size:16px;color:var(--text);
+  text-align:left;cursor:pointer;padding:8px 2px}
+.opt:first-of-type{border-top:none}
+.opt .sub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.opt .g{width:24px;flex:none;color:var(--primary);text-align:center}
+.opt.dz{color:var(--destructive)}
+.sheet .grouplbl{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faint);margin:16px 0 4px}
+
+/* ---- undo bar (extends .toast) ---- */
+.toast{overflow:hidden;padding-bottom:15px}
+.toast .rule{position:absolute;left:0;bottom:0;height:2px;background:#7FA5FF;width:100%;transform-origin:left}
+@keyframes deplete{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.toast.on .rule{animation:deplete 12s linear forwards}
+@media (prefers-reduced-motion:reduce){.toast.on .rule{animation:deplete 12s steps(12) forwards}}
+
+/* ---- skeleton helpers ---- */
+.sk.rowsk{height:88px;border-radius:0}
+
+/* ---- bottom tab bar (extends .tabs in elaya.css) ---- */
+.tabs{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.tab{min-height:52px;justify-content:center}
+.tab .ic{display:grid;place-items:center;height:20px}
+.tab .ic svg{display:block}
+
+/* ---- account screen ---- */
+.mecard{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.meav{width:52px;height:52px;border-radius:50%;background:var(--secondary);color:var(--primary);
+  display:grid;place-items:center;font-size:17px;font-weight:500;flex:none}
+.mecard .mn{font-size:17px;font-weight:500;line-height:1.3}
+.mecard .mr{font-size:13.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+
+/* ---- scroll containers ----
+   One layout only: 390x844 phone. Every screen is a flex column whose middle
+   child owns the scroll. min-height:0 stops the flex item from refusing to
+   shrink below its content and pushing the overflow outside the frame. */
+.screen>.scroll{min-height:0}
+</style>
+</head>
+<body>
+<div class="phone-wrap">
+<div class="phone" id="phone">
+
+  <!-- ============================== C-1 caseload ============================== -->
+  <section class="screen on" id="c1" aria-label="Caseload">
+    <header class="bar pro">
+      <div class="side"><button class="iconbtn" id="c1Back" aria-label="Back">&lsaquo;</button></div>
+      <div class="title" id="c1Title">Caseload</div>
+      <div class="side end">
+        <button class="iconbtn" id="c1Find" aria-label="Search cases" aria-pressed="false" title="Search">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8L21 21"/></svg>
+        </button>
+        <button class="iconbtn" id="toCal" aria-label="Hearing calendar" title="Hearing calendar">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        </button>
+        <button class="iconbtn" id="c1Menu" aria-label="More options">&#8942;</button>
+      </div>
+    </header>
+    <button class="offline" id="c1Off" hidden>&#9888; Offline &middot; Naka-offline &mdash; showing your last download, 7:42 AM &rsaquo;</button>
+    <div class="ctx">
+      <span class="who" id="c1Who">&#9878; Atty. M. Reyes &middot; PAO Quezon City</span>
+      <span class="mono" id="c1Date">Miy &middot; 22 Hul</span>
+    </div>
+    <div class="scroll" id="c1Scroll"></div>
+    <div class="bulkbar" id="c1Bulk" hidden>
+      <span class="n" id="bulkN">0 selected</span>
+      <button class="btn ghost" data-bulk="flag">Flag</button>
+      <button class="btn ghost" data-bulk="assign">Assign</button>
+      <button class="btn ghost" data-bulk="export">Export</button>
+    </div>
+  </section>
+
+  <!-- ============================= C-2 case detail ============================= -->
+  <section class="screen" id="c2" aria-label="Case detail">
+    <header class="bar pro">
+      <div class="side"><button class="iconbtn" id="c2Back" aria-label="Back to caseload">&lsaquo;</button></div>
+      <div class="title">Case detail</div>
+      <div class="side end">
+        <button class="iconbtn" id="c2Star" aria-label="Flag this case" aria-pressed="false">&#9734;</button>
+        <button class="iconbtn" id="c2Menu" aria-label="More options">&#8942;</button>
+      </div>
+    </header>
+    <div class="offline" id="c2Off" hidden>&#9888; Naka-offline &mdash; read-only. Saved on this phone 7:42 AM.</div>
+    <div class="scroll" id="c2Scroll"></div>
+    <div class="foot">
+      <button class="btn ghost" id="c2Copy">Copy case summary</button>
+    </div>
+  </section>
+
+  <!-- =========================== C-3 hearing calendar =========================== -->
+  <section class="screen" id="c3" aria-label="Hearing calendar">
+    <header class="bar pro">
+      <div class="side"><button class="iconbtn" id="c3Back" aria-label="Back to caseload">&lsaquo;</button></div>
+      <div class="title">Hearing calendar</div>
+      <div class="side end"><button class="iconbtn" id="c3Menu" aria-label="More options">&#8942;</button></div>
+    </header>
+    <div class="offline" id="c3Off" hidden>&#9888; Naka-offline &mdash; cached weeks only. Export .ics needs a connection.</div>
+    <div class="wknav">
+      <button class="iconbtn" id="wkPrev" aria-label="Previous week">&lsaquo;</button>
+      <span class="lbl" id="wkLabel">Hulyo 20 &ndash; 26, 2026</span>
+      <button class="iconbtn" id="wkNext" aria-label="Next week">&rsaquo;</button>
+    </div>
+    <div class="pills" id="c3Pills"></div>
+    <div class="scroll" id="c3Scroll"></div>
+  </section>
+
+  <!-- ================================ Ako · account =========================== -->
+  <section class="screen" id="c4" aria-label="Account">
+    <header class="bar pro">
+      <div class="side"></div>
+      <div class="title">Ako</div>
+      <div class="side end"></div>
+    </header>
+    <div class="scroll" id="c4Scroll"></div>
+  </section>
+
+  <nav class="tabs" id="tabs" aria-label="Sections">
+    <button class="tab on" type="button" data-tab="c1" aria-current="page"><span class="ic">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h11M4 12h11M4 18h7"/><path d="M17.5 17l1.8 1.8L23 15"/></svg>
+    </span>Ngayon</button>
+    <button class="tab" type="button" data-tab="cal"><span class="ic">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+    </span>Kalendaryo</button>
+    <button class="tab" type="button" data-tab="find"><span class="ic">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8L21 21"/></svg>
+    </span>Hanapin</button>
+    <button class="tab" type="button" data-tab="me"><span class="ic">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+    </span>Ako</button>
+  </nav>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Options"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span id="toastMsg"></span><button id="toastAct" type="button">UNDO</button><div class="rule"></div>
+  </div>
+</div>
+</div>
+
+<script>
+"use strict";
+/* ====================== tiny helpers ====================== */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.prototype.slice.call(r.querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function api(p,b){try{const r=await fetch(p,b?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}:{});if(!r.ok)throw 0;return await r.json();}catch(e){return null;}}
+
+const NOW=new Date(2026,6,22,8,10);                    /* Miyerkules, 22 Hulyo 2026 */
+const DAY_F=["Linggo","Lunes","Martes","Miyerkules","Huwebes","Biyernes","Sabado"];
+const DAY_S=["Lin","Lun","Mar","Miy","Huw","Biy","Sab"];
+const MON_F=["Enero","Pebrero","Marso","Abril","Mayo","Hunyo","Hulyo","Agosto","Setyembre","Oktubre","Nobyembre","Disyembre"];
+const MON_S=["Ene","Peb","Mar","Abr","May","Hun","Hul","Ago","Set","Okt","Nob","Dis"];
+const ds=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const dayDiff=(a,b)=>Math.round((ds(a)-ds(b))/864e5);
+const fTime=d=>{let h=d.getHours();const m=String(d.getMinutes()).padStart(2,"0"),ap=h<12?"AM":"PM";h=h%12||12;return h+":"+m+" "+ap;};
+const fDate=d=>d.getDate()+" "+MON_S[d.getMonth()]+" "+d.getFullYear();
+const fShort=d=>DAY_S[d.getDay()]+" "+String(d.getDate()).padStart(2,"0")+" "+MON_S[d.getMonth()];
+const SHIELD='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8.1-7 10-4-1.9-7-5.6-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>';
+function since(d){const m=(NOW.getFullYear()-d.getFullYear())*12+(NOW.getMonth()-d.getMonth());const y=Math.floor(m/12);
+  let dd=NOW.getDate()-d.getDate();if(dd<0)dd+=30;return (y?y+"y ":"")+(m%12)+"m "+dd+"d";}
+
+/* ====================== seed: Philippine PAO caseload ====================== */
+const D=(m,day,h,mi)=>new Date(2026,m-1,day,h||0,mi||0);
+const CASES=[];
+let _id=0;
+function mk(o){
+  CASES.push(Object.assign({
+    id:"c"+(++_id),age:null,cicl:false,status:"Detained",stage:"Pre-trial",
+    facility:"BJMP Quezon City Male Dormitory",detainedSince:D(3,3),offence:"",
+    idle:14,milestone:null,milestoneDays:null,unrecorded:null,unrecordedLabel:"",
+    hearing:null,starred:false,vcUnconfirmed:false,prepIncomplete:false,diversionFlag:false,
+    history:[],programs:[],docs:[],notes:[],gcta:null,family:{name:"",rel:"",no:""}
+  },o));
+}
+
+/* --- 1. attended but never recorded (hard top tier, ages upward) --- */
+mk({name:"Manalo, Eduardo P.",age:47,docket:"Crim. Case 2023-08820",court:"RTC Br. 104",
+  courtLong:"Regional Trial Court Branch 104, Quezon City",offence:"Robbery with violence",
+  stage:"Trial",facility:"BJMP Quezon City Male Dormitory",detainedSince:new Date(2025,10,18),
+  unrecorded:D(7,3,9,0),unrecordedLabel:"Continuation of trial",idle:17,
+  family:{name:"Perla Manalo",rel:"spouse",no:"0917 812 4409"},
+  history:[
+    {d:D(7,3),l:"Hearing held — outcome not recorded",p:"You were marked present in the court calendar. Nothing was filed to the case record.",open:true},
+    {d:D(6,12),l:"Motion filed — reduction of bail",p:"Source: e-Laya filing log · synced 12 Jun 2026"},
+    {d:D(2,20),l:"Pre-trial conference terminated",p:"Source: court order, uploaded by counsel"},
+    {d:new Date(2025,10,18),l:"Commitment order",p:"Source: family-uploaded commitment order · verified 19 Nov 2025 · not an official court record"}],
+  docs:[{n:"Commitment order",p:"Family upload · verified 19 Nov 2025"},{n:"Motion for reduction of bail",p:"Counsel filing · 12 Jun 2026"}],
+  notes:[{t:"SMS to Perla Manalo — hearing reminder",d:D(7,4,16,20)}]});
+
+/* --- 2..5 hearings today --- */
+mk({name:"Reyes, Anton B.",age:34,docket:"Crim. Case 2025-01188",court:"RTC Br. 87",
+  courtLong:"Regional Trial Court Branch 87, Quezon City",offence:"Theft",stage:"Arraignment",
+  detainedSince:D(5,9),idle:3,
+  hearing:{at:D(7,22,9,0),type:"Arraignment",mode:"In person",room:"RTC Br. 87"},
+  family:{name:"Lorna Reyes",rel:"mother",no:"0921 774 1188"},
+  history:[{d:D(7,14),l:"Counsel conference at BJMP QC",p:"Source: e-Laya visit log",open:true},
+           {d:D(5,9),l:"Commitment order",p:"Source: BJMP intake record · verified 10 May 2026"}],
+  docs:[{n:"Information (Theft)",p:"Court copy · 12 May 2026"}]});
+
+mk({name:"Dela Cruz, Josefina M.",age:41,docket:"Crim. Case 2024-11938",court:"RTC Br. 87",
+  courtLong:"Regional Trial Court Branch 87, Quezon City",offence:"Estafa",stage:"Pre-trial",
+  facility:"BJMP Quezon City Female Dormitory",detainedSince:new Date(2025,2,3),idle:5,vcUnconfirmed:true,
+  hearing:{at:D(7,22,10,0),type:"Pre-trial",mode:"Videoconference",room:"RTC Br. 87"},
+  family:{name:"Rowena Dela Cruz",rel:"sister",no:"0917 331 8802"},
+  gcta:{tier:"Tier 2 · good conduct",days:118,projected:"14 Feb 2027"},
+  programs:[{n:"Livelihood · Dressmaking",prov:"BJMP QC Female Dorm",att:"11 of 12 sessions",flag:false}],
+  history:[
+    {d:D(7,18),l:"Videoconference link requested from the court",p:"Source: e-Laya request log · no reply yet",open:true},
+    {d:D(6,30),l:"Pre-trial conference reset",p:"Source: court order · verified 01 Jul 2026"},
+    {d:new Date(2025,2,3),l:"Commitment order",p:"Source: family-uploaded commitment order · verified 04 Mar 2025 · not an official court record"}],
+  docs:[{n:"Commitment order",p:"Family upload · verified 04 Mar 2025"},{n:"Counter-affidavit",p:"Counsel filing · 22 Apr 2025"}],
+  notes:[{t:"SMS to Rowena Dela Cruz — hearing reminder",d:D(7,21,17,2)}]});
+
+mk({name:"Ocampo, Liza R.",age:29,docket:"Crim. Case 2024-10233",court:"MTC Br. 12",
+  courtLong:"Metropolitan Trial Court Branch 12, Quezon City",offence:"Illegal possession",
+  stage:"Promulgation",facility:"BJMP Quezon City Female Dormitory",detainedSince:new Date(2025,5,14),idle:2,
+  hearing:{at:D(7,22,10,0),type:"Promulgation",mode:"In person",room:"MTC Br. 12"},
+  family:{name:"Danilo Ocampo",rel:"father",no:"0918 220 7741"},
+  history:[{d:D(7,10),l:"Case submitted for decision",p:"Source: court order · verified 11 Jul 2026",open:true},
+           {d:new Date(2025,5,14),l:"Commitment order",p:"Source: BJMP intake record"}],
+  docs:[{n:"Memorandum for the accused",p:"Counsel filing · 02 Jul 2026"}]});
+
+mk({name:"Bautista, Renz A.",age:16,cicl:true,docket:"Crim. Case 2025-00417",court:"MTC Br. 12",
+  courtLong:"Metropolitan Trial Court Branch 12, Quezon City",offence:"Theft (diversion)",
+  status:"Released to parents",stage:"Diversion",facility:"Bahay Pag-asa Payatas (day programme)",
+  detainedSince:null,idle:6,diversionFlag:true,prepIncomplete:true,
+  hearing:{at:D(7,22,14,30),type:"Diversion review",mode:"In person",room:"MTC Br. 12"},
+  family:{name:"Mrs. Editha Bautista",rel:"mother",no:"0917 445 2210"},
+  programs:[{n:"Anger management · Group B",prov:"Bahay Pag-asa Payatas",att:"5 of 12 sessions · 3 missed in a row",flag:true}],
+  history:[
+    {d:D(7,15),l:"Diversion attendance flag raised by LSWDO",p:"Source: e-Laya S-4 flag · Ms. A. Villanueva",open:true},
+    {d:D(6,3),l:"Diversion contract approved",p:"Source: court order CO-2025-0417 · verified 04 Jun 2026"},
+    {d:D(5,20),l:"Intake and social case study",p:"Source: LSWDO Quezon City"}],
+  docs:[{n:"Diversion contract CO-2025-0417",p:"Court copy · 04 Jun 2026"},{n:"Social case study report",p:"LSWDO QC · 21 May 2026"}]});
+
+/* --- milestone band --- */
+mk({name:"Villaflor, Anecito R.",age:58,docket:"Crim. Case 2020-02231",court:"RTC Br. 220",
+  courtLong:"Regional Trial Court Branch 220, Quezon City",offence:"Frustrated homicide",stage:"Trial",
+  facility:"Quezon City Jail Male Dormitory",detainedSince:new Date(2020,3,11),idle:96,
+  milestone:"Time served exceeds the maximum imposable penalty",milestoneDays:112,
+  gcta:{tier:"Tier 3 · exemplary",days:734,projected:"eligible now"},
+  family:{name:"Nenita Villaflor",rel:"spouse",no:"0906 118 3320"},
+  history:[{d:D(4,1),l:"Time-served threshold crossed",p:"Computed by the Laya calculator · advisory only",open:true},
+           {d:new Date(2020,3,11),l:"Commitment order",p:"Source: BJMP intake record"}],
+  docs:[{n:"Certificate of detention",p:"BJMP QC · 03 Apr 2026"}]});
+
+mk({name:"Santos, Melchor D.",age:52,docket:"Crim. Case 2019-04455",court:"RTC Br. 41",
+  courtLong:"Regional Trial Court Branch 41, Quezon City",offence:"Serious physical injuries",stage:"Promulgated",
+  facility:"New Bilibid Prison, Muntinlupa",detainedSince:new Date(2019,7,2),idle:71,
+  milestone:"GCTA tier 3 reached — release computation unacted",milestoneDays:47,
+  gcta:{tier:"Tier 3 · exemplary",days:612,projected:"09 Nov 2026"},
+  family:{name:"Melchor Santos Jr.",rel:"son",no:"0929 660 4455"},
+  history:[{d:D(6,5),l:"GCTA tier 3 credited",p:"Source: BJMP good conduct record · advisory computation",open:true},
+           {d:new Date(2019,7,2),l:"Commitment order",p:"Source: court copy"}],
+  docs:[{n:"Good conduct certification",p:"BJMP · 05 Jun 2026"}]});
+
+mk({name:"Ompoc, Marilou T.",age:36,docket:"Crim. Case 2022-06714",court:"MTC Br. 33",
+  courtLong:"Metropolitan Trial Court Branch 33, Quezon City",offence:"Estafa (bouncing check)",stage:"Trial",
+  facility:"BJMP Quezon City Female Dormitory",detainedSince:new Date(2024,8,30),idle:44,
+  milestone:"Recognizance eligible — bail gap threshold crossed",milestoneDays:23,
+  family:{name:"Arnel Ompoc",rel:"brother",no:"0908 552 6714"},
+  history:[{d:D(6,29),l:"Recognizance eligibility crossed",p:"Computed by the Laya calculator · advisory only",open:true}],
+  docs:[{n:"Barangay certification of residence",p:"Brgy. Bagong Silangan · 12 Jun 2026"}]});
+
+mk({name:"Ramirez, Alfonso G.",age:44,docket:"Crim. Case 2021-03390",court:"RTC Br. 76",
+  courtLong:"Regional Trial Court Branch 76, Quezon City",offence:"Carnapping",stage:"Trial",
+  facility:"Quezon City Jail Male Dormitory",detainedSince:new Date(2021,10,8),idle:33,
+  milestone:"GCTA tier 2 reached — recomputation unacted",milestoneDays:9,
+  gcta:{tier:"Tier 2 · good conduct",days:398,projected:"22 Mar 2027"},
+  family:{name:"Cristy Ramirez",rel:"spouse",no:"0915 209 3390"},
+  history:[{d:D(7,13),l:"GCTA tier 2 credited",p:"Source: BJMP good conduct record",open:true}],
+  docs:[]});
+
+/* --- tomorrow --- */
+mk({name:"Padilla, Kyle Jerome R.",age:17,cicl:true,docket:"Crim. Case 2026-00142",court:"MTC Br. 12",
+  courtLong:"Metropolitan Trial Court Branch 12, Quezon City",offence:"Malicious mischief (diversion)",
+  status:"Released to parents",stage:"Diversion",facility:"Brgy. Holy Spirit (community service)",
+  detainedSince:null,idle:9,
+  hearing:{at:D(7,23,8,30),type:"Diversion conference",mode:"In person",room:"MTC Br. 12"},
+  family:{name:"Mr. Danilo Padilla",rel:"father",no:"0977 118 0142"},
+  programs:[{n:"Community service · Brgy. Holy Spirit",prov:"Brgy. Holy Spirit LSWDO",att:"6 of 10 sessions",flag:false}],
+  history:[{d:D(7,2),l:"Referred for diversion conference",p:"Source: court order · verified 03 Jul 2026",open:true}],
+  docs:[{n:"Social case study report",p:"LSWDO QC · 28 Jun 2026"}]});
+
+mk({name:"Aguilar, Marissa D.",age:38,docket:"Crim. Case 2024-09071",court:"RTC Br. 220",
+  courtLong:"Regional Trial Court Branch 220, Quezon City",offence:"Qualified theft",stage:"Trial",
+  facility:"BJMP Quezon City Female Dormitory",detainedSince:new Date(2025,0,26),idle:11,vcUnconfirmed:true,
+  hearing:{at:D(7,23,13,30),type:"Motion hearing",mode:"Videoconference",room:"RTC Br. 220"},
+  family:{name:"Joel Aguilar",rel:"spouse",no:"0947 220 9071"},
+  history:[{d:D(7,9),l:"Motion to quash filed",p:"Source: e-Laya filing log",open:true}],
+  docs:[{n:"Motion to quash",p:"Counsel filing · 09 Jul 2026"}]});
+
+/* --- this week (3–10 days out) --- */
+[["Ignacio, Rowena C.",33,"2024-07712","RTC Br. 96","Regional Trial Court Branch 96, Quezon City","Estafa",D(7,27,9,0),"Pre-trial","In person"],
+ ["Mendoza, Arnel B.",45,"2023-05540","RTC Br. 104","Regional Trial Court Branch 104, Quezon City","Homicide",D(7,27,13,30),"Continuation of trial","Videoconference"],
+ ["Salvacion, Petra L.",52,"2022-04120","MTC Br. 33","Metropolitan Trial Court Branch 33, Quezon City","Slight physical injuries",D(7,28,8,30),"Arraignment","In person"],
+ ["Tolentino, Jaypee M.",24,"2025-02011","RTC Br. 87","Regional Trial Court Branch 87, Quezon City","Robbery",D(7,28,14,0),"Bail hearing","In person"],
+ ["Alvarez, Necita R.",60,"2021-01887","RTC Br. 41","Regional Trial Court Branch 41, Quezon City","Estafa",D(7,29,9,30),"Promulgation","In person"],
+ ["Gutierrez, Bong D.",31,"2024-08834","MTC Br. 12","Metropolitan Trial Court Branch 12, Quezon City","Theft",D(7,29,13,0),"Pre-trial","Videoconference"],
+ ["Baclig, Marlon S.",27,"2025-00902","RTC Br. 220","Regional Trial Court Branch 220, Quezon City","Illegal possession",D(7,30,10,0),"Motion hearing","In person"],
+ ["Fajardo, Cristina P.",36,"2023-09615","RTC Br. 76","Regional Trial Court Branch 76, Quezon City","Qualified theft",D(7,31,9,0),"Continuation of trial","In person"],
+ ["Lumbao, Jayson T.",19,"2025-03047","MTC Br. 33","Metropolitan Trial Court Branch 33, Quezon City","Malicious mischief",D(7,31,14,0),"Arraignment","In person"]
+].forEach(function(r,i){
+  mk({name:r[0],age:r[1],docket:"Crim. Case "+r[2],court:r[3],courtLong:r[4],offence:r[5],
+    stage:r[7],idle:7+i,vcUnconfirmed:r[8]==="Videoconference"&&i%3===1,
+    facility:r[1]%2?"BJMP Quezon City Male Dormitory":"BJMP Quezon City Female Dormitory",
+    detainedSince:new Date(2025,(i*3)%12,4+i),
+    hearing:{at:r[6],type:r[7],mode:r[8],room:r[3]},
+    family:{name:"Family contact on file",rel:"guardian",no:"0917 000 00"+(10+i)},
+    history:[{d:new Date(r[6].getTime()-14*864e5),l:"Notice of hearing received",p:"Source: court calendar · synced "+fDate(new Date(r[6].getTime()-14*864e5)),open:true}],
+    docs:[{n:"Notice of hearing",p:"Court calendar · synced"}]});
+});
+
+/* --- quiet band: generated but real-shaped --- */
+(function(){
+  const SUR=["Abad","Agbayani","Alcantara","Amoroso","Balajadia","Bandiola","Buenaflor","Cabreros","Calimlim",
+  "Dagohoy","Dimaculangan","Escalona","Fuentebella","Gatchalian","Hernandez","Ilagan","Jamisola","Katigbak",
+  "Lachica","Macapagal","Nazareno","Obispo","Pagdanganan","Quiambao","Rivera","Sarmiento","Tuazon","Ubaldo",
+  "Valdez","Wenceslao","Yabut","Zamora","Bacolod","Carandang","Delos Reyes","Empeno","Fabregas","Guevarra"];
+  const GIV=["Jose Mari","Maria Teresa","Ricardo","Anabelle","Ferdinand","Luzviminda","Rogelio","Marilyn",
+  "Emmanuel","Cristina","Nestor","Divina","Rolando","Josephine","Wilfredo","Grace","Danilo","Editha",
+  "Reynaldo","Lourdes","Alfredo","Norma","Bernardo","Precious","Fidel","Analyn"];
+  const CRT=["RTC Br. 87","RTC Br. 104","MTC Br. 12","MTC Br. 33","RTC Br. 41","RTC Br. 76","RTC Br. 96","RTC Br. 220"];
+  const OFF=["Theft","Estafa","Illegal possession","Slight physical injuries","Malicious mischief","Robbery","Qualified theft"];
+  let s=20260722;const rnd=()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};
+  for(let i=0;i<280;i++){
+    const sur=SUR[Math.floor(rnd()*SUR.length)],giv=GIV[Math.floor(rnd()*GIV.length)];
+    const ini=giv.split(" ")[0][0]+".";
+    mk({name:sur+", "+giv.split(" ")[0]+" "+ini,age:19+Math.floor(rnd()*44),
+      docket:"Crim. Case "+(2019+Math.floor(rnd()*7))+"-"+String(1000+Math.floor(rnd()*8999)).padStart(5,"0"),
+      court:CRT[Math.floor(rnd()*CRT.length)],courtLong:"Regional Trial Court, Quezon City",
+      offence:OFF[Math.floor(rnd()*OFF.length)],stage:"Trial",
+      idle:38+Math.floor(rnd()*520),detainedSince:new Date(2022+Math.floor(rnd()*3),Math.floor(rnd()*12),1+Math.floor(rnd()*27)),
+      facility:rnd()>.5?"BJMP Quezon City Male Dormitory":"BJMP Quezon City Female Dormitory",
+      family:{name:"Family contact on file",rel:"guardian",no:"0917 555 "+String(1000+Math.floor(rnd()*8999)).slice(0,4)},
+      history:[{d:new Date(NOW.getTime()-(38+Math.floor(rnd()*520))*864e5),l:"Last recorded activity — counsel conference",p:"Source: e-Laya visit log"}],
+      docs:[]});
+  }
+})();
+
+/* ====================== the triage model ======================
+   score = max(hearing, milestone, neglect) + modifiers
+   hearing   : unrecorded outcome -> 1200 + 4 x days (ages UPWARD, hard top tier)
+               upcoming <=14d     -> 900 - 20 x days_until
+   milestone : crossed and unacted -> 800 + 2 x days_since   (ages UPWARD)
+   neglect   : 1.5 x days_idle, capped 500
+   modifiers : +1000 starred - +120 diversion flag - +80 VC unconfirmed - +60 prep incomplete
+   =============================================================== */
+function triage(c){
+  let hearing=0,milestone=0,neglect=0,why=[];
+  if(c.unrecorded){
+    const d=dayDiff(NOW,c.unrecorded);
+    hearing=1200+4*d;
+    why.push("Hearing held "+fDate(c.unrecorded)+", outcome never recorded — "+d+" days (1200 + 4/day)");
+  }else if(c.hearing){
+    const dd=dayDiff(c.hearing.at,NOW);
+    if(dd>=0&&dd<=14){hearing=900-20*dd;why.push((dd===0?"Hearing today":dd===1?"Hearing tomorrow":"Hearing in "+dd+" days")+" (900 − 20/day)");}
+  }
+  if(c.milestoneDays!=null){milestone=800+2*c.milestoneDays;
+    why.push(c.milestone+" — unacted "+c.milestoneDays+" days (800 + 2/day)");}
+  neglect=Math.min(500,Math.round(1.5*c.idle));
+  if(!hearing&&!milestone)why.push("No hearing, no milestone — "+c.idle+" days since any activity (1.5/day, capped 500)");
+  let base=Math.max(hearing,milestone,neglect),mods=0;
+  if(c.starred){mods+=1000;why.push("You flagged this case (+1000)");}
+  if(c.diversionFlag){mods+=120;why.push("Diversion attendance flagged by the LSWDO (+120)");}
+  if(c.vcUnconfirmed){mods+=80;why.push("Videoconference link unconfirmed by the court (+80)");}
+  if(c.prepIncomplete){mods+=60;why.push("Prep checklist incomplete (+60)");}
+  const dominant=(hearing>=milestone&&hearing>=neglect&&hearing>0)?"hearing":(milestone>=neglect&&milestone>0)?"milestone":"neglect";
+  const dd=c.hearing?dayDiff(c.hearing.at,NOW):null;
+  let band;
+  if(c.unrecorded||dd===0||c.starred)band="today";
+  else if(dominant==="milestone")band="milestone";
+  else if(dd===1)band="tomorrow";
+  else if(base+mods>=700)band="week";
+  else band="quiet";
+  return {score:Math.round(base+mods),band:band,why:why,dominant:dominant};
+}
+CASES.forEach(c=>{const t=triage(c);c.t=t;});
+
+const BANDS=[
+  {k:"today",  h:"NEEDS YOU TODAY",   sub:"Kailangan mo ngayon",  open:true},
+  {k:"milestone",h:"MILESTONE REACHED",sub:"Unacted — these get more urgent with age",open:true},
+  {k:"tomorrow",h:"BUKAS · TOMORROW",sub:"Hearings tomorrow",open:false},
+  {k:"week",   h:"THIS WEEK",         sub:"284 cases with nothing scheduled and no milestone.",open:false},
+  {k:"quiet",  h:"QUIET",             sub:"Nothing scheduled and no milestone. Sorted by longest since last activity.",open:false}
+];
+
+/* ====================== state ====================== */
+/* The two bands that carry work you must see without a tap open by default.
+   BUKAS / THIS WEEK / QUIET stay behind their counts. */
+const S={q:"",filters:new Set(),open:{today:true,milestone:true,tomorrow:false,week:false,quiet:false},
+  expand:{},sel:null,bulk:false,picked:new Set(),offline:false,error:false,loading:true,
+  sort:"triage",weekOffset:0,daySel:null,searchOpen:false,screen:"c1",tab:"c1",
+  sections:{history:true,gcta:false,programs:false,docs:false,notif:false}};
+
+/* ====================== C-1 ====================== */
+function bandOf(k){return CASES.filter(c=>c.t.band===k).sort((a,b)=>b.t.score-a.t.score);}
+function matches(c){
+  const q=S.q.trim().toLowerCase();
+  if(q&&!(c.name.toLowerCase().includes(q)||c.docket.toLowerCase().includes(q)||c.court.toLowerCase().includes(q)))return false;
+  for(const f of S.filters){
+    if(f==="Hearings"&&!(c.hearing&&dayDiff(c.hearing.at,NOW)<=10))return false;
+    if(f==="Milestones"&&c.milestoneDays==null)return false;
+    if(f==="CICL"&&!c.cicl)return false;
+    if(f==="Flagged"&&!c.starred)return false;
+    if(f==="Videoconference"&&!(c.hearing&&c.hearing.mode==="Videoconference"))return false;
+  }
+  return true;
+}
+function chipsFor(c){
+  const out=[];
+  if(c.unrecorded)out.push(['amber',"Outcome not recorded · "+fDate(c.unrecorded)]);
+  if(c.hearing){
+    const dd=dayDiff(c.hearing.at,NOW);
+    out.push(['blue',(dd===0?"Hearing "+fTime(c.hearing.at):dd===1?"Bukas · "+fTime(c.hearing.at):"In "+dd+" days")]);
+    if(c.vcUnconfirmed)out.push(['amber',"VC link unconfirmed"]);
+  }
+  if(c.milestoneDays!=null)out.push(['amber',(c.gcta?c.gcta.tier.split(" · ")[0]:"Milestone")+" · "+c.milestoneDays+"d unacted"]);
+  if(c.diversionFlag)out.push(['amber',"Diversion: 3 missed"]);
+  if(!out.length)out.push(['slate',"Last activity "+c.idle+"d ago"]);
+  return out;
+}
+function railOf(c){
+  if(c.t.band==="today"||c.t.band==="tomorrow")return c.unrecorded||c.vcUnconfirmed||c.diversionFlag?"warn":"pri";
+  if(c.t.band==="milestone")return "warn";
+  if(c.t.band==="week")return "pri";
+  return "quiet";
+}
+function rowHTML(c){
+  const cs=chipsFor(c).slice(0,2).map(x=>'<span class="mchip '+x[0]+'">'+esc(x[1])+"</span>").join("");
+  const extra=chipsFor(c).length>2?'<span class="mchip">+'+(chipsFor(c).length-2)+"</span>":"";
+  const check=S.bulk?'<span class="pcheck" data-on="'+(S.picked.has(c.id)?1:0)+'">'+(S.picked.has(c.id)?"✓":"")+"</span>":"";
+  return '<button class="row pro" type="button" data-case="'+c.id+'" aria-current="'+(S.sel===c.id)+'">'
+    +'<span class="rail '+railOf(c)+'"></span>'+check
+    +'<span class="pbody"><span class="pt">'+esc(c.name)+(c.cicl?' <span class="age">· CICL '+c.age+"</span>":"")+"</span>"
+    +'<span class="ps">'+esc(c.docket)+" · "+esc(c.court)+(c.status==="Detained"&&c.detainedSince?" · detained "+since(c.detainedSince).split(" ")[0]:"")+"</span>"
+    +'<span class="pm">'+cs+extra+"</span></span>"
+    +'<span class="pchev">›</span></button>';
+}
+function skeleton(){
+  let h='<div class="sk line" style="width:40%;height:12px;margin:6px 0 12px"></div>'
+    +'<div class="bandcard">';
+  for(let i=0;i<6;i++)h+='<div style="padding:14px 16px;border-top:'+(i?"1px solid var(--border)":"0")+'">'
+    +'<div class="sk line" style="width:60%"></div><div class="sk line" style="width:80%"></div><div class="sk line" style="width:40%;margin-bottom:0"></div></div>';
+  return h+"</div>";
+}
+function renderC1(){
+  const el=$("#c1Scroll");
+  if(S.loading){el.innerHTML=skeleton();return;}
+  let h="";
+  if(S.error)h+='<div class="errbanner"><span style="color:var(--destructive);font-size:18px;line-height:1.2">⚠</span>'
+    +'<span class="grow"><span class="t">Could not refresh your caseload.</span>'
+    +'<span class="s">Showing what was saved on this phone at 7:42 AM. Nothing was lost.</span></span>'
+    +'<button class="linkbtn" id="retry">Try again</button></div>';
+
+  /* search + saved filters live behind the 🔍 toggle */
+  if(S.searchOpen){
+    const F=["Hearings","Milestones","CICL","Flagged","Videoconference"];
+    h+='<div class="searchwrap"><div class="search"><label for="q" style="position:absolute;left:-9999px">Search</label>'
+      +'<input id="q" type="search" placeholder="Search name, docket, or court" value="'+esc(S.q)+'" autocomplete="off">'
+      +'<span class="mag">⚲</span></div>'
+      +'<div class="fchips"><button class="fchip" data-f="__all" aria-pressed="'+(S.filters.size===0)+'">All</button>'
+      +F.map(f=>'<button class="fchip" data-f="'+f+'" aria-pressed="'+S.filters.has(f)+'">'+f+"</button>").join("")+"</div></div>";
+  }
+
+  const searching=S.q.trim()||S.filters.size;
+  if(searching){
+    const res=CASES.filter(matches).sort(sorter);
+    h+='<div class="band"><div class="bandh"><span class="bt">MGA RESULTA · RESULTS</span>'
+      +'<span class="bn">'+res.length+"</span></div>";
+    if(!res.length){
+      h+='<div class="bandbody" style="padding:20px 16px"><p style="font-size:15px;color:var(--muted)">'
+        +(S.q.trim()?'No case matches “'+esc(S.q.trim())+'”. Try a docket number or a court branch.':"No case matches these filters.")
+        +'</p><button class="linkbtn" id="clearF">Clear filters</button></div>';
+    }else{
+      h+='<div class="bandbody">'+res.slice(0,60).map(rowHTML).join("")
+        +(res.length>60?'<div class="more" style="color:var(--muted)">Showing the first 60 of '+res.length+" matches.</div>":"")+"</div>";
+    }
+    h+="</div>";
+  }else{
+    BANDS.forEach(b=>{
+      const list=bandOf(b.k);
+      if(!list.length)return;                                  /* an empty band is never drawn */
+      const isOpen=S.open[b.k];
+      h+='<div class="band" id="band-'+b.k+'">'
+        +'<button class="bandh" data-band="'+b.k+'" aria-expanded="'+isOpen+'">'
+        +'<span class="bt">'+b.h+'</span><span class="bn">'+list.length+"</span>"
+        +'<span class="cv">'+(isOpen?"⌃":"⌄")+"</span></button>";
+      if(isOpen){
+        h+='<div class="bandbody">';
+        if(b.sub&&b.k!=="week")h+='<div class="bandsub">'+esc(b.k==="quiet"?list.length+" cases. "+b.sub:b.sub)+"</div>";
+        const shown=S.expand[b.k]?list.length:(b.k==="quiet"?8:b.k==="week"?9:list.length);
+        h+=list.slice(0,shown).map(rowHTML).join("");
+        if(list.length>shown)h+='<button class="more" type="button" data-moreband="'+b.k+'">… '+(list.length-shown)+" more</button>";
+        h+="</div>";
+      }
+      h+="</div>";
+    });
+  }
+  h+='<p class="tiny" style="text-align:center;padding:8px 0 4px">'+CASES.length
+    +' active clients · sorted by triage score, computed on this device.<br>Last sync 7:42 AM · PAO Quezon City District Office</p>';
+  el.innerHTML=h;
+  $("#c1Find").setAttribute("aria-pressed",String(S.searchOpen));
+  $("#bulkN").textContent=S.picked.size+" selected";
+  $("#c1Bulk").hidden=!S.bulk;
+  $("#c1Title").textContent=S.bulk?"Select cases":"Caseload";
+  paintTabs();
+}
+function sorter(a,b){
+  if(S.sort==="name")return a.name.localeCompare(b.name);
+  if(S.sort==="hearing"){const x=a.hearing?a.hearing.at.getTime():9e15,y=b.hearing?b.hearing.at.getTime():9e15;return x-y;}
+  return b.t.score-a.t.score;
+}
+
+/* ====================== C-2 ====================== */
+function renderC2(){
+  const c=CASES.find(x=>x.id===S.sel);
+  const el=$("#c2Scroll");
+  if(!c)return;                       /* C-2 is only ever reached by tapping a row */
+  $("#c2Star").setAttribute("aria-pressed",String(c.starred));
+  $("#c2Star").innerHTML=c.starred?'<span style="color:var(--accent);-webkit-text-stroke:1px #1A1A2E">★</span>':"☆";
+  let h="";
+  /* identity — flat header */
+  h+='<div class="dhead"><h2>'+esc(c.name.toUpperCase())+"</h2>"
+    +'<div class="dmeta"><span><span class="v">'+esc(c.docket.replace("Crim. Case","Crim. Case No."))+"</span>"
+    +" · "+esc(c.court)+", Quezon City</span>"
+    +'<button class="copy" data-copy="'+esc(c.docket)+'" aria-label="Copy docket number">⧉</button></div>'
+    +'<div class="drow"><span class="schip">'+esc(c.status)+'</span><span class="schip">'+esc(c.stage)+"</span>"
+    +(c.cicl?'<span class="schip">CICL · '+c.age+" y/o</span>":"")
+    +"<span>"+esc(c.facility)+(c.detainedSince?" · "+since(c.detainedSince)+" in custody":"")+"</span></div>"
+    +'</div><hr class="hr dh">';
+
+  /* hero: the hole in the file outranks everything — the pane's ONE tinted block */
+  if(c.unrecorded){
+    const dgone=dayDiff(NOW,c.unrecorded);
+    h+='<div class="strip"><div class="stitle">⚠ Hearing not recorded · Pagdinig na hindi naitala</div>'
+      +'<div class="sdate">'+DAY_F[c.unrecorded.getDay()]+", "+c.unrecorded.getDate()+" "+MON_F[c.unrecorded.getMonth()]+" "+c.unrecorded.getFullYear()+" · "+fTime(c.unrecorded)+"</div>"
+      +'<div class="smeta">'+esc(c.unrecordedLabel)+" · "+esc(c.court)+"</div>"
+      +'<p class="sprose">You were marked present in the court calendar '
+      +dgone+' days ago and nothing was filed to the record. This is a hole in the file, and it ranks above tomorrow’s hearings — '
+      +'you will remember tomorrow; you already forgot this one.</p>'
+      +'<div class="btnrow"><button class="btn" id="record">Record the outcome</button>'
+      +'<button class="btn ghost" id="sms">Notify family (SMS)</button></div></div>';
+  }else if(c.hearing){
+    const dd=dayDiff(c.hearing.at,NOW);
+    h+='<div class="dsec"><div class="seclabel">Susunod na pagdinig · Next hearing</div>'
+      +'<div class="sdate">'+DAY_F[c.hearing.at.getDay()]+", "+c.hearing.at.getDate()+" "+MON_F[c.hearing.at.getMonth()]+" "+c.hearing.at.getFullYear()+" · "+fTime(c.hearing.at)+"</div>"
+      +'<div class="smeta">'+esc(c.hearing.mode)+" · "+esc(c.hearing.room)+" · "+esc(c.hearing.type)+"</div>"
+      +(dd===0?'<p class="dnote">Today. You are counsel of record; the court calendar lists you at '+fTime(c.hearing.at)+".</p>":"")
+      +(c.vcUnconfirmed?'<div class="strip sm">⚠ VC link not yet confirmed by the court. Requested 18 Jul, no reply.</div>':"")
+      +'<div class="btnrow"><button class="btn ghost" id="ics">Add to calendar</button>'
+      +'<button class="btn ghost" id="sms">Notify family (SMS)</button></div>'
+      +'<div class="tiny" style="margin-top:8px">'+esc(c.family.name)+" ("+esc(c.family.rel)+") · "+esc(c.family.no)+"</div></div>";
+  }else if(c.milestoneDays!=null){
+    h+='<div class="strip"><div class="stitle">⚠ Milestone reached · Naabot na milestone</div>'
+      +'<div class="sdate">'+esc(c.milestone)+"</div>"
+      +'<div class="smeta">Crossed '+c.milestoneDays+" days ago · no action recorded since.</div>"
+      +'<p class="sprose">This ranks higher every day it sits. '+c.milestoneDays
+      +' days &times; 2 points has moved it above tomorrow’s hearings.</p>'
+      +'<div class="btnrow"><button class="btn" id="motion">Draft the motion</button>'
+      +'<button class="btn ghost" id="sms">Notify family (SMS)</button></div></div>';
+  }else{
+    h+='<div class="dsec"><div class="seclabel">Susunod na pagdinig · Next hearing</div>'
+      +'<p class="dnote">Walang nakatakda · nothing scheduled. Last recorded activity was '+c.idle+" days ago.</p>"
+      +'<button class="linkbtn" id="chase">Request a setting from the court</button></div>';
+  }
+
+  /* why is this here — one line, tinted text not tinted box */
+  const calc=w=>esc(w).replace(/\(([^()]*)\)/g,'(<span class="calc">$1</span>)');
+  h+='<p class="whyline">ⓘ <strong>Why this is at '+(c.t.band==="quiet"?"the bottom":"the top")+":</strong> "
+    +c.t.why.map(calc).join(" · ")
+    +' — triage score <span class="calc ws">'+c.t.score+"</span>.</p>";
+
+  /* sections */
+  h+=acc("history","Case history",c.history.some(x=>x.open),
+    '<div class="tl">'+c.history.map(e=>'<div class="tlrow'+(e.open?" open":"")+(/not recorded/i.test(e.l)?" amber":"")+'"><span class="nd"></span>'
+      +'<div class="d">'+fDate(e.d)+"</div><div class=\"l\">"+esc(e.l)+"</div>"
+      +(e.p?'<div class="p">'+esc(e.p)+"</div>":"")+"</div>").join("")+"</div>");
+
+  h+=acc("gcta","GCTA & time credits",c.milestoneDays!=null,
+    c.gcta?'<div class="kv"><span class="k">Time in custody</span><span class="v">'+(c.detainedSince?since(c.detainedSince):"—")+"</span></div>"
+      +'<div class="kv"><span class="k">Good conduct tier</span><span class="v">'+esc(c.gcta.tier)+"</span></div>"
+      +'<div class="kv"><span class="k">Credited days</span><span class="v">'+c.gcta.days+"</span></div>"
+      +'<div class="kv"><span class="k">Projected release</span><span class="v">'+esc(c.gcta.projected)+"</span></div>"
+      +'<p class="tiny" style="margin-top:12px">Advisory only. The official computation is BJMP’s. Figures shown use the CHR–UNODC Laya computation.</p>'
+      +'<button class="linkbtn">Open in Laya Calculator ↗</button>'
+    :'<p style="font-size:14px;color:var(--muted)">No GCTA computation on file yet.</p><button class="linkbtn">Add a commitment order</button>');
+
+  h+=acc("programs","Programmes & attendance"+(c.programs.some(p=>p.flag)?" · 3 sessions missed":""),c.programs.some(p=>p.flag),
+    c.programs.length?c.programs.map(p=>'<div class="kv"><span class="k">'+esc(p.n)+'<br><span class="tiny">'+esc(p.prov)+"</span></span>"
+      +'<span class="v">'+esc(p.att)+"</span></div>").join("")
+      +(c.programs.some(p=>p.flag)?'<div class="note amber" style="margin-top:12px"><span class="g">⚠</span><span>The LSWDO raised a follow-up flag on 15 Jul. This is a support trigger, not a breach — the diversion contract is not yet at risk.</span></div>':"")
+      +'<a class="linkbtn" href="sessions.html" style="display:inline-block;text-decoration:none">Open the programme roster ↗</a>'
+    :'<p style="font-size:14px;color:var(--muted)">Not enrolled in any programme.</p>');
+
+  h+=acc("docs","Documents",false,
+    c.docs.length?c.docs.map(d=>'<div class="kv"><span class="k">'+esc(d.n)+"</span><span class=\"v tiny\" style=\"font-weight:400\">"+esc(d.p)+"</span></div>").join("")
+    :'<p style="font-size:14px;color:var(--muted)">No documents uploaded yet.</p><button class="linkbtn">Request from the family</button>');
+
+  h+=acc("notif","Notifications sent",false,
+    (c.notes.length?c.notes:[{t:"No SMS sent from this case yet",d:null}]).map(n=>'<div class="kv"><span class="k">'+esc(n.t)+"</span>"
+      +'<span class="v tiny" style="font-weight:400">'+(n.d?fDate(n.d)+", "+fTime(n.d):"—")+"</span></div>").join(""));
+
+  h+='<p class="tiny" style="padding:16px 0 0">Source: PAO case management sync · last updated 7:42 AM, 22 Jul 2026. Family-uploaded documents are marked as such and are not official court records.</p>';
+  el.innerHTML=h;
+}
+function acc(key,title,dot,body){
+  const open=S.sections[key];
+  return '<div class="acc"><button class="acch" type="button" data-acc="'+key+'" aria-expanded="'+open+'">'
+    +"<span>"+esc(title)+"</span><span class=\"r\">"+(dot?'<span class="dot"></span>':"")
+    +'<span class="cv">'+(open?"⌃":"⌄")+"</span></span></button>"
+    +(open?'<div class="accb">'+body+"</div>":"")+"</div>";
+}
+
+/* ====================== C-3 ====================== */
+function weekStart(off){const d=ds(NOW);const wd=(d.getDay()+6)%7;return new Date(d.getFullYear(),d.getMonth(),d.getDate()-wd+7*off);}
+function hearingsOn(d){return CASES.filter(c=>c.hearing&&dayDiff(c.hearing.at,d)===0)
+  .sort((a,b)=>a.hearing.at-b.hearing.at);}
+function renderC3(){
+  const ws=weekStart(S.weekOffset),we=new Date(ws.getTime()+6*864e5);
+  $("#wkLabel").textContent=(ws.getMonth()===we.getMonth()?MON_F[ws.getMonth()]+" "+ws.getDate()+" – "+we.getDate():MON_S[ws.getMonth()]+" "+ws.getDate()+" – "+MON_S[we.getMonth()]+" "+we.getDate())+", "+we.getFullYear();
+  let p="";
+  for(let i=0;i<7;i++){
+    const d=new Date(ws.getTime()+i*864e5),n=hearingsOn(d).length,isT=dayDiff(d,NOW)===0;
+    const sel=S.daySel&&dayDiff(d,S.daySel)===0;
+    p+='<button class="pill'+(isT?" today":"")+((i>4)?" we":"")+'" type="button" data-day="'+d.toISOString()+'" aria-pressed="'+(!!sel)+'">'
+      +'<span class="w">'+DAY_S[d.getDay()].toUpperCase()+'</span><span class="d">'+d.getDate()+"</span>"
+      +'<span class="dots">'+(n>3?"<b>3+</b>":"<i></i>".repeat(n))+"</span></button>";
+  }
+  $("#c3Pills").innerHTML=p;
+
+  let h="",any=0;
+  for(let i=0;i<7;i++){
+    const d=new Date(ws.getTime()+i*864e5),list=hearingsOn(d),dd=dayDiff(d,NOW);
+    if(S.daySel&&dayDiff(d,S.daySel)!==0)continue;
+    if(!S.daySel&&S.weekOffset===0&&dd<0)continue;      /* the week that already happened is not the agenda */
+    const label=dd===0?"NGAYON · TODAY — "+DAY_F[d.getDay()]+", "+d.getDate()+" "+MON_F[d.getMonth()]
+      :dd===1?"BUKAS · TOMORROW — "+DAY_F[d.getDay()]+", "+d.getDate()+" "+MON_F[d.getMonth()]
+      :(DAY_F[d.getDay()]+", "+d.getDate()+" "+MON_F[d.getMonth()]).toUpperCase();
+    any+=list.length;
+    if(!list.length){
+      h+='<div class="dayh"><span>'+label+" — walang nakatakda · none scheduled</span><span>0</span></div>";
+      continue;
+    }
+    h+='<div class="dayh"><span>'+label+"</span><span>"+list.length+"</span></div><div class=\"bandcard\" style=\"margin-bottom:20px\">";
+    list.forEach((c,ix)=>{
+      const clash=list.filter(o=>o!==c&&o.hearing.at.getTime()===c.hearing.at.getTime());
+      if(clash.length&&ix>0&&list[ix-1].hearing.at.getTime()===c.hearing.at.getTime()){
+        h+='<div style="padding:10px 12px 10px 16px"><div class="note amber"><span class="g">⚠</span><span><b>Two hearings at '
+          +fTime(c.hearing.at)+" in different courts.</b><br>"+esc(list[ix-1].name.split(",")[0])+" ("+esc(list[ix-1].court)+") · "
+          +esc(c.name.split(",")[0])+" ("+esc(c.court)+') <button class="linkbtn" style="font-size:13px">Request a reset ↗</button></span></div></div>';
+      }
+      const cs=[];
+      if(c.hearing.mode==="Videoconference")cs.push(c.vcUnconfirmed?["amber","VC link unconfirmed"]:["blue","Videoconference"]);
+      else cs.push(["slate","In person"]);
+      if(clash.length)cs.push(["amber","Conflict"]);
+      h+='<button class="row pro" type="button" data-case="'+c.id+'">'
+        +'<span class="rail '+(clash.length||c.vcUnconfirmed?"warn":"pri")+'"></span>'
+        +'<span class="ptime"><span class="h">'+fTime(c.hearing.at).split(" ")[0]+'</span><br><span class="m">'+fTime(c.hearing.at).split(" ")[1]+"</span></span>"
+        +'<span class="pbody"><span class="pt">'+esc(c.name)+(c.cicl?' <span class="age">· CICL</span>':"")+"</span>"
+        +'<span class="ps">'+esc(c.court)+" · "+esc(c.hearing.type)+"</span>"
+        +'<span class="pm">'+cs.map(x=>'<span class="mchip '+x[0]+'">'+x[1]+"</span>").join("")+"</span></span>"
+        +'<span class="pchev">›</span></button>';
+    });
+    h+="</div>";
+  }
+  if(!any){
+    h+='<div class="empty"><div class="ic">⏱</div><h3>No hearings this week.</h3>'
+      +'<p style="max-width:290px;margin:8px auto 16px">You have '+CASES.filter(c=>c.hearing).length
+      +' cases with hearings scheduled. This is a good week — use it on the milestone band.</p>'
+      +'<button class="btn ghost" id="jumpNext" style="width:auto;margin:0 auto">Jump to next hearing</button></div>';
+  }
+  $("#c3Scroll").innerHTML=h;
+}
+
+/* ====================== sheets, toast, nav ====================== */
+let toastTimer=null,pendingUndo=null;
+function toast(msg,label,onUndo){
+  clearTimeout(toastTimer);
+  $("#toastMsg").innerHTML=msg;
+  const btn=$("#toastAct");btn.textContent=label||"I-BALIK ↺";btn.hidden=!onUndo;
+  pendingUndo=onUndo||null;
+  const t=$("#toast");t.classList.remove("on");void t.offsetWidth;t.classList.add("on");
+  toastTimer=setTimeout(()=>{t.classList.remove("on");pendingUndo=null;},12000);
+}
+$("#toastAct").onclick=()=>{if(pendingUndo)pendingUndo();pendingUndo=null;$("#toast").classList.remove("on");};
+
+function openSheet(html){$("#sheet").innerHTML='<div class="grab"></div>'+html;$("#sheet").classList.add("on");$("#scrim").classList.add("on");}
+function closeSheet(){$("#sheet").classList.remove("on");$("#scrim").classList.remove("on");}
+$("#scrim").onclick=closeSheet;
+
+/* One layout: every screen is a full-frame push. C-1, C-3 and C-4 are tab
+   roots and keep the bottom bar; C-2 is a pushed case detail and hides it so
+   its own "Copy case summary" footer is never buried. */
+const TABROOT={c1:1,c3:1,c4:1};
+function show(id){
+  S.screen=id;
+  ["c1","c2","c3","c4"].forEach(x=>$("#"+x).classList.toggle("on",x===id));
+  paintTabs();
+}
+function paintTabs(){
+  const t=S.screen==="c3"?"cal":S.screen==="c4"?"me"
+    :(S.screen==="c1"&&S.searchOpen)?"find":"c1";
+  S.tab=t;
+  $$(".tab").forEach(b=>{const on=b.dataset.tab===t;
+    b.classList.toggle("on",on);
+    if(on)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
+  /* the bulk-select bar owns the bottom edge while it is up */
+  $("#tabs").hidden=!TABROOT[S.screen]||S.bulk;
+}
+function goTab(t){
+  if(t==="c1"){if(S.searchOpen){S.searchOpen=false;S.q="";S.filters.clear();renderC1();}show("c1");}
+  else if(t==="cal"){renderC3();show("c3");}
+  else if(t==="find"){S.searchOpen=true;renderC1();show("c1");
+    const q=$("#q");if(q)q.focus();}
+  else if(t==="me"){renderC4();show("c4");}
+}
+$("#tabs").addEventListener("click",function(e){
+  const b=e.target.closest("[data-tab]");if(!b)return;goTab(b.dataset.tab);
+});
+
+/* ====================== C-4 · account ====================== */
+function renderC4(){
+  const hearings=CASES.filter(c=>c.hearing).length;
+  const rows=[["Office","PAO Quezon City District Office"],["Role","Public Attorney II"],
+    ["Roll of Attorneys","No. 68412"],["Active clients",String(CASES.length)],
+    ["Hearings scheduled",String(hearings)],
+    ["Last sync",S.offline?"7:42 AM · offline":"7:42 AM, 22 Jul 2026"]];
+  $("#c4Scroll").innerHTML='<div class="mecard"><div class="meav">MR</div>'
+    +'<div class="grow"><div class="mn">Atty. M. Reyes</div>'
+    +'<div class="mr">Public Attorney II · PAO Quezon City</div></div></div>'
+    +'<div class="'+(S.offline?"banner warn":"banner ok")+'">'
+    +(S.offline
+      ?"Naka-offline. Your caseload is the 7:42 AM download; anything you flag queues on this phone."
+      :"Naka-sync · everything on this phone matches the district office record.")+"</div>"
+    +'<div class="card">'+rows.map(r=>'<div class="kv"><span class="k">'+esc(r[0])+"</span>"
+      +'<span class="v">'+esc(r[1])+"</span></div>").join("")+"</div>"
+    +'<button class="btn quiet" id="signout">Mag-sign out · Sign out</button>'
+    +'<p class="tiny" style="text-align:center;padding:14px 0 0">e-Laya · PAO module. '
+    +"Signed in through eGovPH SSO.</p>";
+}
+$("#c4Scroll").addEventListener("click",function(e){
+  if(!e.target.closest("#signout"))return;
+  openSheet('<h3>Mag-sign out · Sign out?</h3>'
+    +'<p class="lead">Anything queued on this phone uploads first. Nothing is lost.</p>'
+    +'<button class="opt dz" id="soYes"><span class="g">→</span><span>Sign out</span></button>'
+    +'<button class="opt" onclick="document.getElementById(\'sheet\').classList.remove(\'on\');document.getElementById(\'scrim\').classList.remove(\'on\')">'
+    +'<span class="g">↩</span><span>Manatili · Stay signed in</span></button>');
+});
+document.addEventListener("click",function(e){
+  if(e.target.closest("#soYes")){closeSheet();toast("Signed out of this prototype.","",null);}
+});
+function openCase(id){
+  S.sel=id;
+  S.sections={history:true,gcta:false,programs:false,docs:false,notif:false};
+  renderC2();renderC1();
+  show("c2");
+  $("#c2Scroll").scrollTop=0;
+}
+
+/* ====================== events ====================== */
+document.addEventListener("click",function(e){
+  const t=e.target;
+  const row=t.closest("[data-case]");
+  if(row){
+    if(S.bulk){const id=row.dataset.case;S.picked.has(id)?S.picked.delete(id):S.picked.add(id);renderC1();return;}
+    openCase(row.dataset.case);return;
+  }
+  const bh=t.closest("[data-band]");
+  if(bh){S.open[bh.dataset.band]=!S.open[bh.dataset.band];renderC1();return;}
+  const mb=t.closest("[data-moreband]");
+  if(mb){const k=mb.dataset.moreband;S.filters.clear();S.q="";S.open[k]=true;S.expand[k]=true;
+    renderC1();return;}
+  const fc=t.closest("[data-f]");
+  if(fc){const f=fc.dataset.f;
+    if(f==="__all")S.filters.clear();else S.filters.has(f)?S.filters.delete(f):S.filters.add(f);
+    renderC1();return;}
+  const ac=t.closest("[data-acc]");
+  if(ac){S.sections[ac.dataset.acc]=!S.sections[ac.dataset.acc];renderC2();return;}
+  const cp=t.closest("[data-copy]");
+  if(cp){copy(cp.dataset.copy);toast("Docket number copied.","",null);return;}
+  if(t.id==="clearF"){S.filters.clear();S.q="";renderC1();return;}
+  if(t.id==="retry"){S.error=false;S.loading=true;renderC1();setTimeout(()=>{S.loading=false;renderC1();},700);return;}
+  if(t.id==="jumpNext"){S.weekOffset=0;S.daySel=null;renderC3();return;}
+});
+
+$("#c1Scroll").addEventListener("input",function(e){
+  if(e.target.id==="q"){S.q=e.target.value;const pos=e.target.selectionStart;renderC1();
+    const q=$("#q");if(q){q.focus();q.setSelectionRange(pos,pos);}}
+});
+
+/* long-press -> bulk select */
+let lpTimer=null;
+$("#c1Scroll").addEventListener("pointerdown",function(e){
+  const row=e.target.closest("[data-case]");if(!row)return;
+  lpTimer=setTimeout(()=>{S.bulk=true;S.picked.add(row.dataset.case);renderC1();
+    if(navigator.vibrate)navigator.vibrate(8);},420);
+});
+["pointerup","pointermove","pointercancel","scroll"].forEach(ev=>
+  $("#c1Scroll").addEventListener(ev,()=>clearTimeout(lpTimer),{passive:true}));
+
+$("#c1Back").onclick=()=>{if(S.bulk){S.bulk=false;S.picked.clear();renderC1();}};
+$("#c1Find").onclick=()=>{
+  S.searchOpen=!S.searchOpen;
+  if(!S.searchOpen){S.q="";S.filters.clear();}
+  renderC1();
+  if(S.searchOpen){const q=$("#q");if(q)q.focus();}
+};
+$("#c2Back").onclick=()=>show("c1");
+$("#c3Back").onclick=()=>show("c1");
+$("#toCal").onclick=()=>{renderC3();show("c3");};
+$("#wkPrev").onclick=()=>{S.weekOffset--;S.daySel=null;renderC3();};
+$("#wkNext").onclick=()=>{S.weekOffset++;S.daySel=null;renderC3();};
+$("#c3Pills").addEventListener("click",e=>{const p=e.target.closest("[data-day]");if(!p)return;
+  const d=new Date(p.dataset.day);S.daySel=(S.daySel&&dayDiff(d,S.daySel)===0)?null:d;renderC3();});
+$("#c1Off").onclick=()=>openSheet('<h3>Naka-offline · Offline</h3>'
+  +'<p class="lead">Your caseload was downloaded at 7:42 AM today. Every case opens read-only. '
+  +'Nothing is lost — anything you flag or draft is queued on this phone and uploads by itself.</p>'
+  +'<button class="opt"><span class="g">↻</span><span>Try syncing now<span class="sub">Last attempt 8:04 AM</span></span></button>'
+  +'<button class="opt" onclick="this.closest(\'.sheet\').classList.remove(\'on\');document.getElementById(\'scrim\').classList.remove(\'on\')">'
+  +'<span class="g">✓</span><span>Keep working offline</span></button>');
+
+$("#c2Star").onclick=()=>{
+  const c=CASES.find(x=>x.id===S.sel);if(!c)return;
+  c.starred=!c.starred;c.t=triage(c);renderC2();renderC1();
+  toast(c.starred?"Flagged. It now sits at the top of <b>Needs you today</b>.":"Flag removed.","I-BALIK ↺",
+    ()=>{c.starred=!c.starred;c.t=triage(c);renderC2();renderC1();});
+};
+$("#c2Copy").onclick=()=>{
+  const c=CASES.find(x=>x.id===S.sel);if(!c)return;
+  const s=c.name+" · "+c.docket.replace("Crim. Case","Crim. Case No.")+" · "+c.courtLong
+    +(c.hearing?" · Next hearing "+fDate(c.hearing.at)+", "+fTime(c.hearing.at)+" ("+c.hearing.mode.toLowerCase()+")":" · No hearing scheduled")
+    +(c.detainedSince?" · Detained since "+fDate(c.detainedSince)+" ("+since(c.detainedSince)+")":"")
+    +" · Counsel: Atty. M. Reyes, PAO QC";
+  copy(s);toast("Case summary copied — paste it into a message or a pleading.","",null);
+};
+function copy(s){try{navigator.clipboard.writeText(s);}catch(e){
+  const ta=document.createElement("textarea");ta.value=s;document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");}catch(_){}ta.remove();}}
+
+document.addEventListener("click",async function(e){
+  if(e.target.id==="sms"){
+    const c=CASES.find(x=>x.id===S.sel);if(!c)return;
+    const msg="e-Laya: Ang pagdinig ni "+c.name.split(",")[0]+" ay sa "+(c.hearing?fDate(c.hearing.at)+", "+fTime(c.hearing.at):"susunod na iskedyul")
+      +". PAO QC · huwag sagutin ang mensaheng ito.";
+    let cancelled=false;
+    toast("SMS to "+esc(c.family.name)+" queued · sends in 12s.","I-BALIK ↺",()=>{cancelled=true;toast("SMS cancelled. Nothing was sent.","",null);});
+    setTimeout(async()=>{
+      if(cancelled)return;
+      const r=await api("/api/sms",{numbers:[c.family.no.replace(/\s/g,"")],message:msg});
+      c.notes.unshift({t:"SMS to "+c.family.name+" — hearing reminder"+(r?"":" (queued on this phone)"),d:new Date(NOW)});
+      if(S.sel===c.id)renderC2();
+    },12000);
+  }
+  if(e.target.id==="ics"){
+    const c=CASES.find(x=>x.id===S.sel);if(!c||!c.hearing)return;
+    const pad=n=>String(n).padStart(2,"0");
+    const z=d=>d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+"T"+pad(d.getUTCHours())+pad(d.getUTCMinutes())+"00Z";
+    const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//e-Laya//PAO//EN","BEGIN:VEVENT",
+      "UID:"+c.id+"@elaya","DTSTAMP:"+z(new Date()),"DTSTART:"+z(c.hearing.at),
+      "DTEND:"+z(new Date(c.hearing.at.getTime()+36e5)),
+      "SUMMARY:"+c.hearing.type+" — "+c.name,"LOCATION:"+c.hearing.room,
+      "DESCRIPTION:"+c.docket+" \\n"+c.hearing.mode,"END:VEVENT","END:VCALENDAR"].join("\r\n");
+    const a=document.createElement("a");a.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics);
+    a.download=c.docket.replace(/[^0-9A-Za-z]/g,"-")+".ics";a.click();
+    toast("Hearing added to your calendar file.","",null);
+  }
+  if(e.target.id==="record"){
+    openSheet('<h3>Itala ang resulta · Record the outcome</h3>'
+      +'<p class="lead">One line closes the hole. This drops the case out of <b>Needs you today</b> immediately.</p>'
+      +'<button class="opt" data-rec="Reset — new date to follow"><span class="g">·</span><span>Reset — new date to follow</span></button>'
+      +'<button class="opt" data-rec="Continuation of trial held"><span class="g">·</span><span>Continuation of trial held</span></button>'
+      +'<button class="opt" data-rec="Submitted for decision"><span class="g">·</span><span>Submitted for decision</span></button>'
+      +'<button class="opt" data-rec="Provisionally dismissed"><span class="g">·</span><span>Provisionally dismissed</span></button>'
+      +'<button class="opt" data-rec="Other — add a note"><span class="g">✎</span><span>Other — add a note</span></button>');
+  }
+  const rec=e.target.closest("[data-rec]");
+  if(rec){
+    const c=CASES.find(x=>x.id===S.sel);if(!c)return;
+    closeSheet();
+    const was=c.unrecorded,wasHist=c.history.slice();
+    c.history.unshift({d:new Date(NOW),l:"Outcome recorded — "+rec.dataset.rec,p:"Source: Atty. M. Reyes · e-Laya, "+fTime(NOW),open:true});
+    c.history=c.history.filter(x=>x.l!=="Hearing held — outcome not recorded");
+    c.unrecorded=null;c.idle=0;c.t=triage(c);renderC2();renderC1();
+    toast("Outcome recorded. This case left <b>Needs you today</b>.","I-BALIK ↺",
+      ()=>{c.unrecorded=was;c.history=wasHist;c.t=triage(c);renderC2();renderC1();toast("Undone.","",null);});
+  }
+  if(e.target.id==="motion"){toast("Draft started · <b>Motion for release on recognizance</b>.","I-BALIK ↺",()=>toast("Draft discarded.","",null));}
+  if(e.target.id==="chase"){toast("Request queued for the branch clerk of court.","I-BALIK ↺",()=>toast("Request cancelled.","",null));}
+});
+
+/* bulk actions */
+$("#c1Bulk").addEventListener("click",function(e){
+  const b=e.target.closest("[data-bulk]");if(!b)return;
+  const n=S.picked.size;if(!n)return;
+  const act=b.dataset.bulk;
+  const ids=[...S.picked];
+  if(act==="flag"){ids.forEach(id=>{const c=CASES.find(x=>x.id===id);c.starred=true;c.t=triage(c);});}
+  S.bulk=false;S.picked.clear();renderC1();
+  toast(n+(act==="flag"?" cases flagged.":act==="assign"?" cases queued for reassignment.":" cases exported to CSV."),"I-BALIK ↺",
+    ()=>{if(act==="flag")ids.forEach(id=>{const c=CASES.find(x=>x.id===id);c.starred=false;c.t=triage(c);});renderC1();toast("Undone.","",null);});
+});
+
+/* overflow menus */
+function menuC1(){
+  openSheet('<h3>Caseload options</h3>'
+    +'<button class="opt" data-sort="triage"><span class="g">'+(S.sort==="triage"?"✓":"")+'</span><span>Sort: Triage <span class="sub">Default — what needs you today</span></span></button>'
+    +'<button class="opt" data-sort="hearing"><span class="g">'+(S.sort==="hearing"?"✓":"")+'</span><span>Sort: Next hearing</span></button>'
+    +'<button class="opt" data-sort="name"><span class="g">'+(S.sort==="name"?"✓":"")+'</span><span>Sort: Surname A–Z</span></button>'
+    +'<button class="opt" data-do="select"><span class="g">☑</span><span>Select cases</span></button>'
+    +'<button class="opt" data-do="csv"><span class="g">⤓</span><span>Export this week (CSV)</span></button>'
+    +'<button class="opt" data-do="dl"><span class="g">⤓</span><span>Download for offline<span class="sub">300 cases · about 2 MB</span></span></button>'
+    +'<div class="grouplbl">Prototype states</div>'
+    +'<button class="opt" data-do="loading"><span class="g">◌</span><span>Show the loading state</span></button>'
+    +'<button class="opt" data-do="error"><span class="g">⚠</span><span>Show the refresh error<span class="sub">The stale list stays on screen</span></span></button>'
+    +'<button class="opt" data-do="offline"><span class="g">⚡</span><span>'+(S.offline?"Go back online":"Go offline")+"</span></button>"
+    +'<button class="opt" data-do="empty"><span class="g">∅</span><span>Show the empty caseload</span></button>');
+}
+$("#c1Menu").onclick=menuC1;
+$("#c2Menu").onclick=()=>openSheet('<h3>Case options</h3>'
+  +'<button class="opt"><span class="g">⧉</span><span>Copy case summary</span></button>'
+  +'<button class="opt"><span class="g">⤓</span><span>Export case file (PDF)</span></button>'
+  +'<button class="opt"><span class="g">⚑</span><span>Raise to the district office</span></button>'
+  +'<button class="opt"><span class="g">✎</span><span>Add a note to the file</span></button>');
+$("#c3Menu").onclick=()=>openSheet('<h3>Calendar options</h3>'
+  +'<button class="opt"><span class="g">☷</span><span>Week view <span class="sub">Current</span></span></button>'
+  +'<button class="opt"><span class="g">▦</span><span>Month view</span></button>'
+  +'<button class="opt" data-do="ics"><span class="g">⤓</span><span>Export week to calendar (.ics)</span></button>'
+  +'<button class="opt" data-do="vconly"><span class="g">▶</span><span>Only show videoconference</span></button>');
+
+$("#sheet").addEventListener("click",function(e){
+  const s=e.target.closest("[data-sort]");
+  if(s){S.sort=s.dataset.sort;closeSheet();renderC1();toast("Sorted by "+(S.sort==="triage"?"triage score":S.sort==="hearing"?"next hearing":"surname")+".","",null);return;}
+  const d=e.target.closest("[data-do]");if(!d)return;
+  const a=d.dataset.do;closeSheet();
+  if(a==="select"){S.bulk=true;renderC1();}
+  if(a==="csv"){toast("This week exported · 11 hearings, 9 cases.","",null);}
+  if(a==="dl"){toast("Caseload downloaded to this phone · 300 cases.","",null);}
+  if(a==="loading"){S.loading=true;renderC1();setTimeout(()=>{S.loading=false;renderC1();},1400);}
+  if(a==="error"){S.error=true;renderC1();}
+  if(a==="offline"){S.offline=!S.offline;applyOffline();}
+  if(a==="empty"){emptyDemo();}
+  if(a==="ics"){toast("Week exported · 11 hearings.","",null);}
+  if(a==="vconly"){S.filters.add("Videoconference");S.searchOpen=true;renderC1();}
+});
+function applyOffline(){
+  $("#c1Off").hidden=!S.offline;$("#c2Off").hidden=!S.offline;$("#c3Off").hidden=!S.offline;
+  toast(S.offline?"Offline · working from the 7:42 AM download.":"Back online · syncing.","",null);
+}
+function emptyDemo(){
+  $("#c1Scroll").innerHTML='<div class="empty" style="padding-top:96px"><div class="ic">⚖</div>'
+    +'<h3>No cases assigned yet.</h3><p style="max-width:280px;margin:8px auto 16px">When the PAO district office assigns you a case, '
+    +'it appears here — sorted by what needs you first.</p>'
+    +'<button class="btn ghost" style="width:auto;margin:0 auto" onclick="location.reload()">Refresh</button></div>';
+}
+
+/* Escape dismisses whatever is on top. There is no keyboard on the target
+   device, so no row navigation and no shortcut surface — both are gone. */
+document.addEventListener("keydown",function(e){
+  if(e.key!=="Escape")return;
+  const el=document.activeElement;
+  if(/^(INPUT|TEXTAREA)$/.test(el.tagName)){el.blur();
+    if(el.id==="q"&&!S.q.trim()&&!S.filters.size){S.searchOpen=false;renderC1();}
+    return;}
+  closeSheet();
+});
+
+/* ====================== boot ====================== */
+(async function boot(){
+  const now=new Date(NOW);
+  $("#c1Date").textContent=DAY_S[now.getDay()]+" · "+now.getDate()+" "+MON_S[now.getMonth()];
+  renderC1();renderC3();
+  const sso=await api("/api/sso");
+  if(sso&&(sso.name||sso.full_name))
+    $("#c1Who").textContent="⚖ "+(sso.name||sso.full_name)+" · PAO Quezon City";
+  setTimeout(()=>{S.loading=false;renderC1();},520);
+})();
+</script>
+</body>
+</html>

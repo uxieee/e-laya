@@ -1,0 +1,1744 @@
+<!DOCTYPE html>
+<html lang="fil">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>e-Laya · Kiosk</title>
+<link rel="stylesheet" href="elaya.css">
+<style>
+/* ================================================================
+   e-Laya KIOSK layer — sits on top of elaya.css.
+   Portrait 1080×1920 canvas, scaled to fit the viewport.
+   TYPE: five steps only — 64 / 38 / 26 / 24 / 20. 20px is the floor
+   (≈ 10 mm cap height at the 700 mm standing viewing distance).
+   SPACE: 72px screen gutter · 40px screen top pad · 24px grid gap.
+   ================================================================ */
+:root{
+  /* ── five-step type scale ── */
+  --k-display:64px;   /* the screen's question              · 500 */
+  --k-title:38px;     /* card titles, button labels         · 500 */
+  --k-body:26px;      /* body copy + English sub-lines      · 400 */
+  --k-title-tight:34px;/* menu-card titles only — the sanctioned drop from 38
+                          so all four fit one line inside a 456px column     */
+  --k-desc:24px;      /* descriptions, chips, rail          · 400 */
+  --k-meta:20px;      /* meta + chrome — the floor          · 400 */
+
+  --k-pad:72px;       /* screen horizontal padding */
+  --k-gap:24px;       /* gap between tiles in every grid */
+
+  --k-r:20px; --k-r-btn:24px; --k-r-card:32px; --k-r-hero:48px;
+  --k-border:2px solid var(--border-strong);
+  --k-hair:2px solid var(--border);
+  --k-sec:#475569;            /* slate-600 · 7.51:1 — all small text */
+  --k-ter:#64748B;
+  --k-success-text:#15803D;
+  --k-dur:.22s; --k-nav:.28s;
+  --k-ease:cubic-bezier(.4,0,.2,1);
+}
+html,body{height:100%;overflow:hidden;background:#10142A}
+body{background:#10142A}
+
+/* ---------- stage scaling ---------- */
+#stage{width:1080px;height:1920px;background:var(--bg);position:absolute;left:50%;top:50%;
+  transform-origin:center center;display:flex;flex-direction:column;overflow:hidden;
+  font-size:var(--k-body);line-height:1.35;
+  border-radius:8px;box-shadow:0 0 0 1px rgba(255,255,255,.06),0 40px 120px rgba(0,0,0,.55)}
+/* nothing inherits the 16px document size, and no UA 13.3px button text */
+button{font-family:var(--font);font-size:var(--k-body);line-height:1.3}
+
+/* soft sense-of-place tint behind the reading band */
+#stage::before{content:"";position:absolute;left:0;right:0;top:0;height:560px;pointer-events:none;
+  background:linear-gradient(180deg,#F0F4FF 0%,rgba(240,244,255,0) 100%);z-index:0}
+#khead,#kbody,#krail{position:relative;z-index:1}
+
+/* nothing that carries type may ever clip a descender */
+h1,h2,h3,h4,.khead-fil,#k1hero .h1,#doneTitle,.kmodal .mh,#sheet .sh1,.fullres .fh,
+.mtile .t1,.pathtile .t1,.progname .f,.nextbox .v,.ptitle .f,.hearrow .d2{
+  line-height:1.15;padding-bottom:.14em;overflow:visible}
+
+/* ---------- press feedback ---------- */
+.tap{transition:transform .12s var(--k-ease),background .12s var(--k-ease),border-color .12s var(--k-ease),box-shadow .12s var(--k-ease);cursor:pointer;user-select:none}
+.tap:active{transform:scale(.98)}
+
+/* ---------- persistent identity header — chrome, two quiet rows ----------
+   Row 1: e-Laya mark · clock.  Row 2: facility (wraps, never truncates) · date.
+   The session chip is NOT here — it lives with the navigation, at the bottom. */
+#khead{flex:none;background:var(--surface);border-bottom:var(--k-hair);
+  display:flex;flex-direction:column;justify-content:center;gap:10px;padding:22px var(--k-pad) 24px}
+#khead .hrow{display:flex;align-items:baseline;gap:32px;min-width:0}
+#khead .m1{font-size:var(--k-body);font-weight:500;color:var(--primary);letter-spacing:.05em;flex:none}
+#khead .clockT{margin-left:auto;font-size:var(--k-body);font-weight:500;color:var(--text);
+  font-variant-numeric:tabular-nums;flex:none;white-space:nowrap}
+#khead .f1{flex:1;min-width:0;font-size:var(--k-meta);font-weight:400;color:var(--k-sec);
+  white-space:normal;overflow-wrap:break-word;line-height:1.35}
+#khead .clockD{margin-left:auto;font-size:var(--k-meta);color:var(--k-ter);white-space:nowrap;flex:none}
+
+/* ---------- body / screens ---------- */
+#kbody{flex:1;min-height:0;position:relative}
+.kscreen{display:none;position:absolute;inset:0;flex-direction:column;overflow-y:auto;
+  padding:40px var(--k-pad) 48px;scrollbar-width:none}
+.kscreen::-webkit-scrollbar{width:0}
+.kscreen.on{display:flex;animation:kIn var(--k-nav) var(--k-ease)}
+@keyframes kIn{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
+
+/* headings — no height cap anywhere; 24px to the subtitle */
+.khead-fil{font-size:var(--k-display);font-weight:500;line-height:1.15;letter-spacing:-.01em;color:var(--text);
+  flex:none;padding-bottom:.14em}
+.khead-en{font-size:var(--k-body);font-weight:400;color:var(--k-sec);margin-top:24px;line-height:1.35;flex:none}
+.ksub-fil{font-size:var(--k-body);color:var(--text);margin-top:24px;line-height:1.4}
+.ksub-en{font-size:var(--k-desc);color:var(--muted-strong);margin-top:6px;line-height:1.4}
+
+/* cards */
+.kcard{background:var(--surface);border:var(--k-border);border-radius:var(--k-r-card);padding:36px}
+.kstamp{display:flex;align-items:center;gap:14px;font-size:var(--k-meta);color:var(--k-sec);
+  border-top:var(--k-hair);padding-top:20px;margin-top:24px}
+.kstamp .dot9{width:18px;height:18px;border-radius:50%;background:var(--primary);opacity:.35;flex:none}
+
+/* buttons */
+.kbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;
+  min-height:180px;border-radius:var(--k-r-hero);border:none;background:var(--primary);color:#fff;
+  box-shadow:0 8px 32px rgba(0,64,231,.30)}
+.kbtn .b1{font-size:var(--k-title);font-weight:500}
+.kbtn .b2{font-size:var(--k-body);font-weight:400;color:rgba(255,255,255,.82)}
+.kbtn:active{background:var(--primary-hover)}
+.kbtn2{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;
+  min-height:150px;border-radius:var(--k-r-btn);background:var(--surface);
+  border:3px solid var(--border-strong);color:var(--primary)}
+.kbtn2 .b1{font-size:var(--k-title);font-weight:500}
+.kbtn2 .b2{font-size:var(--k-body);font-weight:400;color:var(--k-sec)}
+.kbtn2:active{border-color:var(--primary);background:var(--secondary)}
+.kbtnq{display:flex;align-items:center;justify-content:center;gap:16px;width:100%;min-height:120px;
+  border-radius:var(--k-r-btn);background:transparent;border:var(--k-hair);
+  font-size:var(--k-body);font-weight:400;color:var(--k-sec)}
+
+/* chips */
+.kchip{display:inline-flex;align-items:center;gap:10px;font-size:var(--k-desc);font-weight:500;
+  padding:12px 24px;border-radius:999px;background:var(--secondary);
+  border:var(--k-hair);color:var(--primary-ink);white-space:nowrap}
+.kchip.ok{background:var(--success-surface);border-color:var(--success-border);color:var(--k-success-text)}
+.kchip.warn{background:var(--warn-surface);border-color:var(--warn-border);color:var(--warn)}
+
+/* icons */
+.kic{display:inline-block}
+.kic svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- THE navigation bar — the only one. Bottom-anchored, centred.
+   Row A (wayfinding): step dots left · session chip right.
+   Row B (controls):   Bumalik · Menu · Basahin sa akin · Wika · Itago · Tapos na
+   Targets are 112px tall / ≥112px wide. Content actions never live here. ---- */
+#krail{flex:none;height:176px;background:var(--surface);border-top:var(--k-hair);
+  display:flex;flex-direction:column;justify-content:center;gap:8px;padding:0 40px 12px;
+  box-shadow:0 -6px 28px rgba(16,24,60,.05)}
+#krail.hide{display:none}
+#railmeta{height:44px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex:none}
+#railmeta .steps{display:flex;align-items:center;gap:10px;flex:none}
+#railmeta .sd{width:14px;height:14px;border-radius:50%;background:var(--border-strong)}
+#railmeta .sd.done{background:var(--primary);opacity:.45}
+#railmeta .sd.now{width:40px;border-radius:999px;background:var(--primary);opacity:1}
+#railmain{display:flex;align-items:stretch;justify-content:center;gap:12px;height:112px;flex:none}
+.rbtn{flex:0 0 auto;min-width:112px;min-height:112px;padding:0 22px;background:var(--surface);
+  border:var(--k-hair);border-radius:var(--k-r-btn);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;color:var(--primary);
+  font-family:var(--font);position:relative;overflow:hidden}
+.rbtn .ri{width:40px;height:40px;flex:none}
+.rbtn .ri svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.rbtn .rl{font-size:var(--k-meta);font-weight:500;white-space:nowrap;line-height:1.2}
+/* Bumalik is the most-used control for a first-time user — it reads first. */
+.rbtn.primary{padding:0 40px;background:var(--primary);border-color:var(--primary);color:#fff;
+  box-shadow:0 8px 26px rgba(0,64,231,.30)}
+.rbtn.primary .ri{width:46px;height:46px}
+.rbtn.primary .rl{font-size:var(--k-desc)}
+.rbtn.primary:active{background:var(--primary-hover)}
+.rbtn.on{background:var(--secondary);border-color:var(--border-strong);color:var(--primary-ink)}
+.rbtn.off{opacity:.26;pointer-events:none}
+.rbtn.speaking{background:var(--secondary);border-color:var(--border-strong)}
+.rbtn.speaking::after{content:"";position:absolute;left:0;right:0;bottom:0;height:6px;background:var(--primary);
+  animation:railpulse 1.1s ease-in-out infinite}
+@keyframes railpulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* session chip — wayfinding, so it sits with the navigation */
+#ksession{display:flex;align-items:center;gap:14px;background:var(--secondary);
+  border:var(--k-hair);border-radius:999px;padding:4px 22px 4px 4px;min-height:44px;flex:none}
+#ksession.off{visibility:hidden}
+#ksession .av{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;
+  display:grid;place-items:center;font-size:var(--k-meta);font-weight:500;flex:none}
+#ksession .nm{font-size:var(--k-meta);font-weight:500;color:var(--primary-ink);white-space:nowrap}
+#ksession .tm{font-size:var(--k-meta);color:var(--k-sec);font-variant-numeric:tabular-nums;white-space:nowrap}
+#idlering{width:32px;height:32px;flex:none;display:none}
+#idlering.warn{display:block}
+#idlering circle{fill:none;stroke-width:6}
+#idlering .bg{stroke:var(--border)}
+#idlering .fg{stroke:var(--primary);stroke-linecap:round;stroke-dasharray:125.7;transform:rotate(-90deg);transform-origin:center}
+
+/* ================= K-1 ================= */
+/* min-height, never height: the three attract lines are different depths and
+   the deepest one must not have its descenders sheared off. */
+#k1hero{min-height:300px;transition:opacity .4s ease;overflow:visible;flex:none}
+#k1hero.fade{opacity:0}
+#k1hero .h1{font-size:var(--k-display);font-weight:500;line-height:1.15;letter-spacing:-.01em;color:var(--text);
+  white-space:pre-line;padding-bottom:.14em}
+#k1hero .h2{font-size:var(--k-body);color:var(--k-sec);margin-top:24px;line-height:1.35}
+#k1prompt{font-size:var(--k-body);color:var(--text);margin:24px 0 28px;flex:none}
+#k1prompt .en{color:var(--k-sec);font-size:var(--k-desc)}
+#k1grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--k-gap)}
+.ltile{position:relative;min-height:288px;min-width:0;overflow:hidden;border-radius:var(--k-r-btn);background:var(--secondary);
+  border:var(--k-hair);display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;
+  padding:104px 26px 26px;text-align:left}
+.ltile .ln{font-size:var(--k-title-tight);font-weight:500;color:var(--primary);line-height:1.1}
+.ltile .ls{font-size:var(--k-desc);color:var(--muted-strong);margin-top:8px}
+.ltile:active,.ltile.picked{background:var(--primary);border-color:var(--primary)}
+.ltile:active .ln,.ltile.picked .ln{color:#fff}
+.ltile:active .ls,.ltile.picked .ls{color:rgba(255,255,255,.82)}
+.ltile .spk{position:absolute;top:16px;right:16px;width:68px;height:68px;border-radius:50%;
+  background:var(--surface);border:var(--k-hair);display:grid;place-items:center;color:var(--primary)}
+.ltile .spk .kic{width:34px;height:34px}
+.ltile:active .spk,.ltile.picked .spk{background:rgba(255,255,255,.18);border-color:transparent;color:#fff}
+.ltile .spk.speaking{background:var(--primary);border-color:var(--primary);color:#fff;
+  animation:spkpulse 1.1s ease-in-out infinite}
+@keyframes spkpulse{0%,100%{box-shadow:0 0 0 0 rgba(0,64,231,.45)}50%{box-shadow:0 0 0 12px rgba(0,64,231,0)}}
+#k1foot{margin-top:auto;padding-top:32px;display:flex;gap:16px;align-items:flex-start;color:var(--k-sec);font-size:var(--k-meta);line-height:1.5}
+#k1foot .kic{width:32px;height:32px;flex:none;margin-top:2px;color:var(--k-sec)}
+
+/* ================= K-2 ================= */
+#scanCard{margin-top:32px;position:relative;overflow:hidden}
+#scanCard .inner{display:flex;align-items:center;gap:40px}
+#idart{width:300px;flex:none;display:grid;place-items:center}
+#idart svg{width:270px;height:180px;overflow:visible}
+#idart .frame{stroke:var(--primary);stroke-width:4;stroke-dasharray:14 12;fill:var(--secondary);
+  animation:idpulse 1.4s ease-in-out infinite}
+@keyframes idpulse{0%,100%{opacity:.45}50%{opacity:1}}
+#idart .ln{stroke:var(--primary);stroke-width:4;opacity:.5;stroke-linecap:round;fill:none}
+#idart .scanline{stroke:var(--primary);stroke-width:5;stroke-linecap:round;animation:sweep 2.2s ease-in-out infinite}
+@keyframes sweep{0%,100%{transform:translateY(-62px)}50%{transform:translateY(62px)}}
+#scanCard .stext .p1{font-size:var(--k-title);font-weight:500;line-height:1.25;color:var(--text)}
+#scanCard .stext .p2{font-size:var(--k-body);color:var(--k-sec);margin-top:10px;line-height:1.35}
+#scanCard .assure{margin-top:24px;border-top:var(--k-hair);padding-top:20px;font-size:var(--k-body);color:var(--k-sec);line-height:1.45}
+#scanCard .assure strong{color:var(--text);font-weight:500}
+#scanOverlay{position:absolute;inset:0;background:var(--surface);display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:26px;border-radius:inherit;z-index:2}
+#scanOverlay.show{display:flex}
+#scanOverlay.success{background:var(--success-surface)}
+.karc{width:120px;height:120px;border-radius:50%;border:10px solid var(--secondary);
+  border-top-color:var(--primary);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#scanOverlay .t1{font-size:var(--k-title);font-weight:500;color:var(--text)}
+#scanOverlay .t2{font-size:var(--k-body);color:var(--k-sec)}
+.bigcheck{width:150px;height:150px;border-radius:50%;background:#fff;border:3px solid var(--success-border);
+  display:grid;place-items:center;animation:pop .4s var(--k-ease)}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.bigcheck svg{width:56%;height:56%;stroke:var(--k-success-text);fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.bigcheck .draw{stroke-dasharray:100;stroke-dashoffset:100;animation:draw .6s .15s var(--k-ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+#orsep{display:flex;align-items:center;gap:24px;margin:32px 0;color:var(--k-sec);font-size:var(--k-body)}
+#orsep::before,#orsep::after{content:"";flex:1;height:2px;background:var(--border)}
+#k2alts{display:grid;grid-template-columns:1fr 1fr;gap:var(--k-gap)}
+.pathtile{background:var(--surface);border:var(--k-border);border-radius:var(--k-r-card);
+  padding:32px 36px;display:flex;align-items:center;gap:26px;min-height:200px;text-align:left}
+.pathtile .well{width:96px;height:96px;border-radius:26px;background:var(--secondary);
+  display:grid;place-items:center;color:var(--primary);flex:none}
+.pathtile .well .kic{width:52px;height:52px}
+.pathtile .t1{font-size:var(--k-title);font-weight:500;color:var(--text);line-height:1.2}
+.pathtile .t2{font-size:var(--k-body);color:var(--k-sec);margin-top:8px}
+.pathtile .t3{font-size:var(--k-desc);color:var(--muted-strong);margin-top:8px}
+.pathtile:active{border-color:var(--primary);background:var(--secondary)}
+.bandd{margin-top:auto;padding-top:32px;font-size:var(--k-meta);color:var(--k-sec);line-height:1.5;text-align:center}
+
+/* consent (K-2b) */
+#consentBox{margin-top:32px;background:var(--secondary);border:var(--k-hair);border-radius:var(--k-r-card);
+  padding:36px;font-size:var(--k-body);line-height:1.5;color:var(--text)}
+#consentBox .en{font-size:var(--k-desc);color:var(--k-sec);margin-top:20px;line-height:1.5}
+#consentBox strong{font-weight:500;color:var(--primary-ink)}
+
+/* verify (K-2v) */
+#ovalWrap{margin:40px auto 0;width:500px;height:600px;border-radius:50%/46%;
+  border:5px solid var(--primary);background:var(--secondary);display:grid;place-items:center;position:relative}
+#ovalWrap .facegl{width:260px;height:260px;color:var(--primary);opacity:.5}
+#countNum{position:absolute;inset:0;display:grid;place-items:center;font-size:var(--k-display);font-weight:500;
+  color:var(--primary);font-variant-numeric:tabular-nums}
+#verifyMsg{text-align:center;margin-top:36px;font-size:var(--k-title);font-weight:500;color:var(--text)}
+#verifyMsgEn{text-align:center;margin-top:10px;font-size:var(--k-body);color:var(--k-sec)}
+
+/* staff (K-2c) */
+#staffCode{margin:44px auto 0;text-align:center}
+#staffCode .code{font-size:var(--k-display);font-weight:500;letter-spacing:.12em;color:var(--primary);
+  font-variant-numeric:tabular-nums;background:var(--surface);border:var(--k-border);
+  border-radius:var(--k-r-card);padding:28px 52px;display:inline-block}
+#staffCode .q{font-size:var(--k-title);color:var(--text);margin-top:36px;font-weight:500}
+#staffCode .qe{font-size:var(--k-body);color:var(--k-sec);margin-top:10px}
+.livedot{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--primary);
+  margin-right:14px;animation:railpulse 1.2s ease-in-out infinite}
+
+/* ================= MENU ================= */
+#menugrid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:var(--k-gap);margin-top:40px}
+.mtile{background:var(--surface);border:var(--k-border);border-radius:var(--k-r-card);
+  min-height:480px;min-width:0;padding:36px;display:flex;flex-direction:column;align-items:flex-start;
+  text-align:left}
+.mtile .well{width:104px;height:104px;border-radius:28px;background:var(--secondary);
+  display:grid;place-items:center;color:var(--primary);flex:none}
+.mtile .well .kic{width:56px;height:56px}
+.mtile .t1{font-size:var(--k-title-tight);font-weight:500;color:var(--text);margin-top:24px;line-height:1.15;white-space:nowrap}
+.mtile .t2{font-size:var(--k-body);color:var(--k-sec);margin-top:8px}
+.mtile .t3{font-size:var(--k-desc);color:var(--muted-strong);margin-top:16px;line-height:1.4}
+.mtile:active{border-color:var(--primary);background:var(--secondary)}
+
+/* ================= CASE / panels ================= */
+.ptitle{display:flex;align-items:baseline;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.ptitle .f{font-size:var(--k-title);font-weight:500;color:var(--text)}
+.ptitle .e{font-size:var(--k-body);color:var(--k-sec)}
+.tl{display:flex;align-items:flex-start;margin:12px 0 24px}
+.tl .node{flex:1;display:flex;flex-direction:column;align-items:center;gap:14px;position:relative}
+.tl .node::before{content:"";position:absolute;top:20px;left:-50%;width:100%;height:6px;background:var(--border-strong)}
+.tl .node:first-child::before{display:none}
+.tl .node.done::before,.tl .node.now::before{background:var(--primary);opacity:.5}
+.tl .b{width:40px;height:40px;border-radius:50%;background:var(--surface);
+  border:4px solid var(--border-strong);z-index:1;box-sizing:border-box}
+.tl .node.done .b{background:var(--primary);border-color:var(--primary)}
+.tl .node.now .b{width:52px;height:52px;background:var(--primary);border:5px solid var(--secondary);
+  outline:3px solid var(--primary);margin-top:-6px}
+.tl .l{font-size:var(--k-meta);color:var(--k-sec);text-align:center;line-height:1.3;max-width:160px}
+.tl .node.now .l{font-weight:500;color:var(--text)}
+.pbody-f{font-size:var(--k-body);color:var(--text);line-height:1.4}
+.pbody-e{font-size:var(--k-desc);color:var(--muted-strong);margin-top:6px;line-height:1.4}
+.hearrow{display:flex;gap:36px;align-items:center}
+.hearrow .d1{font-size:var(--k-body);font-weight:500;letter-spacing:.1em;color:var(--primary-ink)}
+.hearrow .d2{font-size:var(--k-display);font-weight:500;color:var(--text);line-height:1.05;margin-top:6px;white-space:nowrap}
+.hearrow .d3{font-size:var(--k-body);color:var(--text);margin-top:10px}
+.hearrow .rel{font-size:var(--k-desc);color:var(--muted-strong);margin-top:12px}
+.vidchip{margin-left:auto;background:var(--secondary);border:var(--k-hair);border-radius:var(--k-r);
+  padding:20px 24px;max-width:340px;font-size:var(--k-desc);line-height:1.4;color:var(--primary-ink)}
+.vidchip .en{color:var(--k-sec);font-size:var(--k-meta);margin-top:8px}
+.gctarow{display:flex;align-items:baseline;gap:24px}
+.gctarow .num{font-size:var(--k-display);font-weight:500;color:var(--text);line-height:1}
+.gctarow .unit{font-size:var(--k-body);color:var(--text)}
+.caveat{display:flex;gap:16px;align-items:flex-start;margin-top:20px;background:var(--warn-surface);
+  border:1px solid var(--warn-border);border-radius:var(--k-r);padding:20px 24px}
+.caveat .gl{width:36px;height:36px;flex:none;color:var(--warn);margin-top:2px}
+.caveat .tx{font-size:var(--k-body);color:var(--text);line-height:1.4}
+.caveat .tx .en{font-size:var(--k-desc);color:var(--k-sec);margin-top:6px}
+.panelact{margin-top:24px;min-height:140px;border-radius:var(--k-r-btn)}
+.stack>*+*{margin-top:24px}
+
+/* ================= PROGRAMS (K-4) ================= */
+.progtop{display:flex;gap:24px;align-items:flex-start}
+.provwell{width:100px;height:100px;border-radius:26px;background:var(--secondary);color:var(--primary);
+  display:grid;place-items:center;font-size:var(--k-desc);font-weight:500;flex:none}
+.progname .f{font-size:var(--k-title);font-weight:500;color:var(--text);line-height:1.15}
+.progname .e{font-size:var(--k-body);color:var(--k-sec);margin-top:6px}
+.progname .pv2{font-size:var(--k-desc);color:var(--muted-strong);margin-top:8px}
+.nextbox{margin-top:24px;background:var(--secondary);border:var(--k-hair);border-radius:var(--k-r);padding:24px 28px}
+.nextbox .k{font-size:var(--k-meta);font-weight:500;letter-spacing:.1em;color:var(--primary-ink);text-transform:uppercase}
+.nextbox .v{font-size:var(--k-title);font-weight:500;color:var(--text);margin-top:10px}
+.nextbox .r{font-size:var(--k-desc);color:var(--muted-strong);margin-top:6px}
+.attline{font-size:var(--k-body);color:var(--text);margin-top:24px}
+.attline .en{color:var(--k-sec);font-size:var(--k-desc)}
+.dots{display:flex;gap:18px;flex-wrap:wrap;margin-top:18px}
+.adot{width:40px;height:40px;border-radius:50%;background:var(--primary);box-sizing:border-box}
+.adot.miss{background:#fff;border:6px solid var(--accent)}
+.adot.next{background:#fff;border:4px solid var(--border-strong)}
+/* three inline legend items, one row, never ragged */
+.legend{display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;
+  align-items:center;column-gap:24px;margin-top:20px;font-size:var(--k-meta);color:var(--k-sec)}
+.legend span{display:flex;align-items:center;gap:12px;white-space:nowrap}
+.legend .adot{width:26px;height:26px;flex:none}
+.legend .adot.miss{border-width:4px}
+/* both actions: equal width, equal height, side by side */
+.cardacts{display:flex;gap:var(--k-gap);margin-top:24px;align-items:stretch}
+.cardacts .kbtn2{flex:1 1 0;width:auto;min-height:132px;padding:0 16px}
+.cardacts .kbtn2 .b1{white-space:nowrap}
+
+/* "find another programme" is an ACTION, not a programme card */
+.findmore{display:flex;align-items:center;gap:28px;width:100%;min-height:164px;text-align:left;
+  padding:0 40px;border-radius:var(--k-r-card);background:var(--secondary);
+  border:3px dashed var(--border-strong);color:var(--primary);font-family:var(--font)}
+.findmore .plus{width:84px;height:84px;border-radius:50%;flex:none;background:var(--primary);color:#fff;
+  display:grid;place-items:center;font-size:44px;font-weight:300;line-height:1}
+.findmore .f{font-size:var(--k-title);font-weight:500;color:var(--primary-ink);display:block}
+.findmore .e{font-size:var(--k-body);color:var(--k-sec);display:block;margin-top:6px}
+.findmore .go{margin-left:auto;font-size:var(--k-title);color:var(--primary);flex:none}
+.findmore:active{background:#E4ECFF;border-style:solid;border-color:var(--primary)}
+.okbar{margin-top:24px;background:var(--success-surface);border:1px solid var(--success-border);
+  border-radius:var(--k-r);padding:22px 26px;display:none;align-items:flex-start;gap:16px}
+.okbar.show{display:flex;animation:kIn .22s var(--k-ease)}
+.okbar .kic{width:40px;height:40px;color:var(--k-success-text);flex:none;margin-top:2px}
+.okbar .tx{font-size:var(--k-body);color:var(--text);line-height:1.4}
+.okbar .tx .en{font-size:var(--k-desc);color:var(--k-sec)}
+
+/* ================= FIND (K-5) ================= */
+#locpills{display:flex;gap:18px;margin:32px 0 0;flex-wrap:wrap}
+.locpill{min-height:88px;padding:0 34px;border-radius:999px;background:var(--surface);
+  border:var(--k-hair);font-size:var(--k-body);font-weight:500;color:var(--k-sec);
+  display:flex;align-items:center;gap:12px}
+.locpill.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.pcard{margin-top:var(--k-gap);padding:32px}
+.pcard .chips{display:flex;gap:16px;margin-top:20px;flex-wrap:wrap}
+.pcard .sched{display:flex;align-items:center;gap:18px;margin-top:20px;font-size:var(--k-body);color:var(--text)}
+.pcard .sched .kic{width:42px;height:42px;color:var(--primary);flex:none}
+.pcard .sched .en{display:block;font-size:var(--k-desc);color:var(--k-sec);margin-top:2px}
+.reqs{margin-top:20px;font-size:var(--k-desc);color:var(--text);line-height:1.4}
+.reqs .rt{font-weight:500}
+.reqs .en{font-weight:400;color:var(--k-sec)}
+.stillgo{margin-top:20px;background:var(--secondary);border:var(--k-hair);border-radius:var(--k-r);
+  padding:20px 24px;display:flex;gap:16px;align-items:flex-start}
+.stillgo .kic{width:38px;height:38px;color:var(--primary);flex:none;margin-top:2px}
+.stillgo .f{font-size:var(--k-desc);font-weight:500;color:var(--primary-ink);line-height:1.4}
+.stillgo .e{font-size:var(--k-meta);color:var(--k-sec);margin-top:6px;line-height:1.4}
+.pacts{display:flex;gap:20px;margin-top:24px;border-top:var(--k-hair);padding-top:24px}
+.pacts .join{flex:1.4;min-height:140px;border-radius:var(--k-r-btn);border:none;background:var(--primary);
+  color:#fff;font-size:var(--k-title);font-weight:500;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  box-shadow:0 8px 32px rgba(0,64,231,.24)}
+.pacts .join .en{font-size:var(--k-body);font-weight:400;color:rgba(255,255,255,.82)}
+.pacts .join:active{background:var(--primary-hover)}
+.pacts .more{flex:1;min-height:140px;border-radius:var(--k-r-btn);background:transparent;
+  border:var(--k-hair);font-size:var(--k-body);color:var(--k-sec);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.pacts .more .en{font-size:var(--k-desc)}
+.enrolled-flag{flex:1.4;min-height:140px;border-radius:var(--k-r-btn);background:var(--success-surface);
+  border:2px solid var(--success-border);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;font-size:var(--k-title);font-weight:500;color:var(--k-success-text)}
+.enrolled-flag .en{font-size:var(--k-body);font-weight:400}
+
+/* ================= ENROLLED (K-5e) ================= */
+#s-done{align-items:center;text-align:center}
+#s-done .prog{font-size:var(--k-body);color:var(--k-sec);margin-top:14px}
+#doneTitle{font-size:var(--k-display);font-weight:500;letter-spacing:-.01em;color:var(--text);margin-top:22px;line-height:1.1}
+#s-done .ten{font-size:var(--k-body);font-weight:400;color:var(--k-sec);margin-top:8px}
+#firstbox{width:100%;margin-top:28px;background:var(--secondary);border:var(--k-hair);
+  border-radius:var(--k-r-card);padding:24px 36px;text-align:left}
+#firstbox .k{font-size:var(--k-meta);font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--primary-ink)}
+#firstbox .v{font-size:var(--k-title);font-weight:500;color:var(--text);margin-top:10px}
+#firstbox .r{font-size:var(--k-desc);color:var(--muted-strong);margin-top:6px}
+#refcode{font-size:var(--k-display);font-weight:500;letter-spacing:.1em;color:var(--primary);margin-top:24px;font-variant-numeric:tabular-nums}
+#reflabel{font-size:var(--k-desc);color:var(--k-sec);margin-top:4px}
+#printbox{width:100%;margin-top:24px;background:var(--surface);border:var(--k-border);
+  border-radius:var(--k-r-card);padding:28px 36px;display:flex;align-items:center;gap:26px;text-align:left}
+#printbox .kic{width:60px;height:60px;color:var(--primary);flex:none}
+#printbox .f{font-size:var(--k-title);font-weight:500;color:var(--text)}
+#printbox .e{font-size:var(--k-body);color:var(--k-sec);margin-top:6px}
+#printbox .arrows{margin-left:auto;display:flex;gap:12px;font-size:var(--k-title);color:var(--primary)}
+#printbox .arrows span{animation:arrowdrop 1.35s ease-in-out infinite}
+#printbox .arrows span:nth-child(2){animation-delay:.45s}
+#printbox .arrows span:nth-child(3){animation-delay:.9s}
+@keyframes arrowdrop{0%,100%{opacity:.25;transform:translateY(-6px)}50%{opacity:1;transform:translateY(8px)}}
+#smsline{font-size:var(--k-desc);color:var(--k-sec);margin-top:20px;line-height:1.5}
+#doneacts{display:flex;gap:var(--k-gap);width:100%;margin-top:24px}
+#doneacts>*{flex:1}
+
+/* ================= STATUS (K-6) =================
+   The status IS the screen, so it leads as a hero — same care as the family
+   app's welfare card. Then one line saying this is what the family sees,
+   then the people who see it, then the correction action. */
+.statushero{display:flex;align-items:center;gap:36px;margin-top:36px;padding:44px 48px;
+  border-radius:var(--k-r-card);background:var(--success-surface);border:3px solid var(--success-border)}
+.statushero .shic{width:96px;height:96px;border-radius:50%;flex:none;background:#fff;
+  border:3px solid var(--success-border);display:grid;place-items:center;color:var(--k-success-text)}
+.statushero .shic .kic{width:54px;height:54px}
+.statushero .shf{font-size:var(--k-display);font-weight:500;color:var(--k-success-text);line-height:1.1;padding-bottom:.1em}
+.statushero .she{font-size:var(--k-body);color:var(--k-success-text);opacity:.85;margin-top:4px}
+.statushero .shwhen{margin-left:auto;text-align:right;font-size:var(--k-meta);color:var(--k-success-text);
+  opacity:.9;line-height:1.4;flex:none}
+.statusline{font-size:var(--k-body);color:var(--text);line-height:1.4}
+.statusline-en{font-size:var(--k-desc);color:var(--k-sec);margin-top:8px;line-height:1.4}
+.seerhead{font-size:var(--k-meta);font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--primary-ink);margin-top:32px}
+.seers{display:flex;gap:20px;margin-top:18px}
+.seer{flex:1 1 0;display:flex;align-items:center;gap:18px;min-height:104px;padding:0 24px;
+  background:var(--secondary);border:var(--k-hair);border-radius:var(--k-r)}
+.seer .av{width:64px;height:64px;border-radius:50%;background:var(--primary);color:#fff;flex:none;
+  display:grid;place-items:center;font-size:var(--k-body);font-weight:500}
+.seer .n{font-size:var(--k-body);font-weight:500;color:var(--text)}
+.seer .r{font-size:var(--k-meta);color:var(--k-sec);margin-top:2px}
+#needhead{font-size:var(--k-title);font-weight:500;color:var(--text);margin:28px 0 0}
+#needhead .en{font-size:var(--k-body);font-weight:400;color:var(--k-sec)}
+#needgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--k-gap);margin-top:20px}
+.ntile{background:var(--surface);border:var(--k-border);border-radius:var(--k-r-card);
+  min-height:148px;padding:22px 28px;display:flex;align-items:center;gap:24px;text-align:left}
+.ntile .well{width:80px;height:80px;border-radius:22px;background:var(--secondary);color:var(--primary);
+  display:grid;place-items:center;flex:none}
+.ntile .well .kic{width:44px;height:44px}
+.ntile .t1{font-size:var(--k-body);font-weight:500;color:var(--text)}
+.ntile .t2{font-size:var(--k-meta);color:var(--k-sec);margin-top:4px}
+.ntile:active{border-color:var(--primary);background:var(--secondary)}
+
+/* ================= OVERLAYS ================= */
+.koverlay{position:absolute;inset:0;background:rgba(26,26,46,.72);display:none;
+  align-items:center;justify-content:center;z-index:60}
+.koverlay.show{display:flex;animation:fadein .22s ease}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.kmodal{width:840px;background:var(--surface);border:3px solid var(--border-strong);
+  border-radius:var(--k-r-hero);padding:48px;display:flex;flex-direction:column;align-items:center;
+  text-align:center;animation:pop .28s var(--k-ease)}
+.kmodal .mh{font-size:var(--k-display);font-weight:500;color:var(--text);line-height:1.15}
+.kmodal .me{font-size:var(--k-body);font-weight:400;color:var(--k-sec);margin-top:10px}
+.kmodal .mb{font-size:var(--k-body);color:var(--text);margin-top:28px;line-height:1.45}
+.kmodal .mbe{font-size:var(--k-desc);color:var(--k-sec);margin-top:8px;line-height:1.45}
+.kmodal .kbtn{margin-top:32px;min-height:180px}
+.kmodal .kbtnq{margin-top:20px}
+#graceWrap{position:relative;width:180px;height:180px;margin-bottom:8px}
+#graceWrap svg{width:180px;height:180px}
+#graceWrap circle{fill:none;stroke-width:10}
+#graceWrap .bg{stroke:var(--secondary)}
+#graceWrap .fg{stroke:var(--primary);stroke-linecap:round;stroke-dasharray:502.65;
+  transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s linear}
+#graceNum{position:absolute;inset:0;display:grid;place-items:center;font-size:var(--k-display);font-weight:500;
+  color:var(--primary);font-variant-numeric:tabular-nums}
+
+/* bottom sheet */
+#scrim{position:absolute;inset:0;background:rgba(26,26,46,.5);opacity:0;pointer-events:none;
+  transition:opacity var(--k-nav) ease;z-index:50}
+#scrim.show{opacity:1;pointer-events:auto}
+#sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);
+  border-radius:var(--k-r-hero) var(--k-r-hero) 0 0;padding:24px var(--k-pad) 48px;z-index:55;
+  transform:translateY(105%);transition:transform var(--k-nav) var(--k-ease);max-height:1300px;overflow-y:auto}
+#sheet.show{transform:none}
+#sheet .grab{width:120px;height:12px;border-radius:999px;background:var(--border-strong);margin:0 auto 28px}
+#sheet .sh1{font-size:var(--k-display);font-weight:500;color:var(--text);line-height:1.2}
+#sheet .sh2{font-size:var(--k-body);color:var(--k-sec);margin-top:10px}
+#sheet .srow{margin-top:24px;background:var(--secondary);border:var(--k-hair);border-radius:var(--k-r);
+  padding:22px 28px;font-size:var(--k-body);color:var(--text);line-height:1.45}
+#sheet .srow .en{font-size:var(--k-desc);color:var(--k-sec);margin-top:6px}
+#sheet .srow strong{font-weight:500}
+#sheet .kbtn{margin-top:32px;min-height:180px}
+#sheet .kbtnq{margin-top:20px}
+#sheet .rgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--k-gap);margin-top:28px}
+#sheet .rtile{min-height:150px;border-radius:var(--k-r-btn);background:var(--surface);
+  border:var(--k-border);padding:24px 28px;text-align:left;
+  display:flex;flex-direction:column;justify-content:center;gap:6px}
+#sheet .rtile .f{font-size:var(--k-body);font-weight:500;color:var(--text)}
+#sheet .rtile .e{font-size:var(--k-desc);color:var(--k-sec)}
+#sheet .rtile:active{background:var(--secondary);border-color:var(--primary)}
+
+/* full-screen result overlays (sent / end card) */
+.fullres{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;z-index:70;padding:60px var(--k-pad)}
+.fullres.show{display:flex;animation:fadein .25s ease}
+.fullres .fh{font-size:var(--k-display);font-weight:500;color:var(--text);margin-top:36px;line-height:1.15}
+.fullres .fe{font-size:var(--k-body);color:var(--k-sec);margin-top:12px}
+.fullres .fb{font-size:var(--k-body);color:var(--text);margin-top:32px;line-height:1.5}
+.fullres .fbe{font-size:var(--k-desc);color:var(--k-sec);margin-top:8px}
+.fullres .ref{font-size:var(--k-display);font-weight:500;letter-spacing:.08em;color:var(--primary);margin-top:32px}
+.fullres .kbtn{max-width:720px;margin-top:44px}
+
+/* toast on K-1 after clear */
+#ktoast{position:absolute;top:200px;left:50%;transform:translate(-50%,-20px);background:var(--text);
+  color:#fff;border-radius:var(--k-r-btn);padding:24px 40px;font-size:var(--k-body);z-index:80;
+  opacity:0;pointer-events:none;transition:.3s ease;white-space:nowrap}
+#ktoast.show{opacity:1;transform:translate(-50%,0)}
+#ktoast .en{color:rgba(255,255,255,.7);font-size:var(--k-desc);margin-left:14px}
+
+/* demo corner control */
+#demodot{position:absolute;right:14px;bottom:14px;width:40px;height:40px;border-radius:50%;
+  background:var(--text);opacity:.12;border:none;cursor:pointer;z-index:90}
+#demodot:hover{opacity:.3}
+
+/* masked (Itago) */
+.pv.masked{color:var(--k-sec)!important;letter-spacing:.06em}
+
+/* the English secondary line, dropped when English IS the chosen language */
+.i18n-off{display:none!important}
+/* the two-line tiles must stack, whatever the language */
+.pathtile .t1,.pathtile .t2,.pathtile .t3,.mtile .t1,.mtile .t2,.mtile .t3{display:block}
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- ============ IDENTITY HEADER ============ -->
+  <header id="khead">
+    <div class="hrow">
+      <div class="m1">e-Laya</div>
+      <div class="clockT" id="clockT">10:42 AM</div>
+    </div>
+    <div class="hrow">
+      <div class="f1">BJMP Batangas City Jail · Female Dorm</div>
+      <div class="clockD" id="clockD">Miyerkules · 22 Hulyo 2026</div>
+    </div>
+  </header>
+
+  <!-- ============ BODY ============ -->
+  <main id="kbody">
+
+    <!-- ===== K-1 · LANGUAGE = START ===== -->
+    <section class="kscreen" id="s-k1">
+      <div id="k1hero">
+        <div class="h1" id="k1h1">Alamin ang kaso mo.
+Maghanap ng programa.</div>
+        <div class="h2" id="k1h2">Check your case. Find a program.</div>
+      </div>
+      <div id="k1prompt">Pindutin ang wika mo para magsimula. <span class="en">· Tap your language to begin.</span></div>
+      <div id="k1grid"></div>
+      <div id="k1foot">
+        <span class="kic"><svg viewBox="0 0 48 48"><rect x="10" y="21" width="28" height="19" rx="4"/><path d="M16 21v-6a8 8 0 0 1 16 0v6"/></svg></span>
+        <div>Walang naiiwan sa screen na ito pagkatapos mong umalis.<br>Nothing stays on this screen after you leave.</div>
+      </div>
+    </section>
+
+    <!-- ===== K-2 · IDENTIFY ===== -->
+    <section class="kscreen" id="s-k2">
+      <h1 class="khead-fil" data-i18n="k2.h">Patunayan na ikaw ito</h1>
+      <div class="khead-en" data-i18n-en="k2.h">Confirm it's you</div>
+      <div class="ksub-fil" data-i18n="k2.sub">Para walang ibang makakakita ng impormasyon mo.</div>
+      <div class="ksub-en" data-i18n-en="k2.sub">So no one else can see your information.</div>
+
+      <div class="kcard tap" id="scanCard" onclick="startScan()">
+        <div class="inner">
+          <div id="idart">
+            <svg viewBox="0 0 300 200">
+              <rect class="frame" x="8" y="8" width="284" height="184" rx="20"/>
+              <circle class="ln" cx="70" cy="86" r="26"/>
+              <path class="ln" d="M40 150c6-20 54-20 60 0"/>
+              <line class="ln" x1="120" y1="62" x2="256" y2="62"/>
+              <line class="ln" x1="120" y1="96" x2="256" y2="96"/>
+              <line class="ln" x1="120" y1="130" x2="216" y2="130"/>
+              <line class="scanline" x1="24" y1="100" x2="276" y2="100"/>
+            </svg>
+          </div>
+          <div class="stext">
+            <div class="p1" data-i18n="k2.scan">Ilapat ang National ID mo sa ilaw sa ibaba.</div>
+            <div class="p2" data-i18n-en="k2.scan">Place your National ID on the light below.</div>
+          </div>
+        </div>
+        <div class="assure"><strong data-i18n="k2.assure">Basahin lang ito. Walang ibang gagawin.</strong><br><span data-i18n-en="k2.assure">We only read it. Nothing else happens.</span></div>
+        <div id="scanOverlay"></div>
+      </div>
+
+      <div id="orsep" data-i18n="k2.or">o kaya · or</div>
+      <div id="k2alts">
+        <button class="pathtile tap" onclick="go('k2b')">
+          <span class="well"><span class="kic"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><path d="M17.5 20h.1M30.5 20h.1"/><path d="M16 29c2 3.2 4.8 5 8 5s6-1.8 8-5"/></svg></span></span>
+          <span>
+            <span class="t1" data-i18n="k2.noid">Wala akong ID</span>
+            <span class="t2" style="display:block" data-i18n-en="k2.noid">I don't have an ID</span>
+            <span class="t3" style="display:block" data-i18n="k2.noid2">Kunan ka namin ng larawan</span>
+          </span>
+        </button>
+        <button class="pathtile tap" onclick="go('k2c')">
+          <span class="well"><span class="kic"><svg viewBox="0 0 48 48"><circle cx="17" cy="16" r="6"/><path d="M6 40c0-7 5-11 11-11s11 4 11 11"/><circle cx="33" cy="14" r="5"/><path d="M32 26c6 0 10 4 10 11"/></svg></span></span>
+          <span>
+            <span class="t1" data-i18n="k2.staff">Tawagin ang staff</span>
+            <span class="t2" style="display:block" data-i18n-en="k2.staff">Ask staff for help</span>
+            <span class="t3" style="display:block" data-i18n="k2.staff2">May tutulong sa iyo</span>
+          </span>
+        </button>
+      </div>
+      <div class="bandd"><span data-i18n="k2.band">Hindi namin itinatago ang larawan mo. Ginagamit lang ito ngayon.</span><br><span data-i18n-en="k2.band">We do not store your photo. It is used only right now.</span></div>
+    </section>
+
+    <!-- ===== K-2b · FACE CONSENT ===== -->
+    <section class="kscreen" id="s-k2b">
+      <h1 class="khead-fil" data-i18n="k2b.h">Papayag ka bang kunan ka ng larawan?</h1>
+      <div class="khead-en" data-i18n-en="k2b.h">Is it okay to take your picture?</div>
+      <div id="consentBox">
+        <span class="fil" style="font-style:normal" data-i18n="k2b.body">Ginagamit lang ito ngayon para malaman kung ikaw nga ito. Hindi ito itinatago. Hindi ito ipinapakita kaninuman. Hindi ito pupunta sa pulis.</span>
+        <div class="en" data-i18n-en="k2b.body">It is used only right now to check it's you. It is not saved. It is not shown to anyone. It does not go to the police.</div>
+      </div>
+      <button class="kbtn tap" style="margin-top:48px" onclick="go('k2v')">
+        <span class="b1" data-i18n="k2b.yes">Oo, sige</span><span class="b2" data-i18n-en="k2b.yes">Yes, go ahead</span>
+      </button>
+      <button class="kbtnq tap" style="margin-top:26px" onclick="go('k2c')"><span data-i18n="k2b.no">Hindi. Tawagin na lang ang staff.</span>&nbsp;·&nbsp;<span data-i18n-en="k2b.no">No. Ask staff instead.</span></button>
+    </section>
+
+    <!-- ===== K-2v · FACE VERIFY ===== -->
+    <section class="kscreen" id="s-k2v">
+      <h1 class="khead-fil" data-i18n="k2v.h">Tumingin sa camera. Huwag gumalaw.</h1>
+      <div class="khead-en" data-i18n-en="k2v.h">Look at the camera. Stay still.</div>
+      <div id="ovalWrap">
+        <span class="kic facegl"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><path d="M17.5 20h.1M30.5 20h.1"/><path d="M16 29c2 3.2 4.8 5 8 5s6-1.8 8-5"/></svg></span>
+        <div id="countNum"></div>
+      </div>
+      <div id="verifyMsg">Handa na.</div>
+      <div id="verifyMsgEn">Ready.</div>
+    </section>
+
+    <!-- ===== K-2c · STAFF ASSIST ===== -->
+    <section class="kscreen" id="s-k2c">
+      <h1 class="khead-fil" data-i18n="k2c.h">Sabihin ang numerong ito sa staff</h1>
+      <div class="khead-en" data-i18n-en="k2c.h">Give this number to staff</div>
+      <div id="staffCode">
+        <div class="code">4 8 2 9 1 7</div>
+        <div class="q"><span class="livedot"></span><span data-i18n="k2c.queue">Numero mo sa pila: 2</span></div>
+        <div class="qe" data-i18n-en="k2c.queue">You are number 2 in line. Someone is coming.</div>
+      </div>
+      <div class="bandd"><span data-i18n="k2c.band">Walang form. Walang kailangang ipaliwanag.</span><br><span data-i18n-en="k2c.band">No form. No explanation needed.</span></div>
+    </section>
+
+    <!-- ===== MENU (K-3 hub) ===== -->
+    <section class="kscreen" id="s-menu">
+      <h1 class="khead-fil" data-i18n="menu.h">Ano ang gusto mong gawin?</h1>
+      <div class="khead-en" data-i18n-en="menu.h">What would you like to do?</div>
+      <div id="menugrid">
+        <button class="mtile tap" onclick="go('case')">
+          <span class="well"><span class="kic"><svg viewBox="0 0 48 48"><rect x="10" y="6" width="28" height="36" rx="4"/><path d="M17 16h14M17 24h14M17 32h9"/></svg></span></span>
+          <span class="t1" data-i18n="menu.case">Aking Kaso</span>
+          <span class="t2" data-i18n-en="menu.case">My Case</span>
+          <span class="t3" data-i18n="menu.case2">Kung saan na ang kaso mo, kailan ang susunod na hearing.</span>
+        </button>
+        <button class="mtile tap" onclick="go('programs')">
+          <span class="well"><span class="kic"><svg viewBox="0 0 48 48"><rect x="7" y="10" width="34" height="31" rx="4"/><path d="M7 19h34M16 6v8M32 6v8"/><path d="M17.5 30l4.5 4.5L31 25"/></svg></span></span>
+          <span class="t1" data-i18n="menu.progs">Aking mga Programa</span>
+          <span class="t2" data-i18n-en="menu.progs">My Programs</span>
+          <span class="t3" data-i18n="menu.progs2">Susunod na sesyon at kung ilan ang napuntahan mo.</span>
+        </button>
+        <button class="mtile tap" onclick="go('find')">
+          <span class="well"><span class="kic"><svg viewBox="0 0 48 48"><circle cx="21" cy="21" r="11"/><path d="M30 30 41 41"/></svg></span></span>
+          <span class="t1" data-i18n="menu.find">Maghanap at Sumali</span>
+          <span class="t2" data-i18n-en="menu.find">Find &amp; Enrol</span>
+          <span class="t3" data-i18n="menu.find2">Mga libreng programa malapit sa iyo.</span>
+        </button>
+        <button class="mtile tap" onclick="go('status')">
+          <span class="well"><span class="kic"><svg viewBox="0 0 48 48"><path d="M24 41S7 30 7 18.5A9.5 9.5 0 0 1 24 13a9.5 9.5 0 0 1 17 5.5C41 30 24 41 24 41z"/></svg></span></span>
+          <span class="t1" data-i18n="menu.status">Aking Katayuan</span>
+          <span class="t2" data-i18n-en="menu.status">My Status</span>
+          <span class="t3" data-i18n="menu.status2">Ang nakikita ng pamilya mo, at paghingi ng tulong.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== K-3 · MY CASE ===== -->
+    <section class="kscreen" id="s-case">
+      <h1 class="khead-fil" data-i18n="case.h">Ang kaso mo</h1>
+      <div class="khead-en" data-i18n-en="case.h">Your case</div>
+      <div class="stack" style="margin-top:36px">
+
+        <div class="kcard">
+          <div class="ptitle"><span class="f" data-i18n="case.where">Nasaan na ang kaso mo</span><span class="e" data-i18n-en="case.where">Where your case stands</span></div>
+          <div class="tl">
+            <div class="node done"><div class="b"></div><div class="l">Naaresto</div></div>
+            <div class="node done"><div class="b"></div><div class="l">Nakapiit</div></div>
+            <div class="node now"><div class="b"></div><div class="l">Naghihintay ng paglilitis</div></div>
+            <div class="node"><div class="b"></div><div class="l">Nililitis</div></div>
+            <div class="node"><div class="b"></div><div class="l">May hatol</div></div>
+          </div>
+          <div class="pbody-f pv" data-i18n="case.await">Naghihintay ka pa ng paglilitis. Wala pang hatol sa kaso mo.</div>
+          <div class="pbody-e pv" data-i18n-en="case.await">You are still waiting for your trial. There is no decision on your case yet.</div>
+          <div class="kstamp"><span class="dot9"></span>Galing sa BJMP · Huling update: 2 araw na ang nakalipas</div>
+        </div>
+
+        <div class="kcard">
+          <div class="ptitle"><span class="f" data-i18n="case.next">Susunod na hearing</span><span class="e" data-i18n-en="case.next">Your next hearing</span></div>
+          <div class="hearrow">
+            <div>
+              <div class="d1 pv">MARTES</div>
+              <div class="d2 pv">11 Agosto 2026</div>
+              <div class="d3 pv">9:00 ng umaga</div>
+              <div class="rel pv">Sa loob ng 20 araw · In 20 days</div>
+            </div>
+            <div class="vidchip">📹&nbsp; <span data-i18n="case.video">Sa video ang pagdinig mo, dito mismo sa pasilidad. Hindi ka dadalhin sa korte.</span><div class="en" data-i18n-en="case.video">Your hearing is by video, from here in the facility. You will not be taken to the court.</div></div>
+          </div>
+          <div class="kstamp"><span class="dot9"></span>Galing sa RTC Batangas City Br. 3 · Update: kahapon</div>
+        </div>
+
+        <div class="kcard">
+          <div class="ptitle"><span class="f" data-i18n="case.gcta">Bawas sa sentensiya mo</span><span class="e" data-i18n-en="case.gcta">Days taken off your sentence</span></div>
+          <div class="gctarow"><span class="num pv">412</span><span class="unit" data-i18n="case.days">araw · days</span></div>
+          <div class="pbody-f" style="margin-top:18px" data-i18n="case.gctawhat">Ito ang bilang ng araw na naibawas na sa sentensiya mo dahil sa mabuting asal. Tawag dito sa papel: GCTA.</div>
+          <div class="pbody-e" data-i18n-en="case.gctawhat">This is how many days have been taken off your sentence for good conduct. On paper it is called GCTA.</div>
+          <div class="caveat">
+            <span class="kic gl"><svg viewBox="0 0 48 48"><path d="M24 6 44 42H4z"/><path d="M24 20v10M24 36h.1"/></svg></span>
+            <div class="tx"><span data-i18n="case.notrelease">Hindi ito ang petsa ng paglaya mo. Ang paralegal — ang taong tumutulong sa kaso mo dito sa loob — lang ang makakapagsabi niyan.</span>
+              <div class="en" data-i18n-en="case.notrelease">This is not your release date. Only the paralegal — the person here who helps with your case — can tell you that.</div>
+            </div>
+          </div>
+          <button class="kbtn2 tap panelact" onclick="toast('Naipaalam na namin sa paralegal.','We told the paralegal. They will call you.')">
+            <span class="b1" data-i18n="case.askpara">Gusto kong makausap ang paralegal</span><span class="b2" data-i18n-en="case.askpara">I want to speak with the paralegal</span>
+          </button>
+          <div class="kstamp"><span class="dot9"></span>Galing sa BJMP Records · Update: kahapon</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== K-4 · MY PROGRAMS ===== -->
+    <section class="kscreen" id="s-programs">
+      <h1 class="khead-fil" data-i18n="prog.h">Mga programa mo</h1>
+      <div class="khead-en" data-i18n-en="prog.h">Your programs</div>
+      <div class="stack" style="margin-top:36px">
+
+        <!-- one card anatomy: badge · title · provider · next session · attendance · actions · source -->
+        <div class="kcard">
+          <div class="progtop">
+            <div class="provwell">BSF</div>
+            <div class="progname">
+              <div class="f pv" data-dyn>Pagpapayo sa Kalooban</div>
+              <div class="e">Counselling</div>
+              <div class="pv2">Bahay Silungan Foundation · San Pascual, Batangas</div>
+            </div>
+            <span class="kchip ok" style="margin-left:auto"><span data-i18n="prog.enrolled">✓ Naka-enroll</span></span>
+          </div>
+          <div class="nextbox">
+            <div class="k"><span data-i18n="prog.next">Susunod na sesyon</span> · <span data-i18n-en="prog.next">Next session</span></div>
+            <div class="v pv">Lunes, 27 Hulyo · 10:00 ng umaga</div>
+            <div class="r">Sa loob ng 5 araw · In 5 days</div>
+          </div>
+          <div class="attline pv">Nakapunta ka sa <strong>8 sa 12</strong> na sesyon <span class="en">· You attended 8 of 12</span></div>
+          <div class="dots">
+            <span class="adot"></span><span class="adot"></span><span class="adot"></span><span class="adot"></span>
+            <span class="adot miss"></span><span class="adot"></span><span class="adot"></span><span class="adot"></span>
+            <span class="adot miss"></span><span class="adot next"></span><span class="adot next"></span><span class="adot next"></span>
+          </div>
+          <div class="legend">
+            <span><span class="adot"></span><span data-i18n="leg.went">nakapunta · went</span></span>
+            <span><span class="adot miss"></span><span data-i18n="leg.miss">hindi nakapunta · missed</span></span>
+            <span><span class="adot next"></span><span data-i18n="leg.next">hindi pa · not yet</span></span>
+          </div>
+          <div class="okbar" id="cantbar">
+            <span class="kic"><svg viewBox="0 0 48 48"><path d="M10 26l9 9 19-22"/></svg></span>
+            <div class="tx">Naipaalam na namin sa social worker mo. Hindi ito bibilangin bilang liban.
+              <div class="en">We've told your social worker. This will not be counted as an absence.</div></div>
+          </div>
+          <div class="cardacts">
+            <button class="kbtn2 tap" onclick="openReasonSheet()"><span class="b1" data-i18n="prog.cant">Hindi ako pupunta</span><span class="b2" data-i18n-en="prog.cant">I can't go</span></button>
+            <button class="kbtn2 tap" onclick="toast('Ipinakita ang lahat ng sesyon.','Full session list opens here.')"><span class="b1" data-i18n="prog.all">Lahat ng sesyon</span><span class="b2" data-i18n-en="prog.all">All sessions</span></button>
+          </div>
+          <div class="kstamp"><span class="dot9"></span>Galing sa DSWD Case Records · Huling update: kahapon</div>
+        </div>
+
+        <!-- same anatomy, fewer rows — not a different shape -->
+        <div class="kcard">
+          <div class="progtop">
+            <div class="provwell">ALS</div>
+            <div class="progname">
+              <div class="f pv" data-dyn>Adult Basic Education (ALS)</div>
+              <div class="e">Libreng pag-aaral para sa mga nasa hustong gulang</div>
+              <div class="pv2">DepEd Batangas · Batangas City ALS Center</div>
+            </div>
+            <span class="kchip ok" style="margin-left:auto"><span data-i18n="prog.enrolled">✓ Naka-enroll</span></span>
+          </div>
+          <div class="nextbox">
+            <div class="k"><span data-i18n="prog.next">Susunod na sesyon</span> · <span data-i18n-en="prog.next">Next session</span></div>
+            <div class="v pv">Miyerkules, 29 Hulyo · 8:00 ng umaga</div>
+            <div class="r">Sa loob ng 7 araw · In 7 days</div>
+          </div>
+          <div class="attline pv">Nakapunta ka sa <strong>5 sa 6</strong> na sesyon <span class="en">· You attended 5 of 6</span></div>
+          <div class="dots">
+            <span class="adot"></span><span class="adot"></span><span class="adot"></span>
+            <span class="adot miss"></span><span class="adot"></span><span class="adot"></span>
+          </div>
+          <div class="kstamp"><span class="dot9"></span>Galing sa DepEd ALS · Huling update: kahapon</div>
+        </div>
+
+        <button class="findmore tap" onclick="go('find')">
+          <span class="plus">+</span>
+          <span>
+            <span class="f" data-i18n="prog.findmore">Maghanap pa ng programa</span>
+            <span class="e" data-i18n-en="prog.findmore">Find another programme</span>
+          </span>
+          <span class="go">›</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== K-5 · FIND & ENROL ===== -->
+    <section class="kscreen" id="s-find">
+      <h1 class="khead-fil" id="findH">Mga programa malapit sa Batangas City</h1>
+      <div class="khead-en" id="findHE">Programs near Batangas City · free to join</div>
+      <div id="locpills"></div>
+      <div id="findList"></div>
+      <div class="bandd">Walang bayad ang lahat ng nakalista. Hindi kailangan ng cellphone para sumali.<br>Everything listed is free. You don't need a phone to join.</div>
+    </section>
+
+    <!-- ===== K-5e · ENROLLED ===== -->
+    <section class="kscreen" id="s-done">
+      <div class="bigcheck" style="width:160px;height:160px;margin-top:4px;flex:none">
+        <svg viewBox="0 0 48 48"><path class="draw" d="M10 26l9 9 19-22"/></svg>
+      </div>
+      <div id="doneTitle" data-i18n="done.h">Sumali ka na.</div>
+      <div class="ten" data-i18n-en="done.h">You're enrolled.</div>
+      <div class="prog" id="doneProg">Panday at Pagwewelding · TESDA – Batangas City</div>
+      <div id="firstbox">
+        <div class="k">Unang sesyon · First session</div>
+        <div class="v" id="doneWhen">MARTES, 4 Agosto 2026 · 9:00 ng umaga</div>
+        <div class="r" id="doneRel">Sa loob ng 13 araw · In 13 days</div>
+      </div>
+      <div id="refcode">ELY-4K2M</div>
+      <div id="reflabel"><span data-i18n="done.ref">Numero ng pagsali mo. Ipakita ito sa unang araw.</span><br><span data-i18n-en="done.ref">Your enrolment number. Show it on the first day.</span></div>
+      <div id="printbox">
+        <span class="kic"><svg viewBox="0 0 48 48"><path d="M14 18V8h20v10"/><rect x="8" y="18" width="32" height="14" rx="3"/><path d="M14 27h20v13H14z"/></svg></span>
+        <div><div class="f">Kunin ang papel sa ibaba</div><div class="e">Take the paper below</div></div>
+        <div class="arrows"><span>↓</span><span>↓</span><span>↓</span></div>
+      </div>
+      <div id="smsline">✉ &nbsp;Padadalhan ka namin ng text bago ang sesyon. Hindi kailangan ng data.<br>We'll text you before the session. No data needed.</div>
+      <div id="doneacts">
+        <button class="kbtn2 tap" style="min-height:180px" onclick="go('find')"><span class="b1">Maghanap pa</span><span class="b2">Find another program</span></button>
+        <button class="kbtn tap" style="min-height:180px;border-radius:var(--k-r-btn)" onclick="askEnd()"><span class="b1">Tapos na ako</span><span class="b2">I'm done</span></button>
+      </div>
+    </section>
+
+    <!-- ===== K-6 · MY STATUS ===== -->
+    <section class="kscreen" id="s-status">
+      <h1 class="khead-fil" data-i18n="st.h">Ang kalagayan mo</h1>
+      <div class="khead-en" data-i18n-en="st.h">Your status</div>
+
+      <!-- the status is the point of the screen, so it leads -->
+      <div class="statushero">
+        <span class="shic"><span class="kic"><svg viewBox="0 0 48 48"><path d="M10 26l9 9 19-22"/></svg></span></span>
+        <div>
+          <div class="shf pv" data-i18n="st.ok">Ayos lang</div>
+          <div class="she pv" data-i18n-en="st.ok">OK</div>
+        </div>
+        <div class="shwhen">Itinakda ng BJMP<br>kaninang 6:00 ng umaga</div>
+      </div>
+
+      <div class="kcard" style="margin-top:24px">
+        <div class="statusline" data-i18n="st.seen">Ito mismo ang nakikita ng pamilya mo sa eGovPH app ngayon. Walang ibang bersyon.</div>
+        <div class="statusline-en" data-i18n-en="st.seen">This is exactly what your family sees in the eGovPH app right now. There is no other version.</div>
+        <div class="seerhead"><span data-i18n="st.who">Sino ang nakakakita</span> · <span data-i18n-en="st.who">Who can see it</span></div>
+        <div class="seers">
+          <div class="seer"><div class="av">C</div><div><div class="n pv">Corazon D.</div><div class="r">Nanay mo · Your mother</div></div></div>
+          <div class="seer"><div class="av">R</div><div><div class="n pv">Atty. R. Lim</div><div class="r">Abogado mo sa PAO · Your PAO lawyer</div></div></div>
+        </div>
+        <button class="kbtn2 tap" style="min-height:140px;margin-top:32px" onclick="toast('Naitala. Titingnan ito ng staff.','Recorded. Staff will review it.')">
+          <span class="b1" data-i18n="st.wrong">Mali ito. Sabihin ko.</span><span class="b2" data-i18n-en="st.wrong">This is wrong. Let me say so.</span>
+        </button>
+      </div>
+
+      <div id="needhead"><span data-i18n="st.need">Kailangan mo ba ng tulong?</span> <span class="en" data-i18n-en="st.need">· Do you need something?</span></div>
+      <div id="needgrid"></div>
+      <div class="bandd"><span data-i18n="st.band">Nakikita ng staff ang hiling mo. Hindi nila nakikita kung sino ka hangga't hindi ka sumasagot.</span><br><span data-i18n-en="st.band">Staff see your request. They do not see who you are until you answer.</span></div>
+    </section>
+
+  </main>
+
+  <!-- ============ THE NAVIGATION BAR (the only one) ============ -->
+  <footer id="krail" class="hide">
+    <div id="railmeta">
+      <div class="steps" id="crumbSteps"></div>
+      <div id="ksession" class="off">
+        <svg id="idlering" viewBox="0 0 48 48"><circle class="bg" cx="24" cy="24" r="20"/><circle class="fg" id="idlefg" cx="24" cy="24" r="20"/></svg>
+        <div class="av" id="sessAv">M</div>
+        <div class="nm" id="sessName">Maria S.</div>
+        <div class="tm" id="sessTime">⏱ 12:00</div>
+      </div>
+    </div>
+    <div id="railmain">
+      <button id="kback" class="rbtn primary tap" onclick="goBack()">
+        <span class="ri"><svg viewBox="0 0 48 48"><path d="M28 10 14 24l14 14"/></svg></span>
+        <span class="rl" data-i18n="nav.back">Bumalik</span>
+      </button>
+      <button id="khome" class="rbtn tap" onclick="go('menu')">
+        <span class="ri"><svg viewBox="0 0 48 48"><path d="M8 22 24 8l16 14"/><path d="M12 20v20h24V20"/></svg></span>
+        <span class="rl" data-i18n="nav.menu">Menu</span>
+      </button>
+      <button id="railSpeak" class="rbtn tap" onclick="speakScreen()">
+        <span class="ri"><svg viewBox="0 0 48 48"><path d="M10 19v10h8l10 8V11l-10 8h-8z"/><path d="M33 18a8 8 0 0 1 0 12M37.5 14a14 14 0 0 1 0 20"/></svg></span>
+        <span class="rl" data-i18n="nav.read">Basahin sa akin</span>
+      </button>
+      <button id="kwika" class="rbtn tap" onclick="go('k1')">
+        <span class="ri"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><path d="M7 24h34M24 7c6.5 5 6.5 29 0 34-6.5-5-6.5-29 0-34z"/></svg></span>
+        <span class="rl" data-i18n="nav.lang">Wika</span>
+      </button>
+      <button id="kitago" class="rbtn tap" onclick="toggleMask()">
+        <span class="ri"><svg viewBox="0 0 48 48"><path d="M8 8l32 32"/><path d="M12 15C7 19 4 24 4 24s7 13 20 13c3 0 5.6-.6 8-1.7M20 11.4c1.3-.3 2.6-.4 4-.4 13 0 20 13 20 13s-1.9 3.5-5.5 6.8"/></svg></span>
+        <span class="rl" id="itagoLabel" data-i18n="nav.hide">Itago</span>
+      </button>
+      <button id="kend" class="rbtn tap" onclick="askEnd()">
+        <span class="ri"><svg viewBox="0 0 48 48"><path d="M14 14l20 20M34 14L14 34"/></svg></span>
+        <span class="rl" data-i18n="nav.done">Tapos na</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- ============ SHEET + SCRIM ============ -->
+  <div id="scrim" onclick="closeSheet()"></div>
+  <div id="sheet"></div>
+
+  <!-- ============ TIMEOUT OVERLAY ============ -->
+  <div class="koverlay" id="timeoutOv">
+    <div class="kmodal">
+      <div id="graceWrap">
+        <svg viewBox="0 0 180 180"><circle class="bg" cx="90" cy="90" r="80"/><circle class="fg" id="graceFg" cx="90" cy="90" r="80"/></svg>
+        <div id="graceNum">30</div>
+      </div>
+      <div class="mh" data-i18n="ov.still">Nandiyan ka pa ba?</div>
+      <div class="me" data-i18n-en="ov.still">Are you still there?</div>
+      <div class="mb" data-i18n="ov.stillb">Isasara namin ito para hindi makita ng iba ang impormasyon mo.</div>
+      <div class="mbe" data-i18n-en="ov.stillb">We'll close this so no one else sees your information.</div>
+      <button class="kbtn tap" onclick="stillHere()"><span class="b1" data-i18n="ov.yes">Oo, nandito pa ako</span><span class="b2" data-i18n-en="ov.yes">Yes, I'm still here</span></button>
+      <button class="kbtnq tap" onclick="endNow()"><span data-i18n="ov.imdone">Tapos na ako</span>&nbsp;·&nbsp;<span data-i18n-en="ov.imdone">I'm done</span></button>
+    </div>
+  </div>
+
+  <!-- ============ END CONFIRM ============ -->
+  <div class="koverlay" id="endOv">
+    <div class="kmodal">
+      <div class="mh" data-i18n="ov.fin">Tapusin na?</div>
+      <div class="me" data-i18n-en="ov.fin">Finish?</div>
+      <div class="mb" data-i18n="ov.finb">Buburahin ang lahat sa screen na ito.</div>
+      <div class="mbe" data-i18n-en="ov.finb">Everything on this screen will be cleared.</div>
+      <button class="kbtn tap" onclick="endNow()"><span class="b1" data-i18n="ov.finyes">Oo, tapos na ako</span><span class="b2" data-i18n-en="ov.finyes">Yes, I'm done</span></button>
+      <button class="kbtnq tap" onclick="hideOv('endOv')"><span data-i18n="ov.finno">Hindi, bumalik</span>&nbsp;·&nbsp;<span data-i18n-en="ov.finno">No, go back</span></button>
+    </div>
+  </div>
+
+  <!-- ============ END CARD ============ -->
+  <div class="fullres" id="endCard">
+    <div class="bigcheck" style="width:210px;height:210px"><svg viewBox="0 0 48 48"><path class="draw" d="M10 26l9 9 19-22"/></svg></div>
+    <div class="fh" id="endName">Salamat, Maria. Ingat ka.</div>
+    <div class="fe">Thank you, Maria. Take care.</div>
+    <div class="fb">Wala nang natira sa screen na ito.</div>
+    <div class="fbe">Nothing is left on this screen.</div>
+  </div>
+
+  <!-- ============ REQUEST SENT ============ -->
+  <div class="fullres" id="sentOv">
+    <div class="bigcheck" style="width:210px;height:210px"><svg viewBox="0 0 48 48"><path class="draw" d="M10 26l9 9 19-22"/></svg></div>
+    <div class="fh">Naipadala na.</div>
+    <div class="fe">Sent.</div>
+    <div class="ref" id="sentRef">R-8842</div>
+    <div class="fb">May sasagot sa iyo. Karaniwan, sa loob ng 2 araw.</div>
+    <div class="fbe">Someone will respond. Usually within 2 days.</div>
+    <button class="kbtn tap" onclick="hideOv('sentOv')"><span class="b1">Tapos</span><span class="b2">Done</span></button>
+  </div>
+
+  <div id="ktoast"></div>
+  <button id="demodot" title="Demo: cycle screens (keys 1–8, 9 timeout, 0 end)" onclick="demoCycle()"></button>
+</div>
+
+<script>
+/* ================================================================
+   e-Laya kiosk — no frameworks. Runs fully from file:// on seeds;
+   attempts /api/everify, /api/psgc, /api/ai with silent fallback.
+   Demo: keys 1..8 jump screens · 9 timeout · 0 end card · corner dot cycles.
+   ================================================================ */
+'use strict';
+
+/* ---------- seeds ---------- */
+const SEED = {
+  persona:{ first:'Maria', initial:'S.', phone:'0917 ••• 4567' },
+  localities:[
+    {code:'ALL', name:'Lahat · All'},
+    {code:'041005000', name:'Batangas City'},
+    {code:'041010000', name:'Lipa'},
+    {code:'041028000', name:'San Pascual'}
+  ],
+  programs:[
+    { id:'weld', title:'Panday at Pagwewelding', en:'Welding and Metalwork',
+      prov:'TESDA – Batangas City', init:'TESDA', loc:'041005000',
+      km:'2.4 km', len:'12 sesyon · 3 buwan',
+      sched:'Tuwing Martes at Huwebes, 9:00 ng umaga', schedEn:'Every Tuesday and Thursday, 9:00 AM',
+      reqs:['Kahit anong ID','Barangay clearance','1 larawan (1×1)'],
+      first:'MARTES, 4 Agosto 2026 · 9:00 ng umaga', rel:'Sa loob ng 13 araw · In 13 days',
+      dir:'1247 P. Burgos St., Batangas City · Sakay: Jeep pa-SM City Batangas, baba sa Capitol. 5 minutong lakad.' },
+    { id:'bake', title:'Pagluluto at Panaderya', en:'Cooking and Baking',
+      prov:'Batangas City LGU – Skills Center', init:'LGU', loc:'041005000',
+      km:'1.1 km', len:'8 sesyon · 2 buwan',
+      sched:'Tuwing Sabado, 8:00 ng umaga', schedEn:'Every Saturday, 8:00 AM',
+      reqs:['Kahit anong ID','1 larawan (1×1)'],
+      first:'SABADO, 1 Agosto 2026 · 8:00 ng umaga', rel:'Sa loob ng 10 araw · In 10 days',
+      dir:'City Skills Center, Rizal Ave., Batangas City · Katabi ng City Hall. Lakad mula plaza.' },
+    { id:'als', title:'Adult Basic Education (ALS)', en:'School and learning',
+      prov:'DepEd – Lipa', init:'ALS', loc:'041010000',
+      km:'11 km', len:'Tuloy-tuloy · buong taon',
+      sched:'Tuwing Miyerkules, 8:00–10:00 ng umaga', schedEn:'Every Wednesday, 8:00–10:00 AM',
+      reqs:['Kahit anong ID'],
+      first:'MIYERKULES, 29 Hulyo 2026 · 8:00 ng umaga', rel:'Sa loob ng 7 araw · In 7 days',
+      dir:'Lipa City ALS Center, C.M. Recto Ave. · Sakay: Jeep pa-Lipa bayan, baba sa Recto.' },
+    { id:'couns', title:'Pagpapayo sa Kalooban', en:'Counselling',
+      prov:'Bahay Silungan Foundation', init:'BSF', loc:'041028000',
+      km:'6.2 km', len:'12 sesyon · 3 buwan',
+      sched:'Tuwing Lunes, 10:00 ng umaga', schedEn:'Every Monday, 10:00 AM',
+      reqs:['Rekomendasyon ng Case Manager'],
+      first:'LUNES, 27 Hulyo 2026 · 10:00 ng umaga', rel:'Sa loob ng 5 araw · In 5 days',
+      dir:'Bahay Silungan, San Pascual · Sakay: Jeep pa-San Pascual, baba sa munisipyo.',
+      enrolled:true }
+  ],
+  needs:[
+    {f:'Gamot o doktor', e:'Medicine or a doctor', ic:'med'},
+    {f:'Makausap ang abogado', e:'Speak to my lawyer', ic:'law'},
+    {f:'Makausap ang pamilya', e:'Speak to my family', ic:'fam'},
+    {f:'Pagkain o tubig', e:'Food or water', ic:'food'},
+    {f:'Damit o gamit', e:'Clothes or supplies', ic:'cloth'},
+    {f:'May sasabihin ako', e:'I want to say something', ic:'mic'}
+  ],
+  langs:[
+    {n:'Filipino', s:'Wikang Filipino'}, {n:'English', s:'English language'},
+    {n:'Binisaya', s:'Sinugboanon'}, {n:'Ilokano', s:'Pagsasao nga Ilokano'},
+    {n:'Hiligaynon', s:'Ilonggo'}, {n:'Waray', s:'Winaray'},
+    {n:'Kapampangan', s:'Amanung Kapampangan'}, {n:'Pangasinan', s:'Salitan Pangasinan'},
+    {n:'Bikol', s:'Tataramon na Bikol'}
+  ]
+};
+
+const NEED_ICONS = {
+  med:'<path d="M18 6h12v12h12v12H30v12H18V30H6V18h12z"/>',
+  law:'<path d="M24 6v36M14 42h20"/><path d="M10 14h28"/><path d="M10 14 5 26a6 6 0 0 0 12 0zM38 14l-5 12a6 6 0 0 0 12 0z"/>',
+  fam:'<circle cx="17" cy="16" r="6"/><path d="M6 40c0-7 5-11 11-11s11 4 11 11"/><circle cx="33" cy="14" r="5"/><path d="M32 26c6 0 10 4 10 11"/>',
+  food:'<path d="M12 6v14M12 42V20M8 6v8a4 4 0 0 0 8 0V6"/><path d="M32 6c-4 0-6 6-6 12s2 8 6 8v16"/>',
+  cloth:'<path d="M18 8a6 6 0 0 0 12 0l10 6-4 8-4-2v20H16V20l-4 2-4-8z"/>',
+  mic:'<rect x="18" y="6" width="12" height="22" rx="6"/><path d="M10 24a14 14 0 0 0 28 0M24 38v6"/>'
+};
+
+/* ================================================================
+   STATIC TRANSLATION TABLE — all UI chrome and screen copy.
+   Order: Filipino · English · Binisaya · Ilokano · Hiligaynon · Waray ·
+          Kapampangan · Pangasinan · Bikol
+   Where a term has no natural local equivalent (Menu, GCTA, ID, staff,
+   app, video) the Filipino/English word is kept on purpose. Nothing here
+   ever touches /api/ai — the team has ~196 credits for the whole event.
+   ================================================================ */
+const LANGS = ['Filipino','English','Binisaya','Ilokano','Hiligaynon','Waray','Kapampangan','Pangasinan','Bikol'];
+const I18N_RAW = {
+/* ---- navigation chrome ---- */
+'nav.back':['Bumalik','Back','Balik','Agsubli','Balik','Balik','Mibalik','Ompawil','Bumalik'],
+'nav.menu':['Menu','Menu','Menu','Menu','Menu','Menu','Menu','Menu','Menu'],
+'nav.read':['Basahin sa akin','Read to me','Basaha nako','Basaem kaniak','Basaha sa akon','Basaha ha akon','Basan mo kaku','Basaen mod siak','Basahon sa sako'],
+'nav.lang':['Wika','Language','Pinulongan','Pagsasao','Hambal','Yinaknan','Amanu','Salita','Tataramon'],
+'nav.hide':['Itago','Hide','Tagoi','Ilemmeng','Tagua','Tagoi','Isalikut','Iyamot','Itago'],
+'nav.show':['Ipakita','Show','Ipakita','Ipakita','Ipakita','Ipakita','Pakit','Ipanengneng','Ipahiling'],
+'nav.done':['Tapos na','Done','Human na','Nalpasen','Tapos na','Tapos na','Yari na','Asumpal la','Tapos na'],
+
+/* ---- K-2 identify ---- */
+'k2.h':['Patunayan na ikaw ito','Confirm it’s you','Pamatud-i nga ikaw kini','Paneknekam a sika daytoy','Pamatud-i nga ikaw ini','Pamatud-i nga ikaw ini','Patunayan mung ika ini','Paneknekan mo a sika ya','Patunayan mo na ika ini'],
+'k2.sub':['Para walang ibang makakakita ng impormasyon mo.','So no one else can see your information.','Aron walay laing makakita sa imong impormasyon.','Tapno awan sabali a makakita iti impormasionmo.','Agod wala sing iban nga makakita sang imo impormasyon.','Basi waray iba nga makakita han imo impormasyon.','Ba nung ala nang aliwang makakit king impormasyun mu.','Pian anggapoy arum a makanengneng ed impormasyon mo.','Tanganing mayong iba an makahiling kan impormasyon mo.'],
+'k2.scan':['Ilapat ang National ID mo sa ilaw sa ibaba.','Place your National ID on the light below.','Ipatong ang imong National ID sa suga sa ubos.','Iparabaw ti National ID mo iti silaw iti baba.','Ibutang ang imo National ID sa suga sa idalom.','Ibutang an imo National ID ha suga ha ubos.','Ilage me ing National ID mu king sala king lalam.','Iyan mo so National ID mo ed silew ed leksab.','Ibugtak an National ID mo sa ilaw sa ibaba.'],
+'k2.assure':['Basahin lang ito. Walang ibang gagawin.','We only read it. Nothing else happens.','Basahon ra kini. Wala nay laing mahitabo.','Basaen laeng daytoy. Awan sabali a mapasamak.','Basahon lang ini. Wala na sing iban nga matabo.','Babasahon la ini. Waray na iba nga mahitatabo.','Basan mu ne mu ini. Alang aliwang malyari.','Basaen labat ya. Anggapoy arum a nagawa.','Babasahon sana ini. Mayo nang ibang mangyayari.'],
+'k2.or':['o kaya · or','or','o kaha · or','wenno · or','ukon · or','o kon · or','o kaya · or','odino · or','o kaya · or'],
+'k2.noid':['Wala akong ID','I don’t have an ID','Wala koy ID','Awan ID ko','Wala ko sing ID','Waray ako ID','Alang kung ID','Anggapoy ID ko','Mayo akong ID'],
+'k2.noid2':['Kunan ka namin ng larawan','We will take your photo','Kuhaan ka namo ug litrato','Alaenmi ti ladawanmo','Kuhaan namon ikaw sing retrato','Kukuhaan ka namon hin retrato','Kunan da kang letratu','Alaan mi kay litrato mo','Kukuahan mi ika nin ladawan'],
+'k2.staff':['Tawagin ang staff','Ask staff for help','Tawga ang staff','Ayaban ti staff','Tawga ang staff','Tawaga an staff','Ausan ing staff','Tawagen so staff','Apudon an staff'],
+'k2.staff2':['May tutulong sa iyo','Someone will help you','Naay motabang nimo','Adda tumulong kenka','May magabulig sa imo','May mabulig ha imo','Atin mangaduang keka','Walay ontulong ed sika','Igwa nin matabang saimo'],
+'k2.band':['Hindi namin itinatago ang larawan mo. Ginagamit lang ito ngayon.','We do not store your photo. It is used only right now.','Wala namo gitipigan ang imong litrato. Gigamit ra karon.','Saanmi nga idulin ti ladawanmo. Mausar laeng ita.','Wala namon ginatago ang imo retrato. Ginagamit lang subong.','Diri namon gintitipigan an imo retrato. Ginagamit la yana.','E mi tatagu ing letratu mu. Gagamitan ya mu ngeni.','Agmi tataryaan so litrato mo. Uusaren labat natan.','Dai mi tinatago an ladawan mo. Ginagamit sana ngunyan.'],
+
+/* ---- K-2b consent ---- */
+'k2b.h':['Papayag ka bang kunan ka ng larawan?','Is it okay to take your picture?','Pwede ba mi kuha ug litrato nimo?','Mabalin nga alaenmi ti ladawanmo?','Pwede bala namon kuhaan sing retrato?','Pwede ba namon kuhaan ka hin retrato?','Malyari kang kunan mi letratu?','Nayarian mi kan alaan na litrato?','Puwede ka mi kuahan nin ladawan?'],
+'k2b.body':['Ginagamit lang ito ngayon para malaman kung ikaw nga ito. Hindi ito itinatago. Hindi ito ipinapakita kaninuman. Hindi ito pupunta sa pulis.','It is used only right now to check it’s you. It is not saved. It is not shown to anyone. It does not go to the police.','Gigamit ra kini karon aron masuta nga ikaw gyud. Dili kini tipigan. Dili ipakita ni bisan kinsa. Dili kini moadto sa pulis.','Mausar laeng daytoy ita tapno maammuan no sika. Saan a maidulin. Saan a maipakita iti siasinoman. Saan a mapan iti pulis.','Ginagamit lang ini subong agod mahibal-an kon ikaw gid. Indi ini pagtaguon. Indi ini pagpakitaon sa bisan sin-o. Indi ini makadto sa pulis.','Ginagamit la ini yana basi mahibaroan kon ikaw gud. Diri ini tinitipigan. Diri ini ipinapakita ha bisan hin-o. Diri ini makadto ha pulis.','Gagamitan ya mu ngeni ba nung ika mu ini. E ya tatagu. E ya papakit kaninu man. E ya munta king pulis.','Uusaren labat natan pian naamtaan no sika ya. Ag ni tataryaan. Ag ni ipapanengneng ed siopaman. Ag ni onla ed pulis.','Ginagamit sana ini ngunyan tanganing maaraman kun ika nanggad. Dai ini tinatago. Dai ini ipinapahiling sa kiisay man. Dai ini napapaduman sa pulis.'],
+'k2b.yes':['Oo, sige','Yes, go ahead','O, sige','Wen, sige','Huo, sige','Oo, sige','Wa, sige','On, sige','Iyo, sige'],
+'k2b.no':['Hindi. Tawagin na lang ang staff.','No. Ask staff instead.','Dili. Tawga na lang ang staff.','Saan. Ayaban laengen ti staff.','Indi. Tawga na lang ang staff.','Diri. Tawaga na la an staff.','Ali. Ausan ne mu ing staff.','Andi. Tawagen la so staff.','Dai. Apudon na sana an staff.'],
+
+/* ---- K-2v / K-2c ---- */
+'k2v.h':['Tumingin sa camera. Huwag gumalaw.','Look at the camera. Stay still.','Tan-aw sa camera. Ayaw lihok.','Kitaem ti camera. Dika aggaraw.','Tulok sa camera. Indi maghulag.','Kitaa an camera. Ayaw pagkiwa.','Lawen me ing camera. E ka kikimut.','Nengneng mo so camera. Agka ongogalaw.','Hilingon an camera. Dai ka maghiro.'],
+'k2c.h':['Sabihin ang numerong ito sa staff','Give this number to staff','Isulti kini nga numero sa staff','Ibagam daytoy a numero iti staff','Isiling ini nga numero sa staff','Isumat ini nga numero ha staff','Sabian me ing numerung ini king staff','Ibagam iyan a numero ed staff','Sabihon ining numero sa staff'],
+'k2c.queue':['Numero mo sa pila: 2','You are number 2 in line. Someone is coming.','Numero nimo sa linya: 2','Numerom iti linia: 2','Numero mo sa linya: 2','Numero mo ha linya: 2','Numeru mu king pila: 2','Numero mo ed linya: 2','Numero mo sa pila: 2'],
+'k2c.band':['Walang form. Walang kailangang ipaliwanag.','No form. No explanation needed.','Walay porma. Walay kinahanglang isaysay.','Awan porma. Awan masapul nga ilawlawag.','Wala sing porma. Wala sing kinahanglan ipaathag.','Waray porma. Waray kinahanglan isaysay.','Alang porma. Alang kailangang ipaliwanag.','Anggapoy porma. Anggapoy nakaukolan ya ipaliwawa.','Mayong porma. Mayong kaipuhan ipaliwanag.'],
+
+/* ---- MENU ---- */
+'menu.h':['Ano ang gusto mong gawin?','What would you like to do?','Unsa’y gusto nimong buhaton?','Ania ti kayatmo nga aramiden?','Ano ang gusto mo himuon?','Ano an karuyag mo buhaton?','Nanu ing buri meng daptan?','Anto so labay mon gawaen?','Ano an gusto mong gibohon?'],
+'menu.case':['Aking Kaso','My Case','Akong Kaso','Ti Kasok','Akon Kaso','Akon Kaso','Ing Kasu Ku','Say Kaso Ko','An Kaso Ko'],
+'menu.case2':['Kung saan na ang kaso mo, kailan ang susunod na hearing.','Where your case stands, when your next hearing is.','Asa na ang imong kaso, kanus-a ang sunod nga hearing.','Sadino ti kasom, kaano ti sumaruno a hearing.','Diin na ang imo kaso, san-o ang masunod nga hearing.','Hain na an imo kaso, san-o an sunod nga hearing.','Nokarin ne ing kasu mu, kapilan ing tutuki mung hearing.','Iner so kaso mo, kapigan so onsublay a hearing.','Sain na an kaso mo, nuarin an masunod na hearing.'],
+'menu.progs':['Aking mga Programa','My Programs','Akong mga Programa','Dagiti Programak','Akon mga Programa','Akon mga Programa','Deng Programa Ku','Saray Programa Ko','An mga Programa Ko'],
+'menu.progs2':['Susunod na sesyon at kung ilan ang napuntahan mo.','Your next session and how many you have attended.','Sunod nga sesyon ug pila na imong naadtoan.','Sumaruno a sesion ken mano ti napanam.','Masunod nga sesyon kag pila na ang imo nakadtuan.','Sunod nga sesyon ngan pira na an imo kinadtoan.','Tutuki mung sesyon at pilan na ing miras mu.','Onsublay a sesyon tan pigaray inlaan mo.','Masunod na sesyon asin pira na an naduman mo.'],
+'menu.find':['Maghanap at Sumali','Find & Enrol','Pangita ug Apil','Agbirok ken Makikappeng','Mangita kag Mag-intra','Mamiling ngan Umapi','Manintun at Munyabe','Manapa tan Miloob','Maghanap asin Mag-ayon'],
+'menu.find2':['Mga libreng programa malapit sa iyo.','Free programmes near you.','Libre nga mga programa duol nimo.','Libre a programa nga asideg kenka.','Libre nga mga programa malapit sa imo.','Libre nga mga programa hirani ha imo.','Deng libreng programa malapit keka.','Saray libren programa ya asingger ed sika.','Mga libreng programa harani saimo.'],
+'menu.status':['Aking Katayuan','My Status','Akong Kahimtang','Ti Kasasaadko','Akon Kahimtangan','Akon Kahimtang','Ing Kabilyan Ku','Say Kipapasen Ko','An Kamugtakan Ko'],
+'menu.status2':['Ang nakikita ng pamilya mo, at paghingi ng tulong.','What your family sees, and asking for help.','Ang makita sa imong pamilya, ug pagpangayo ug tabang.','Ti makita ti pamiliam, ken panagkiddaw iti tulong.','Ang nakita sang imo pamilya, kag pagpangayo sing bulig.','An nakikita han imo pamilya, ngan pangaro hin bulig.','Ing akakit ning pamilya mu, at pangaus tulung.','Say nanengneng na pamilyam, tan onkerew na tulong.','An nahihiling kan pamilya mo, asin paghagad nin tabang.'],
+
+/* ---- K-3 case ---- */
+'case.h':['Ang kaso mo','Your case','Ang imong kaso','Ti kasom','Ang imo kaso','An imo kaso','Ing kasu mu','Say kaso mo','An kaso mo'],
+'case.where':['Nasaan na ang kaso mo','Where your case stands','Asa na ang imong kaso','Sadino ti kasom','Diin na ang imo kaso','Hain na an imo kaso','Nokarin ne ing kasu mu','Iner so kaso mo','Sain na an kaso mo'],
+'case.await':['Naghihintay ka pa ng paglilitis. Wala pang hatol sa kaso mo.','You are still waiting for your trial. There is no decision on your case yet.','Naghulat pa ka sa husay. Wala pay hukom sa imong kaso.','Agur-uraymo pay ti pannakaukom. Awan pay pangngeddeng iti kasom.','Nagahulat ka pa sang bista. Wala pa sing desisyon sa imo kaso.','Naghuhulat ka pa han bista. Waray pa desisyon ha imo kaso.','Manaya ka pa king lilitis. Alang pa disisyun king kasu mu.','Man-aalagar ka nid bista. Anggapo nid desisyon ed kaso mo.','Naghahalat ka pa nin bista. Mayo pang desisyon sa kaso mo.'],
+'case.next':['Susunod na hearing','Your next hearing','Sunod nga hearing','Sumaruno a hearing','Masunod nga hearing','Sunod nga hearing','Tutuki mung hearing','Onsublay a hearing','Masunod na hearing'],
+'case.video':['Sa video ang pagdinig mo, dito mismo sa pasilidad. Hindi ka dadalhin sa korte.','Your hearing is by video, from here in the facility. You will not be taken to the court.','Sa video ang imong hearing, dinhi mismo sa pasilidad. Dili ka dad-on sa korte.','Iti video ti hearing mo, ditoy mismo iti pasilidad. Saanka a maipan iti korte.','Sa video ang imo hearing, diri mismo sa pasilidad. Indi ka dal-on sa korte.','Ha video an imo hearing, dinhi mismo ha pasilidad. Diri ka dadad-on ha korte.','King video ing hearing mu, keni mismu king pasilidad. E ra ka dalan king korte.','Diad video so hearing mo, dia mismo ed pasilidad. Agka niyakar ed korte.','Sa video an pagdangog mo, digdi mismo sa pasilidad. Dai ka dadarahon sa korte.'],
+'case.gcta':['Bawas sa sentensiya mo','Days taken off your sentence','Kunhod sa imong sentensiya','Kissay iti sentensiam','Bawas sa imo sentensiya','Bawas ha imo sentensiya','Bawas king sentensiya mu','Bawas ed sentensiya mo','Bawas sa sentensiya mo'],
+'case.days':['araw · days','days','adlaw · days','aldaw · days','adlaw · days','adlaw · days','aldo · days','agew · days','aldaw · days'],
+'case.gctawhat':['Ito ang bilang ng araw na naibawas na sa sentensiya mo dahil sa mabuting asal. Ang tawag dito sa papel: GCTA.','This is how many days have been taken off your sentence for good conduct. On paper it is called GCTA.','Mao kini ang gidaghanon sa adlaw nga nakunhod na sa imong sentensiya tungod sa maayong pamatasan. Sa papel, GCTA ang tawag.','Daytoy ti bilang dagiti aldaw a naikissay iti sentensiam gapu iti nasayaat a kababalin. Iti papel, GCTA ti awagna.','Amo ini ang kadamuon sang adlaw nga nabawas na sa imo sentensiya bangod sa maayo nga pamatasan. Sa papel, GCTA ang tawag.','Ini an kadamo han adlaw nga nabawas na ha imo sentensiya tungod han maupay nga pamatasan. Ha papel, GCTA an tawag.','Ini ing bilang da reng aldo a mibawas na king sentensiya mu uli ning mayap a ugali. King papil, GCTA ing aus.','Saya so bilang na agew ya abawas la ed sentensiya mo lapud maong ya ugali. Diad papel, GCTA so tawag.','Ini an bilang kan mga aldaw na nabawas na sa sentensiya mo huli kan marahay na ugali. Sa papel, GCTA an apod.'],
+'case.notrelease':['Hindi ito ang petsa ng paglaya mo. Ang paralegal — ang taong tumutulong sa kaso mo dito sa loob — lang ang makakapagsabi niyan.','This is not your release date. Only the paralegal — the person here who helps with your case — can tell you that.','Dili kini ang petsa sa imong paggawas. Ang paralegal ra — ang tawo dinhi nga motabang sa imong kaso — ang makasulti niana.','Saan a daytoy ti petsa ti pannakaruk-atmo. Ti paralegal laeng — ti tao ditoy a tumultulong iti kasom — ti makaibaga iti dayta.','Indi ini ang petsa sang imo paggwa. Ang paralegal lang — ang tawo diri nga nagabulig sa imo kaso — ang makasiling sina.','Diri ini an petsa han imo paggawas. An paralegal la — an tawo dinhi nga nabulig ha imo kaso — an makakasumat hito.','E ini ing petsa ning pamaglual mu. Ing paralegal mu — ing taung mangaduang king kasu mu keni — ing makasabi kanita.','Aliwan saya so petsa na kibulos mo. Say paralegal labat — say too dia ya ontutulong ed kaso mo — so makabaga ed satan.','Bako ini an petsa kan pagluwas mo. An paralegal sana — an tawo digdi na nagtatabang sa kaso mo — an makakasabi kaiyan.'],
+'case.askpara':['Gusto kong makausap ang paralegal','I want to speak with the paralegal','Gusto nakong makig-istorya sa paralegal','Kayatko a makisarita iti paralegal','Gusto ko makig-istorya sa paralegal','Karuyag ko makiistorya ha paralegal','Buri kung makipag-abe king paralegal','Labay kon mitongtong ed paralegal','Gusto kong makaolay an paralegal'],
+
+/* ---- K-4 programmes ---- */
+'prog.h':['Mga programa mo','Your programmes','Imong mga programa','Dagiti programam','Imo mga programa','Imo mga programa','Deng programa mu','Saray programa mo','An mga programa mo'],
+'prog.enrolled':['✓ Naka-enroll','✓ Enrolled','✓ Naka-apil','✓ Nakikappeng','✓ Naka-intra','✓ Naapi na','✓ Kayabe na','✓ Miloob la','✓ Naka-ayon'],
+'prog.next':['Susunod na sesyon','Next session','Sunod nga sesyon','Sumaruno a sesion','Masunod nga sesyon','Sunod nga sesyon','Tutuki nang sesyon','Onsublay a sesyon','Masunod na sesyon'],
+'prog.cant':['Hindi ako pupunta','I can’t go','Dili ko makaadto','Diak makaapan','Indi ako makakadto','Diri ako makakadto','E ku makapunta','Agak makaonla','Dai ako makakaduman'],
+'prog.all':['Lahat ng sesyon','All sessions','Tanan nga sesyon','Amin a sesion','Tanan nga sesyon','Ngatanan nga sesyon','Ngan a sesyon','Amin a sesyon','Gabos na sesyon'],
+'prog.findmore':['Maghanap pa ng programa','Find another programme','Pangita pa ug programa','Agbirok pay iti programa','Mangita pa sing programa','Mamiling pa hin programa','Manintun pa programa','Manapa nid programa','Maghanap pa nin programa'],
+'leg.went':['nakapunta · went','went','nakaadto · went','napan · went','nakakadto · went','nakadto · went','mekapunta · went','inla · went','nakaduman · went'],
+'leg.miss':['hindi nakapunta · missed','missed','wala nakaadto · missed','saan a napan · missed','wala nakakadto · missed','waray kadto · missed','e mekapunta · missed','agla inla · missed','dai nakaduman · missed'],
+'leg.next':['hindi pa · not yet','not yet','wala pa · not yet','saan pay · not yet','wala pa · not yet','waray pa · not yet','ali pa · not yet','agni · not yet','dai pa · not yet'],
+
+/* ---- K-6 status ---- */
+'st.h':['Ang kalagayan mo','Your status','Ang imong kahimtang','Ti kasasaadmo','Ang imo kahimtangan','An imo kahimtang','Ing kabilyan mu','Say kipapasen mo','An kamugtakan mo'],
+'st.ok':['Ayos lang','OK','Okay ra','Nasayaat','Maayo lang','Maupay la','Mayap ya','Maong','Marahay sana'],
+'st.seen':['Ito mismo ang nakikita ng pamilya mo sa eGovPH app ngayon. Walang ibang bersyon.','This is exactly what your family sees in the eGovPH app right now. There is no other version.','Mao gyud kini ang makita sa imong pamilya sa eGovPH app karon. Walay laing bersyon.','Daytoy mismo ti makita ti pamiliam iti eGovPH app ita. Awan sabali a bersion.','Amo gid ini ang nakita sang imo pamilya sa eGovPH app subong. Wala sing iban nga bersyon.','Ini gud an nakikita han imo pamilya ha eGovPH app yana. Waray iba nga bersyon.','Iti mismu ing akakit ning pamilya mu king eGovPH app ngeni. Alang aliwang bersyon.','Saya mismo so nanengneng na pamilyam ed eGovPH app natan. Anggapoy arum a bersyon.','Ini mismo an nahihiling kan pamilya mo sa eGovPH app ngunyan. Mayong ibang bersyon.'],
+'st.who':['Sino ang nakakakita','Who can see it','Kinsa ang makakita','Siasino ti makakita','Sin-o ang makakita','Hin-o an nakakakita','Ninu ing makakakit','Siopa so makanengneng','Siisay an nakakahiling'],
+'st.wrong':['Mali ito. Sabihin ko.','This is wrong. Let me say so.','Sayop kini. Isulti nako.','Saan a husto daytoy. Ibagak.','Sala ini. Isiling ko.','Sayop ini. Isusumat ko.','Mali ini. Sabian ku.','Aliwa ya. Ibagak.','Sala ini. Sasabihon ko.'],
+'st.need':['Kailangan mo ba ng tulong?','Do you need something?','Nagkinahanglan ka ba ug tabang?','Kasapulam kadi ti tulong?','Nagakinahanglan ka bala sing bulig?','Nagkikinahanglan ka ba hin bulig?','Kailangan mu wari tulung?','Kaukolan mo kasi tulong?','Kaipuhan mo daw nin tabang?'],
+'st.band':['Nakikita ng staff ang hiling mo. Hindi nila nakikita kung sino ka hangga’t hindi ka sumasagot.','Staff see your request. They do not see who you are until you answer.','Makita sa staff ang imong hangyo. Dili nila makita kung kinsa ka hangtod dili ka motubag.','Makita ti staff ti kiddawmo. Saanda a makita no siasinoka agingga a saanka a sumungbat.','Makita sang staff ang imo pangayo. Indi nila makita kon sin-o ka tubtob indi ka magsabat.','Nakikita han staff an imo hangyo. Diri nira nakikita kon hin-o ka tubtob diri ka binaton.','Akakit da reng staff ing kekang aduan. E ra akakit nung ninu ka anggang e ka pakibat.','Nanengneng na staff so kerew mo. Agda nanengneng no siopa ka anggad agka onebat.','Nahihiling kan staff an hagad mo. Dai ninda nahihiling kun siisay ka sagkod na dai ka nagsimbag.'],
+
+/* ---- enrolment result ---- */
+'done.h':['Sumali ka na.','You’re enrolled.','Naapil na ka.','Nakikappengkan.','Naintra ka na.','Naapi ka na.','Kayabe na ka.','Miloob ka la.','Naka-ayon ka na.'],
+'done.ref':['Numero ng pagsali mo. Ipakita ito sa unang araw.','Your enrolment number. Show it on the first day.','Numero sa imong pag-apil. Ipakita kini sa unang adlaw.','Numero ti pannakikappengmo. Ipakitam iti umuna nga aldaw.','Numero sang imo pag-intra. Ipakita ini sa una nga adlaw.','Numero han imo pag-api. Ipakita ini ha syahan nga adlaw.','Numeru ning pamiyabe mu. Pakit me king mumunang aldo.','Numero na inloob mo. Ipanengneng mo ed unonan agew.','Numero kan pag-ayon mo. Ipahiling ini sa enot na aldaw.'],
+
+/* ---- overlays ---- */
+'ov.still':['Nandiyan ka pa ba?','Are you still there?','Naa pa ka?','Addaka pay laeng?','Ara ka pa?','Aada ka pa?','Atyu ka pa?','Wadia ka ni?','Yaon ka pa?'],
+'ov.stillb':['Isasara namin ito para hindi makita ng iba ang impormasyon mo.','We’ll close this so no one else sees your information.','Sirad-an namo kini aron walay laing makakita sa imong impormasyon.','Irekepmi daytoy tapno awan sabali a makakita iti impormasionmo.','Sirahan namon ini agod wala sing iban nga makakita sang imo impormasyon.','Sirad-an namon ini basi waray iba nga makakita han imo impormasyon.','Isara mi ini ba nung ala nang aliwang makakit king impormasyun mu.','Ikapot mi ya pian anggapoy arum a makanengneng ed impormasyon mo.','Sasarahon mi ini tanganing mayong iba an makahiling kan impormasyon mo.'],
+'ov.yes':['Oo, nandito pa ako','Yes, I’m still here','O, naa pa ko','Wen, addaak pay','Huo, ari pa ko','Oo, aadi pa ako','Wa, atyu ku pa','On, wadia ak ni','Iyo, yaon pa ako'],
+'ov.imdone':['Tapos na ako','I’m done','Human na ko','Nalpasakon','Tapos na ko','Tapos na ako','Yari na ku','Asumpal ak la','Tapos na ako'],
+'ov.fin':['Tapusin na?','Finish?','Humanon na?','Leppasen?','Tapuson na?','Tatapuson na?','Yaring na?','Sumpalen la?','Tatapuson na?'],
+'ov.finb':['Buburahin ang lahat sa screen na ito.','Everything on this screen will be cleared.','Papason ang tanan sa kini nga screen.','Mapunasto amin iti daytoy a screen.','Panason ang tanan sa sini nga screen.','Papason an ngatanan hini nga screen.','Burian ing ngan king screen a ini.','Naandi so amin ed sayan screen.','Papahidon an gabos sa screen na ini.'],
+'ov.finyes':['Oo, tapos na ako','Yes, I’m done','O, human na ko','Wen, nalpasakon','Huo, tapos na ko','Oo, tapos na ako','Wa, yari na ku','On, asumpal ak la','Iyo, tapos na ako'],
+'ov.finno':['Hindi, bumalik','No, go back','Dili, balik','Saan, agsubli','Indi, balik','Diri, balik','Ali, mibalik','Andi, ompawil','Dai, bumalik'],
+
+/* ---- needs (K-6 grid) ---- */
+'need.med':['Gamot o doktor','Medicine or a doctor','Tambal o doktor','Agas wenno doktor','Bulong ukon doktor','Bulong o doktor','Tambal o doktor','Tambal odino doktor','Bulong o doktor'],
+'need.law':['Makausap ang abogado','Speak to my lawyer','Makig-istorya sa abogado','Makisarita iti abogado','Makig-istorya sa abogado','Makiistorya ha abogado','Makipag-abe king abugadu','Mitongtong ed abogado','Makaolay an abogado'],
+'need.fam':['Makausap ang pamilya','Speak to my family','Makig-istorya sa pamilya','Makisarita iti pamilia','Makig-istorya sa pamilya','Makiistorya ha pamilya','Makipag-abe king pamilya','Mitongtong ed pamilya','Makaolay an pamilya'],
+'need.food':['Pagkain o tubig','Food or water','Pagkaon o tubig','Taraon wenno danum','Pagkaon ukon tubig','Pagkaon o tubig','Pamangan o danum','Naakan odino danum','Kakanon o tubig'],
+'need.cloth':['Damit o gamit','Clothes or supplies','Sinina o gamit','Badbadu wenno gamit','Panapton ukon gamit','Bado o gamit','Imalan o gamit','Kawes odino kagawaan','Bado o gamit'],
+'need.mic':['May sasabihin ako','I want to say something','Naa koy isulti','Adda ibagak','May isiling ako','May isusumat ako','Atin kung sasabian','Walay ibagak','Igwa akong sasabihon']
+};
+const I18N = {};
+Object.keys(I18N_RAW).forEach(function(k){
+  const a = I18N_RAW[k], o = {};
+  LANGS.forEach(function(L,i){ o[L] = a[i] || a[0]; });
+  I18N[k] = o;
+});
+function t(key, lang){
+  const row = I18N[key];
+  if(!row) return '';
+  return row[lang || S.lang || 'Filipino'] || row.Filipino;
+}
+
+/* ---------- state ---------- */
+const S = {
+  screen:'k1', lang:'Filipino', session:false, masked:false,
+  sessionStart:0, lastAct:Date.now(), graceLeft:30, graceTimer:null,
+  attractIdx:0, attractTimer:null, currentProgram:null
+};
+const $ = function(id){ return document.getElementById(id); };
+const backMap = { k2:'k1', k2b:'k2', k2v:'k2b', k2c:'k2', case:'menu', programs:'menu', find:'menu', status:'menu', done:'find' };
+const stepMap = { k2:2, k2b:2, k2v:2, k2c:2, menu:3, case:3, programs:3, find:3, done:3, status:3 };
+
+/* ================================================================
+   LANGUAGE — selecting a tile switches the whole interface at once.
+   [data-i18n]     → primary line, in the chosen language
+   [data-i18n-en]  → secondary line, always English; hidden when the
+                     chosen language IS English (no line said twice)
+   ================================================================ */
+function applyLang(lang){
+  if(LANGS.indexOf(lang) < 0) lang = 'Filipino';
+  S.lang = lang;
+  document.documentElement.lang = LANG_CODE[lang] || 'fil';
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    const v = t(el.getAttribute('data-i18n'), lang);
+    if(v){ if(el.dataset.o !== undefined){ el.dataset.o = v; } else { el.textContent = v; } }
+  });
+  const isEn = lang === 'English';
+  document.querySelectorAll('[data-i18n-en]').forEach(function(el){
+    /* a class, never an inline style — inline display:block must survive */
+    el.classList.toggle('i18n-off', isEn);
+    if(isEn) return;
+    const v = t(el.getAttribute('data-i18n-en'), 'English');
+    if(v){ if(el.dataset.o !== undefined){ el.dataset.o = v; } else { el.textContent = v; } }
+  });
+  renderNeeds();
+  if(S.screen === 'find') renderFind();
+  translateDynamic(lang);
+}
+
+/* ---- DYNAMIC content only (programme names, notes) via /api/ai.
+        Memoised on a content hash so a rehearsal costs nothing twice.
+        Never called for the static table above. ---- */
+const DYN = {};
+function dynHash(s, lang){ return lang + '::' + s; }
+async function translateDynamic(lang){
+  if(lang === 'Filipino' || lang === 'English') return;      /* source already readable */
+  const nodes = document.querySelectorAll('[data-dyn]');
+  for(let i=0;i<nodes.length;i++){
+    const el = nodes[i];
+    if(!el.dataset.src) el.dataset.src = (el.textContent||'').trim();
+    const src = el.dataset.src;
+    if(!src) continue;
+    const key = dynHash(src, lang);
+    if(DYN[key] !== undefined){ if(DYN[key]) el.textContent = DYN[key]; continue; }
+    DYN[key] = null;                                          /* claim it — one call max */
+    const r = await tryApi('/api/ai', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'translate', text:src, source_lang:'fil', target_lang:LANG_CODE[lang]})}, 1500);
+    const out = r && r.ok && r.translated;
+    if(out){ DYN[key] = out; el.textContent = out; }
+  }
+}
+
+/* ---------- stage scaling ---------- */
+function fit(){
+  const s = Math.min(innerWidth/1080, innerHeight/1920);
+  $('stage').style.transform = 'translate(-50%,-50%) scale('+s+')';
+}
+addEventListener('resize', fit);
+
+/* ---------- API with silent fallback ---------- */
+async function tryApi(path, opts, ms){
+  try{
+    const c = new AbortController();
+    const t = setTimeout(function(){ c.abort(); }, ms||1200);
+    const r = await fetch(path, Object.assign({signal:c.signal}, opts||{}));
+    clearTimeout(t);
+    if(!r.ok) throw new Error('bad');
+    return await r.json();
+  }catch(e){ return null; }
+}
+
+/* ================================================================
+   READ-ALOUD — Web Speech API. No network, no API credits.
+   Degrades silently on browsers with no speechSynthesis and on
+   browsers that expose speechSynthesis but ship zero voices.
+   ================================================================ */
+const VOICE_TAGS = {
+  Filipino:['fil-ph','fil','tl-ph','tl'],
+  English:['en-ph','en-us','en-gb','en'],
+  Binisaya:['ceb-ph','ceb','fil-ph','tl-ph','en-ph'],
+  Ilokano:['ilo-ph','ilo','fil-ph','tl-ph','en-ph'],
+  Hiligaynon:['hil-ph','hil','fil-ph','tl-ph','en-ph'],
+  Waray:['war-ph','war','fil-ph','tl-ph','en-ph'],
+  Kapampangan:['pam-ph','pam','fil-ph','tl-ph','en-ph'],
+  Pangasinan:['pag-ph','pag','fil-ph','tl-ph','en-ph'],
+  Bikol:['bik-ph','bcl','fil-ph','tl-ph','en-ph']
+};
+const LANG_CODE = { Filipino:'fil', English:'en', Binisaya:'ceb', Ilokano:'ilo',
+  Hiligaynon:'hil', Waray:'war', Kapampangan:'pam', Pangasinan:'pag', Bikol:'bik' };
+
+let VOICES = [];
+function synth(){ try{ return window.speechSynthesis || null; }catch(e){ return null; } }
+function loadVoices(){
+  const s = synth(); if(!s) return;
+  try{ VOICES = s.getVoices() || []; }catch(e){ VOICES = []; }
+}
+(function initVoices(){
+  const s = synth(); if(!s) return;
+  loadVoices();
+  try{ s.addEventListener ? s.addEventListener('voiceschanged', loadVoices)
+                          : (s.onvoiceschanged = loadVoices); }catch(e){}
+})();
+function pickVoice(lang){
+  if(!VOICES.length) return null;
+  const tags = VOICE_TAGS[lang] || VOICE_TAGS.Filipino;
+  for(let i=0;i<tags.length;i++){
+    const t = tags[i];
+    const exact = VOICES.find(function(v){ return (v.lang||'').toLowerCase().replace('_','-') === t; });
+    if(exact) return exact;
+    const loose = VOICES.find(function(v){ return (v.lang||'').toLowerCase().replace('_','-').indexOf(t.split('-')[0]) === 0; });
+    if(loose) return loose;
+  }
+  return null;
+}
+
+/* which control is lit, and what it last said (so a second tap stops it) */
+const SPEECH = { btn:null, key:null, watch:null };
+function speechPaint(btn, on){
+  if(!btn) return;
+  btn.classList.toggle('speaking', !!on);
+}
+function speechClear(){
+  speechPaint(SPEECH.btn, false);
+  SPEECH.btn = null; SPEECH.key = null;
+  if(SPEECH.watch){ clearInterval(SPEECH.watch); SPEECH.watch = null; }
+}
+function stopSpeaking(){
+  const s = synth();
+  try{ if(s) s.cancel(); }catch(e){}
+  speechClear();
+}
+/* speak(text, langCode, btn) — returns true if an utterance was queued */
+function speak(text, lang, btn){
+  text = (text || '').toString().replace(/\s+/g,' ').trim();
+  if(!text) return false;
+  const key = (lang||'') + '|' + text;
+  const wasSame = SPEECH.key === key;
+  stopSpeaking();
+  if(wasSame) return false;                       /* second tap = stop */
+  const s = synth();
+  if(!s || typeof window.SpeechSynthesisUtterance !== 'function') return false;
+  try{
+    const u = new window.SpeechSynthesisUtterance(text);
+    const chosen = pickVoice(lang || S.lang || 'Filipino');
+    if(chosen){ u.voice = chosen; u.lang = chosen.lang; }
+    else { u.lang = (VOICE_TAGS[lang || S.lang || 'Filipino'] || ['fil-PH'])[0]; }
+    u.rate = 0.9; u.pitch = 1; u.volume = 1;
+    SPEECH.btn = btn || null; SPEECH.key = key;
+    speechPaint(SPEECH.btn, true);
+    u.onend = speechClear; u.onerror = speechClear;
+    s.speak(u);
+    /* some engines never fire onend — watch the queue and drop the lit state */
+    SPEECH.watch = setInterval(function(){
+      try{ if(!s.speaking && !s.pending) speechClear(); }catch(e){ speechClear(); }
+    }, 400);
+    return true;
+  }catch(e){ speechClear(); return false; }
+}
+
+/* the primary content of the screen, in reading order */
+const SPEAK_SEL = '.khead-fil,#k1hero .h1,.ksub-fil,.stext .p1,#consentBox .fil,#staffCode .q,' +
+  '.mtile .t1,.ptitle .f,.pbody-f,.hearrow .d1,.hearrow .d2,.hearrow .d3,.vidchip>span,' +
+  '.gctarow,.caveat .tx,.progname .f,.nextbox .v,.attline,.statushero .shf,.statusline,' +
+  '.pcard .sched,#doneTitle,#firstbox .v,#needhead,.ntile .t1,.pathtile .t1';
+function screenText(){
+  const sc = document.querySelector('.kscreen.on');
+  if(!sc) return 'e-Laya';
+  const seen = {}, parts = [];
+  sc.querySelectorAll(SPEAK_SEL).forEach(function(el){
+    if(el.offsetWidth === 0 && el.offsetHeight === 0) return;
+    const t = (el.innerText || el.textContent || '').replace(/\s+/g,' ').trim();
+    if(!t || seen[t]) return;
+    seen[t] = 1; parts.push(t.replace(/\s*·\s*/g, ', ').replace(/[.,;:]+$/, ''));
+  });
+  const out = parts.join('. ').slice(0, 700);
+  return out || 'e-Laya';
+}
+function speakScreen(){ speak(screenText(), S.lang || 'Filipino', $('railSpeak')); }
+
+/* ---------- navigation ---------- */
+function go(id){
+  if(id !== 'k1' && !S.session) startSessionShell();
+  document.querySelectorAll('.kscreen').forEach(function(x){ x.classList.remove('on'); });
+  const el = $('s-'+id);
+  if(el) el.classList.add('on');
+  S.screen = id;
+  const isK1 = id === 'k1';
+  /* ONE navigation bar. It is hidden only on the language chooser, which is
+     itself the root of the journey and has nothing to navigate back to. */
+  $('krail').classList.toggle('hide', isK1);
+  $('kback').classList.toggle('off', !(id in backMap));
+  $('khome').classList.toggle('off', isK1 || id==='menu' || id==='k2' || id==='k2b' || id==='k2v' || id==='k2c');
+  $('kitago').classList.toggle('off', !(id==='case' || id==='programs' || id==='status'));
+  const step = stepMap[id];
+  $('crumbSteps').innerHTML = step ? [1,2,3].map(function(n){
+    return '<span class="sd '+(n<step?'done':(n===step?'now':''))+'"></span>';
+  }).join('') : '';
+  stopSpeaking();
+  if(isK1){ resetToAttract(); } else { stopAttract(); }
+  if(id==='find') renderFind();
+  if(id==='k2v') runFaceVerify();
+  if(el) el.scrollTop = 0;
+  bump();
+}
+function goBack(){ const b = backMap[S.screen]; if(b) go(b); }
+
+/* ---------- session ---------- */
+function startSessionShell(){
+  S.session = true; S.sessionStart = Date.now();
+  $('ksession').classList.remove('off');
+  $('sessName').textContent = SEED.persona.first+' '+SEED.persona.initial;
+  $('sessAv').textContent = SEED.persona.first.charAt(0);
+}
+function startWithLanguage(lang, tileEl){
+  applyLang(lang);
+  tileEl.classList.add('picked');
+  /* the tile says its own name, in its own voice */
+  speak(lang, lang, tileEl.querySelector('.spk'));
+  setTimeout(function(){ tileEl.classList.remove('picked'); go('k2'); }, 300);
+}
+function askEnd(){ showOv('endOv'); }
+function endNow(){
+  hideOv('endOv'); hideOv('timeoutOv'); closeSheet();
+  $('endName').textContent = 'Salamat, '+SEED.persona.first+'. Ingat ka.';
+  $('endCard').classList.add('show');
+  restartCheck($('endCard'));
+  setTimeout(function(){ $('endCard').classList.remove('show'); hardClear(); }, 2600);
+}
+function hardClear(){
+  S.session = false;
+  stopSpeaking();
+  if(S.masked){ S.masked = false; applyMask(false); }
+  applyLang('Filipino');                     /* reset to the chooser's language */
+  $('ksession').classList.add('off');
+  $('idlering').classList.remove('warn');
+  hideOv('timeoutOv'); hideOv('endOv'); hideOv('sentOv'); closeSheet();
+  $('cantbar').classList.remove('show');
+  go('k1');
+  toast('Tapos na. Salamat.','Finished. Thank you.');
+}
+
+/* ---------- overlays / sheet ---------- */
+function showOv(id){ $(id).classList.add('show'); }
+function hideOv(id){ $(id).classList.remove('show'); }
+function restartCheck(scope){
+  scope.querySelectorAll('.draw').forEach(function(p){
+    p.style.animation='none'; void p.offsetWidth; p.style.animation='';
+  });
+}
+function openSheet(html){
+  $('sheet').innerHTML = '<div class="grab"></div>'+html;
+  $('sheet').classList.add('show');
+  $('scrim').classList.add('show');
+}
+function closeSheet(){ $('sheet').classList.remove('show'); $('scrim').classList.remove('show'); }
+
+/* ---------- toast ---------- */
+let toastT = null;
+function toast(f, e){
+  const t = $('ktoast');
+  t.innerHTML = f + (e ? '<span class="en">'+e+'</span>' : '');
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+/* ---------- Itago / privacy mask ---------- */
+function toggleMask(){ S.masked = !S.masked; applyMask(S.masked); }
+function applyMask(on){
+  $('kitago').classList.toggle('on', on);
+  const lbl = $('itagoLabel');
+  lbl.setAttribute('data-i18n', on ? 'nav.show' : 'nav.hide');
+  lbl.textContent = t(on ? 'nav.show' : 'nav.hide', S.lang);
+  document.querySelectorAll('.pv').forEach(function(el){
+    if(on){
+      if(!el.dataset.o){ el.dataset.o = el.innerHTML; }
+      el.innerHTML = '••••'; el.classList.add('masked');
+    } else if(el.dataset.o){
+      el.innerHTML = el.dataset.o; delete el.dataset.o; el.classList.remove('masked');
+    }
+  });
+}
+
+/* ---------- clock + session timers ---------- */
+const DAYS = ['Linggo','Lunes','Martes','Miyerkules','Huwebes','Biyernes','Sabado'];
+const MONTHS = ['Enero','Pebrero','Marso','Abril','Mayo','Hunyo','Hulyo','Agosto','Setyembre','Oktubre','Nobyembre','Disyembre'];
+function tickClock(){
+  const n = new Date();
+  let h = n.getHours(); const ap = h>=12 ? 'PM' : 'AM'; h = h%12 || 12;
+  $('clockT').textContent = h+':'+String(n.getMinutes()).padStart(2,'0')+' '+ap;
+  $('clockD').textContent = DAYS[n.getDay()]+' · '+n.getDate()+' '+MONTHS[n.getMonth()]+' '+n.getFullYear();
+  if(S.session){
+    const left = Math.max(0, 720 - Math.floor((Date.now()-S.sessionStart)/1000));
+    $('sessTime').textContent = '⏱ '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
+  }
+}
+setInterval(tickClock, 1000);
+
+/* ---------- idle: 60s warn → 30s grace → hard clear ---------- */
+function bump(){ S.lastAct = Date.now(); }
+['pointerdown','keydown','touchstart'].forEach(function(ev){ addEventListener(ev, bump, true); });
+setInterval(function(){
+  if(!S.session || S.screen==='k1'){ $('idlering').classList.remove('warn'); return; }
+  if($('timeoutOv').classList.contains('show')) return;
+  const idle = Date.now() - S.lastAct;
+  const ring = $('idlering');
+  if(idle > 40000){
+    ring.classList.add('warn');
+    const f = Math.min(1, (idle-40000)/20000);
+    $('idlefg').style.strokeDashoffset = 125.7*(1-f);
+  } else ring.classList.remove('warn');
+  if(idle > 60000) openTimeout();
+}, 500);
+function openTimeout(){
+  S.graceLeft = 30;
+  $('graceNum').textContent = '30';
+  $('graceFg').style.strokeDashoffset = 0;
+  showOv('timeoutOv');
+  clearInterval(S.graceTimer);
+  S.graceTimer = setInterval(function(){
+    S.graceLeft--;
+    if(S.graceLeft < 0){ clearInterval(S.graceTimer); hideOv('timeoutOv'); hardClear(); return; }
+    $('graceNum').textContent = S.graceLeft;
+    $('graceFg').style.strokeDashoffset = 502.65*(1 - S.graceLeft/30);
+  }, 1000);
+}
+function stillHere(){ clearInterval(S.graceTimer); hideOv('timeoutOv'); bump(); }
+
+/* ---------- K-1: language grid + attract ---------- */
+const SPK = '<svg viewBox="0 0 48 48"><path d="M10 19v10h8l10 8V11l-10 8h-8z"/><path d="M33 18a8 8 0 0 1 0 12"/></svg>';
+function renderK1(){
+  $('k1grid').innerHTML = SEED.langs.map(function(l){
+    return '<button class="ltile tap" onclick="startWithLanguage(\''+l.n+'\', this)">'+
+      '<span class="spk" onclick="event.stopPropagation();speak(\''+l.n+'\',\''+l.n+'\',this)" role="button" aria-label="Basahin: '+l.n+'"><span class="kic">'+SPK+'</span></span>'+
+      '<span class="ln">'+l.n+'</span><span class="ls">'+l.s+'</span>'+
+    '</button>';
+  }).join('');
+}
+const ATTRACT = [
+  ['Alamin ang kaso mo.\nMaghanap ng programa.','Check your case. Find a program.'],
+  ['May hearing ka ba?\nAlamin kung kailan.','Do you have a hearing? Find out when.'],
+  ['Papalabas ka na?\nMay programang maaari\nmong salihan.','Getting out soon? There are programs you can join.']
+];
+function resetToAttract(){
+  stopAttract();
+  S.attractTimer = setInterval(function(){
+    const hero = $('k1hero');
+    hero.classList.add('fade');
+    setTimeout(function(){
+      S.attractIdx = (S.attractIdx+1) % ATTRACT.length;
+      $('k1h1').textContent = ATTRACT[S.attractIdx][0];
+      $('k1h2').textContent = ATTRACT[S.attractIdx][1];
+      hero.classList.remove('fade');
+    }, 420);
+  }, 8000);
+}
+function stopAttract(){ clearInterval(S.attractTimer); }
+
+/* ---------- K-2: ID scan (attempts /api/everify) ---------- */
+let scanning = false;
+async function startScan(){
+  if(scanning) return;
+  scanning = true;
+  const ov = $('scanOverlay');
+  ov.classList.remove('success');
+  ov.innerHTML = '<div class="karc"></div><div class="t1">Sandali lang…</div><div class="t2">Binabasa ang ID mo · Reading your ID</div>';
+  ov.classList.add('show');
+  const api = await tryApi('/api/everify', {method:'POST'}, 1600);
+  const verified = api ? (api.verified !== false) : true;  /* 200 + verified:false = mismatch */
+  await new Promise(function(r){ setTimeout(r, api ? 300 : 1400); });
+  if(verified){
+    ov.classList.add('success');
+    ov.innerHTML = '<div class="bigcheck"><svg viewBox="0 0 48 48"><path class="draw" d="M10 26l9 9 19-22"/></svg></div>'+
+      '<div class="t1">Kumusta, '+SEED.persona.first+'.</div><div class="t2">Hello, '+SEED.persona.first+'.</div>';
+    setTimeout(function(){ ov.classList.remove('show','success'); scanning=false; go('menu'); }, 1500);
+  } else {
+    ov.innerHTML = '<div class="t1">Hindi nabasa ang ID.</div><div class="t2">Baka may dumi o gasgas. Subukan ulit. · Try again.</div>';
+    setTimeout(function(){ ov.classList.remove('show'); scanning=false; }, 2400);
+  }
+}
+
+/* ---------- K-2v: face verify ---------- */
+let verifying = false;
+function runFaceVerify(){
+  if(verifying) return;
+  verifying = true;
+  const num = $('countNum'), msg = $('verifyMsg'), msgE = $('verifyMsgEn');
+  msg.textContent = 'Tumingin sa camera.'; msgE.textContent = 'Look at the camera.';
+  let c = 3;
+  num.textContent = c;
+  const iv = setInterval(function(){
+    c--;
+    if(c > 0){ num.textContent = c; return; }
+    clearInterval(iv);
+    num.textContent = '';
+    msg.textContent = 'Sinusuri…'; msgE.textContent = 'Checking…';
+    setTimeout(function(){
+      msg.textContent = 'Kumusta, '+SEED.persona.first+'.';
+      msgE.textContent = 'Hello, '+SEED.persona.first+'.';
+      setTimeout(function(){ verifying=false; go('menu'); }, 1200);
+    }, 1600);
+  }, 900);
+}
+
+/* ---------- K-4: "can't make it" reason sheet ---------- */
+const REASONS = [
+  ['May sakit ako',"I'm sick"], ['Walang pamasahe','No fare money'],
+  ['May trabaho ako','I have work'], ['Malayo / walang masakyan','Too far / no ride'],
+  ['May problema sa bahay','Family problem'], ['Iba pa — sasabihin ko',"Something else — I'll say it"]
+];
+function openReasonSheet(){
+  openSheet(
+    '<div class="sh1">Bakit hindi ka makakapunta?</div>'+
+    '<div class="sh2">Why can\'t you make it? · Piliin ang isa · Pick one</div>'+
+    '<div class="rgrid">'+REASONS.map(function(r){
+      return '<button class="rtile tap" onclick="sendReason()"><span class="f">'+r[0]+'</span><span class="e">'+r[1]+'</span></button>';
+    }).join('')+'</div>'+
+    '<button class="kbtnq tap" onclick="closeSheet()">Bumalik · Back</button>'
+  );
+}
+function sendReason(){
+  closeSheet();
+  const bar = $('cantbar');
+  bar.classList.add('show');
+  setTimeout(function(){ bar.classList.remove('show'); }, 5000);
+}
+
+/* ---------- K-5: find & enrol ---------- */
+let curLoc = 'ALL';
+async function renderFind(){
+  const api = await tryApi('/api/psgc?province=batangas', null, 1000);
+  const locs = (api && api.localities) ? api.localities : SEED.localities;
+  $('locpills').innerHTML = locs.map(function(l){
+    return '<button class="locpill tap'+(l.code===curLoc?' on':'')+'" onclick="setLoc(\''+l.code+'\')">'+l.name+'</button>';
+  }).join('');
+  const list = SEED.programs.filter(function(p){ return curLoc==='ALL' || p.loc===curLoc; });
+  const locName = (SEED.localities.find(function(l){ return l.code===curLoc; })||{}).name || '';
+  $('findH').textContent = curLoc==='ALL' ? 'Mga programa malapit sa Batangas City' : 'Mga programa sa '+locName;
+  $('findHE').textContent = list.length+' programa · walang bayad ang lahat · '+
+    list.length+(list.length===1?' programme':' programmes')+' · all free to join';
+  $('findList').innerHTML = list.map(function(p){
+    const act = p.enrolled
+      ? '<div class="enrolled-flag">✓ Naka-enroll ka na<span class="en">You\'re enrolled</span></div>'+
+        '<button class="more tap" onclick="openDetail(\''+p.id+'\')">Alamin pa<span class="en">Know more</span></button>'
+      : '<button class="join tap" onclick="openJoin(\''+p.id+'\')">Sumali<span class="en">Join</span></button>'+
+        '<button class="more tap" onclick="openDetail(\''+p.id+'\')">Alamin pa<span class="en">Know more</span></button>';
+    return '<div class="kcard pcard">'+
+      '<div class="progtop"><div class="provwell">'+p.init+'</div>'+
+      '<div class="progname"><div class="f">'+p.title+'</div><div class="e">'+p.en+'</div>'+
+      '<div class="pv2">'+p.prov+'</div></div></div>'+
+      '<div class="chips"><span class="kchip ok">LIBRE · FREE</span><span class="kchip">📍 '+p.km+'</span><span class="kchip">'+p.len+'</span></div>'+
+      '<div class="sched"><span class="kic"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><path d="M24 13v11l7 5"/></svg></span>'+
+      '<span>'+p.sched+'<span class="en">'+p.schedEn+'</span></span></div>'+
+      '<div class="reqs"><span class="rt">Dalhin mo <span class="en">· Bring with you</span></span> — '+p.reqs.join(' · ')+'</div>'+
+      '<div class="stillgo"><span class="kic"><svg viewBox="0 0 48 48"><path d="M24 41S7 30 7 18.5A9.5 9.5 0 0 1 24 13a9.5 9.5 0 0 1 17 5.5C41 30 24 41 24 41z"/></svg></span>'+
+      '<div><div class="f">Kung wala kang alinman dito, pumunta ka pa rin. Tutulungan ka nila.</div>'+
+      '<div class="e">If you don\'t have any of these, come anyway. They will help you.</div></div></div>'+
+      '<div class="pacts">'+act+'</div></div>';
+  }).join('');
+}
+function setLoc(c){ curLoc = c; renderFind(); }
+function findProg(id){ return SEED.programs.find(function(p){ return p.id===id; }); }
+function openDetail(id){
+  const p = findProg(id);
+  openSheet(
+    '<div class="sh1">'+p.title+'</div><div class="sh2">'+p.en+' · '+p.prov+'</div>'+
+    '<div class="srow">🕘 &nbsp;'+p.sched+'<div class="en">'+p.schedEn+' · '+p.len+'</div></div>'+
+    '<div class="srow">📍 &nbsp;'+p.dir+'</div>'+
+    '<div class="srow">Dalhin: '+p.reqs.join(' · ')+'<div class="en">Kung wala, pumunta ka pa rin. Tutulungan ka nila.</div></div>'+
+    (p.enrolled
+      ? '<button class="kbtnq tap" onclick="closeSheet()">Bumalik · Back</button>'
+      : '<button class="kbtn tap" onclick="confirmJoin(\''+p.id+'\', this)"><span class="b1">✓ &nbsp;Oo, isali mo ako</span><span class="b2">Yes, enrol me</span></button>'+
+        '<button class="kbtnq tap" onclick="closeSheet()">Bumalik sa listahan · Back to the list</button>')
+  );
+}
+function openJoin(id){
+  const p = findProg(id);
+  openSheet(
+    '<div class="sh1">Sasali ka sa programang ito?</div>'+
+    '<div class="sh2">Join this program? · '+p.title+'</div>'+
+    '<div class="srow">📅 &nbsp;Unang sesyon: <strong>'+p.first+'</strong><div class="en">'+p.rel+'</div></div>'+
+    '<div class="srow">📱 &nbsp;Ipapaalala namin sa '+SEED.persona.phone+'<div class="en">We\'ll remind you by text. No data needed.</div></div>'+
+    '<button class="kbtn tap" onclick="confirmJoin(\''+p.id+'\', this)"><span class="b1">✓ &nbsp;Oo, isali mo ako</span><span class="b2">Yes, enrol me</span></button>'+
+    '<button class="kbtnq tap" onclick="closeSheet()">Hindi muna · Not now</button>'
+  );
+}
+async function confirmJoin(id, btn){
+  const p = findProg(id);
+  btn.innerHTML = '<span class="b1">Isinasali ka namin…</span><span class="b2">Enrolling you…</span>';
+  await tryApi('/api/everify', {method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'enrol', program:id, idem:'ELY-4K2M'})}, 1200);
+  await new Promise(function(r){ setTimeout(r, 900); });
+  p.enrolled = true;
+  S.currentProgram = p;
+  closeSheet();
+  $('doneProg').textContent = p.title+' · '+p.prov;
+  $('doneWhen').textContent = p.first;
+  $('doneRel').textContent = p.rel;
+  go('done');
+  restartCheck($('s-done'));
+}
+
+/* ---------- K-6: needs grid ---------- */
+function renderNeeds(){
+  const isEn = S.lang === 'English';
+  $('needgrid').innerHTML = SEED.needs.map(function(n){
+    const k = 'need.'+n.ic;
+    return '<button class="ntile tap" onclick="sendNeed()">'+
+      '<span class="well"><span class="kic"><svg viewBox="0 0 48 48">'+NEED_ICONS[n.ic]+'</svg></span></span>'+
+      '<span><span class="t1" style="display:block">'+t(k, S.lang)+'</span>'+
+      (isEn ? '' : '<span class="t2" style="display:block">'+t(k,'English')+'</span>')+'</span>'+
+    '</button>';
+  }).join('');
+}
+function sendNeed(){
+  $('sentRef').textContent = 'R-'+(8800+Math.floor(Math.random()*199));
+  showOv('sentOv');
+  restartCheck($('sentOv'));
+}
+
+/* ---------- demo affordance (filming) ---------- */
+const DEMO_ORDER = ['k1','k2','menu','case','programs','find','status','done'];
+addEventListener('keydown', function(e){
+  const map = {'1':'k1','2':'k2','3':'menu','4':'case','5':'programs','6':'find','7':'status','8':'done'};
+  if(map[e.key]){
+    if(map[e.key]==='done' && !S.currentProgram){ S.currentProgram = SEED.programs[0]; }
+    go(map[e.key]);
+  }
+  if(e.key==='9'){ if($('timeoutOv').classList.contains('show')) stillHere(); else openTimeout(); }
+  if(e.key==='0'){ endNow(); }
+});
+function demoCycle(){
+  const i = DEMO_ORDER.indexOf(S.screen);
+  const nxt = DEMO_ORDER[(i+1) % DEMO_ORDER.length];
+  if(nxt==='done' && !S.currentProgram){ S.currentProgram = SEED.programs[0]; }
+  go(nxt);
+}
+
+/* ---------- init ---------- */
+renderK1();
+applyLang('Filipino');
+tickClock();
+fit();
+go('k1');
+</script>
+</body>
+</html>
