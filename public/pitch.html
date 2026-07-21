@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>e-Laya — Team Ala-Eh — eGovHackathon 2026</title>
+<title>e-Laya · Team Ala-Eh · eGovHackathon 2026</title>
 <link rel="stylesheet" href="elaya.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
@@ -33,7 +33,7 @@ h3{font-size:17px;font-weight:500;letter-spacing:-.01em;color:var(--text)}
 .n{font-size:10px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:var(--primary);margin-bottom:6px}
 .card p{font-size:13px;line-height:1.5;color:var(--muted-strong)}
 
-/* six module cards — index.html framing, clickable */
+/* six module cards, index.html framing, clickable */
 .six{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:4px}
 .m{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--surface);
   border:1px solid var(--border);border-radius:var(--radius);padding:14px;transition:.15s}
@@ -47,7 +47,6 @@ h3{font-size:17px;font-weight:500;letter-spacing:-.01em;color:var(--text)}
 .m li{font-size:11.5px;line-height:1.4;color:var(--muted-strong);padding-left:11px;position:relative;margin-bottom:3px}
 .m li::before{content:"";position:absolute;left:0;top:6px;width:4px;height:4px;border-radius:50%;background:var(--border-strong)}
 .m .go{margin-top:9px;font-size:12px;font-weight:500;color:var(--primary)}
-.m.hero{border:2px solid var(--primary);background:var(--secondary)}
 
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
@@ -55,9 +54,6 @@ th{text-align:left;font-size:10px;font-weight:500;letter-spacing:.12em;text-tran
 td{padding:8px 9px;border-bottom:1px solid var(--border);color:var(--muted-strong);line-height:1.45}
 td.k2{color:var(--text);font-weight:500;white-space:nowrap}
 tr:last-child td{border-bottom:none}
-.tag{font-size:9.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:999px}
-.tag.live{background:var(--success-surface);color:var(--success);border:1px solid var(--success-border)}
-.tag.pro{background:#FFF8E1;color:#8A6D00;border:1px solid #F0DFA8}
 .foot{font-size:11.5px;color:var(--faint);border-top:1px solid var(--border);padding-top:10px;margin-top:13px;line-height:1.5}
 #bar{position:fixed;top:0;left:0;height:3px;background:var(--primary);transition:width .3s;z-index:60}
 #hud{position:fixed;bottom:12px;right:14px;display:flex;gap:5px;align-items:center;z-index:60}
@@ -80,171 +76,182 @@ tr:last-child td{border-bottom:none}
 <script>
 const SIX=`<div class="six">
 <a class="m" href="kiosk.html" target="_blank"><span class="r">/kiosk</span><h3>Facility terminal</h3>
-<div class="who">For people in custody, and those just released</div>
-<div class="lb">The problem</div><p class="pr">A person inside cannot look up their own case, and a person released this morning has no phone, no ID, and no idea which programmes they are entitled to join.</p>
-<div class="lb">What they can do</div><ul><li>Read their case status, hearing and credit</li><li>Find programmes nearby and enrol on the spot</li><li>In nine languages, without typing a word</li></ul>
+<div class="who">For people in custody, and people released this morning</div>
+<div class="lb">The problem</div><p class="pr">A person inside cannot look up their own case. A person released this morning has no phone, no ID, and no idea which programmes they are entitled to join.</p>
+<div class="lb">What they can do</div><ul><li>Read their case status, next hearing and credit</li><li>Find programmes nearby and enrol on the spot</li><li>Nine languages, no typing required</li></ul>
 <div class="go">Open the terminal →</div></a>
 
 <a class="m" href="app.html" target="_blank"><span class="r">/app</span><h3>Family app</h3>
 <div class="who">For families and guardians</div>
-<div class="lb">The problem</div><p class="pr">Between visits there is silence. A relative travels for hours to hear four words, and learns nothing about hearings or programmes until the next trip.</p>
-<div class="lb">What they can do</div><ul><li>See how their person is — and when it was last confirmed</li><li>Follow hearings, sessions and attendance</li><li>Receive it by SMS, on a phone with no data</li></ul>
+<div class="lb">The problem</div><p class="pr">Between visits there is silence. A relative travels for hours to hear four words, then learns nothing about hearings or programmes until the next trip.</p>
+<div class="lb">What they can do</div><ul><li>See how their person is, and when it was last confirmed</li><li>Follow hearings, sessions and attendance</li><li>Get it by SMS, on a phone with no data</li></ul>
 <div class="go">Open the app →</div></a>
 
 <a class="m" href="cases.html" target="_blank"><span class="r">/cases</span><h3>Counsel's caseload</h3>
 <div class="who">For Public Attorney's Office lawyers</div>
-<div class="lb">The problem</div><p class="pr">A PAO lawyer may carry hundreds of clients. The cases that go wrong are the hearing held and never written down, and the client who became eligible while nobody was looking.</p>
-<div class="lb">What they can do</div><ul><li>Open to what needs attention today, not an alphabet</li><li>See history, hearings and programme progress in one place</li><li>Record an outcome and notify the family in one action</li></ul>
+<div class="lb">The problem</div><p class="pr">One PAO lawyer can carry hundreds of clients. What slips is the hearing that happened and was never written down, and the client who became eligible while nobody was looking.</p>
+<div class="lb">What they can do</div><ul><li>Open on what needs attention today</li><li>See history, hearings and programme progress in one place</li><li>Record an outcome and tell the family in one action</li></ul>
 <div class="go">Open the caseload →</div></a>
 
 <a class="m" href="sessions.html" target="_blank"><span class="r">/sessions</span><h3>Programme attendance</h3>
 <div class="who">For social workers and programme providers</div>
-<div class="lb">The problem</div><p class="pr">Diversion attendance lives on paper. A child who quietly stops coming — or who attends perfectly but was given too few sessions to finish in time — is only found at a review months later.</p>
-<div class="lb">What they can do</div><ul><li>Log a full session in seconds, even with no signal</li><li>See who needs follow-up, and who cannot finish on schedule</li><li>Issue a record anyone can independently verify</li></ul>
+<div class="lb">The problem</div><p class="pr">Diversion attendance lives on paper. The child who quietly stops coming, and the child attending perfectly with too few sessions left to finish on time, both surface at a review months later.</p>
+<div class="lb">What they can do</div><ul><li>Log a full session in seconds, even with no signal</li><li>See who needs follow-up, and who cannot finish on schedule</li><li>Issue a record anyone can verify independently</li></ul>
 <div class="go">Open the register →</div></a>
 
-<a class="m hero" href="verify.html" target="_blank"><span class="r">/verify</span><h3>Kalayaan · Sino siya?</h3>
+<a class="m" href="verify.html" target="_blank"><span class="r">/verify</span><h3>Kalayaan · Sino siya?</h3>
 <div class="who">For LSWDO, PAO and BJMP / BuCor records officers</div>
-<div class="lb">The problem</div><p class="pr">The justice system holds people it cannot name. A child booked as an adult loses the diversion the law guarantees. An adult under an alias loses everything downstream of a matched record.</p>
-<div class="lb">What they can do</div><ul><li>Interview conversationally — <span class="fil">"hindi ko alam"</span> is always valid</li><li>Reconcile what they remember against civil registration</li><li>Refer the unregistered to a path to existing in the record</li></ul>
+<div class="lb">The problem</div><p class="pr">People are held under names nobody has been able to confirm. A child booked as an adult loses the diversion the law guarantees. An adult under an alias loses everything that follows a matched record.</p>
+<div class="lb">What they can do</div><ul><li>Interview conversationally, where <span class="fil">"hindi ko alam"</span> is a valid answer</li><li>Reconcile what they remember against civil registration</li><li>Refer the unregistered to a route into the record</li></ul>
 <div class="go">Open Kalayaan →</div></a>
 
 <a class="m" href="custody.html" target="_blank"><span class="r">/custody</span><h3>Welfare check-in</h3>
 <div class="who">For jail and prison officers</div>
-<div class="lb">The problem</div><p class="pr">Officers already see every person every day. That knowledge simply has nowhere to go — so the family outside stays in the dark, and the officer takes the phone calls.</p>
-<div class="lb">What they can do</div><ul><li>Confirm welfare in about two seconds, one at a time</li><li>See exactly what the family will read before confirming</li><li>Let a status expire, so nobody is told stale news</li></ul>
+<div class="lb">The problem</div><p class="pr">Officers already see every person every day. That knowledge has nowhere to go, so the family outside waits without news, and the officer takes the phone calls.</p>
+<div class="lb">What they can do</div><ul><li>Confirm welfare in about two seconds, one person at a time</li><li>See exactly what the family will read before confirming</li><li>Let a status expire, so nobody is told stale news</li></ul>
 <div class="go">Open the check-in →</div></a>
 </div>`;
 
 const D=[
 
-/*1*/{t:40,n:`<p><span class="t">0:00–0:42 · Walk on. No greeting, no team name. Let the room settle.</span></p>
-<p>Three-second pause after <b>"punong-puno ka ng pag-asa."</b> Do not fill it. Then flat: "And then nothing."</p>
-<p>Protect yourself: <b>the social workers DO remember every name</b> — so nobody from a Bahay Pag-asa can contradict you.</p>
-<p>Land hard on <span class="t">"hope is not a plan."</span></p>`,
+/*1*/{t:8,n:`<p><span class="t">0:00 to 0:08 · Walk on and stand still. Let the room read it.</span></p>
+<p>Do not say good morning. Do not say the team name. <b>Do not read the members aloud.</b> This slide orients the room, it is not something you narrate.</p>
+<p>One beat, then click straight into the opener and start with <span class="t">"You are sixteen."</span></p>`,
+h:`<div class="s tint" style="justify-content:center;text-align:center">
+<h1 style="font-size:104px;margin:0;color:var(--primary);letter-spacing:-.045em">e-Laya</h1>
+<p class="p" style="font-size:22px;max-width:64ch;margin:16px auto 0">A set of six solutions for children in conflict with the law, persons deprived of liberty, their families, and the agencies that carry them.</p>
+<div class="k" style="margin:44px 0 14px">Team Ala-Eh</div>
+<div style="display:flex;justify-content:center;gap:38px">
+<div style="font-size:16px;font-weight:500;color:var(--text);line-height:1.45">Baldoza,<br><span style="font-weight:300;color:var(--muted-strong)">Kyle Ashleigh</span></div>
+<div style="font-size:16px;font-weight:500;color:var(--text);line-height:1.45">Go,<br><span style="font-weight:300;color:var(--muted-strong)">Janzen</span></div>
+<div style="font-size:16px;font-weight:500;color:var(--text);line-height:1.45">Go,<br><span style="font-weight:300;color:var(--muted-strong)">Justin</span></div>
+<div style="font-size:16px;font-weight:500;color:var(--text);line-height:1.45">Pequieras,<br><span style="font-weight:300;color:var(--muted-strong)">Sofia Theresa</span></div>
+<div style="font-size:16px;font-weight:500;color:var(--text);line-height:1.45">Roque,<br><span style="font-weight:300;color:var(--muted-strong)">Xander John</span></div></div>
+<div class="foot" style="margin-top:34px">DICT eGovHackathon 2026</div></div>`},
+
+/*2*/{t:40,n:`<p><span class="t">0:08 to 0:48 · Walk on. No greeting, no team name. Let the room settle first.</span></p>
+<p>Three full seconds of silence after <b>"punong-puno ka ng pag-asa."</b> Do not fill it. Then say it flat, no drama: "And then nothing."</p>
+<p>Protect yourself. <b>The social workers DO remember every name</b>, so nobody from a Bahay Pag-asa can contradict you.</p>
+<p>Slow down for the last four words. Land hard on <span class="t">"hope is not a plan."</span> Then move.</p>`,
 h:`<div class="s"><div class="k">Isipin mo</div>
-<div class="big">Imagine you are sixteen, walking out of <b>Bahay Pag-asa</b>. House of Hope.</div>
+<div class="big">You are sixteen, walking out of <b>Bahay Pag-asa</b>. House of Hope.</div>
 <p class="p beat">You did everything they asked. Twelve sessions. You came to all of them.<br>
-And at that gate — <b class="fil">punong-puno ka ng pag-asa.</b></p>
+And at that gate, <b class="fil">punong-puno ka ng pag-asa.</b></p>
 <p class="p beat" style="font-size:29px;color:var(--text)"><b>And then nothing.</b></p>
 <p class="p beat">Nobody checks. Nobody calls. No next session, no next person.<br>
-Same street, same house, same everything — alone, with hope. <b>And hope is not a plan.</b></p>
-<div class="foot">Not because anyone stopped caring. The social workers there can tell you every name.</div></div>`},
+Same street, same house, same everything. You walk home carrying hope. <b>And hope is not a plan.</b></p>
+<div class="foot">Not because anyone stopped caring. The social workers there can tell you every single name.</div></div>`},
 
-/*2*/{t:34,n:`<p><span class="t">0:42–1:18 · What the field visit found. This is OUR primary research — say so.</span></p>
-<p>"We asked the social workers what happens to the children after they finish. They did not hesitate."</p>
-<p><span class="t">"Babalik sila."</span> — let it sit unglossed for a beat.</p>
-<p>Then the honest turn: <b>and when we went looking for the national number, there wasn't one.</b> Nobody can tell you how many come back. That absence IS the finding.</p>`,
+/*3*/{t:34,n:`<p><span class="t">0:48 to 1:22 · This is OUR field visit. Say that out loud, it is primary research.</span></p>
+<p>"We went to a Bahay Pag-asa. We asked the social workers what happens to the children after they finish. They answered in about a second."</p>
+<p>Say <span class="t">"Babalik sila."</span> Then stop. Let it sit before you translate it.</p>
+<p>Then the turn: <b>we went looking for the national number, and there isn't one.</b> Nobody can tell you how many come back. That absence IS the finding. Say it as a fact, never as an accusation.</p>`,
 h:`<div class="s tint"><div class="k">What we found</div>
 <h2>We asked what happens to the children after they finish.</h2>
 <p class="p beat" style="font-size:34px;color:var(--text);margin-top:16px"><b class="fil">"Babalik sila."</b></p>
-<p class="p" style="margin-top:6px">They come back. The social workers did not hesitate, and they were not surprised — they have watched it happen for years, without the means to stop it.</p>
+<p class="p" style="margin-top:6px">They come back. Nobody hesitated, and nobody was surprised. These are people who have watched it happen for years without the means to stop it.</p>
 <div class="row beat" style="margin-top:24px;gap:14px">
 <div class="card" style="flex:1"><div class="n">Then we looked for the number</div>
-<p>How many children return? How many released adults do? <b>There is no national figure.</b> The country's recidivism rate sits in a freedom-of-information request filed February 2025 that has never been answered.</p></div>
+<p>How many children come back? How many released adults do? <b>There is no national figure.</b> The country's recidivism rate sits inside a freedom of information request filed in February 2025 that has never been answered.</p></div>
 <div class="card t" style="flex:1"><div class="n">And that is the finding</div>
-<p>A rate needs four things: a release cohort, a person-level identifier, a follow-up window, a chosen event. <b>We have none of the four.</b> Nobody is counting — which is exactly why nobody is following.</p></div></div>
-<div class="foot">Primary research: our own team's interview with social workers at a Bahay Pag-asa, July 2026.</div></div>`},
+<p>A rate needs four things: a release cohort, a person level identifier, a fixed follow up window, and a chosen event. <b>We have none of the four.</b> Nobody counts them, so nobody follows them.</p></div></div>
+<div class="foot">Primary research: our own interview with social workers at a Bahay Pag-asa, July 2026.</div></div>`},
 
-/*3*/{t:30,n:`<p><span class="t">1:18–1:48 · The reframe. Say it plainly, then the turn.</span></p>
-<p>"Every system we have moves a <b>case</b> to a verdict. None of them follows a <b>person</b>."</p>
-<p>Then: <span class="t">"Entry into that system is automatic. Exit is somebody remembering."</span></p>
-<p>Close on the society line — it implicates <b>us</b>, never the room.</p>`,
+/*4*/{t:28,n:`<p><span class="t">1:22 to 1:50 · The mechanism. Plain and unhurried. No heat in the voice.</span></p>
+<p>Headline first, then pause: <b>"Everything we have follows a case. Nothing follows a person."</b></p>
+<p>Then the sharpest line in the slide, said slowly: <span class="t">"Getting taken in is automatic. Getting picked up on the other side depends on somebody remembering."</span></p>
+<p>Two cards, one breath each. Do not read them, say the idea: the programme has an end date, and every handover starts from zero.</p>
+<p>Close on the certificate line and go straight to the reveal.</p>`,
 h:`<div class="s"><div class="k">Why it keeps happening</div>
-<h2>This is the one sector we have all agreed to look away from.</h2>
-<p class="p beat" style="margin-top:14px">A prisoner. A child who offended. We judge them, and then we stop looking —
-and a country's systems are built out of what its people are willing to look at.</p>
+<h2>Everything we have follows a case. Nothing follows a person.</h2>
+<p class="p beat" style="margin-top:14px">A case has a number, a calendar and an owner, so it moves on its own.
+A person has none of that. Getting taken in is automatic. Getting picked up on the other side depends on somebody remembering.</p>
 <div class="row beat" style="margin-top:22px;gap:14px">
-<div class="card" style="flex:1"><div class="n">So the rehabilitation exists</div>
-<p>Bahay Pag-asa. Diversion programmes. Paralegal desks. Education inside. <b>The law already promises a second chance</b> — and thousands of people are working to deliver it.</p></div>
-<div class="card" style="flex:1"><div class="n">But nothing carries it</div>
-<p>No record follows the person out of the gate. No one is assigned to notice. <b>The promise ends where the building ends</b> — so the child walks out with hope and nothing underneath it.</p></div></div>
+<div class="card" style="flex:1"><div class="n">The support has an end date</div>
+<p>Twelve sessions, then the file closes. The programme is complete, so the paperwork is complete. <b>The boy is sixteen, and the next year of his life starts the following morning</b> with nobody assigned to it.</p></div>
+<div class="card" style="flex:1"><div class="n">Every handover starts from zero</div>
+<p>The social worker knows him by name. The lawyer has never met him. The officer at the next facility has a name and nothing behind it. <b>What one worker learns stays with that worker.</b></p></div></div>
 <p class="p beat" style="font-size:25px;color:var(--text);margin-top:22px">
-<b>A second chance is not a feeling. It is infrastructure.</b><br>
-And for these Filipinos, nobody ever built it.</p></div>`},
+So he walks back into the same street<br>
+<b>holding a certificate nobody will ever ask to see.</b></p></div>`},
 
-/*4*/{t:22,n:`<p><span class="t">1:48–2:10 · THE REVEAL. e-Laya is the bida. Say the name and stop.</span></p>
+/*5*/{t:22,n:`<p><span class="t">1:50 to 2:12 · The reveal. e-Laya is the bida. Say the name, then stop talking.</span></p>
 <p>"So it was nobody's job to notice." Beat. <b>"We built the somebody."</b></p>
-<p>Then the definition — and be precise: <span class="t">it is NOT one system. It is a set of solutions.</span></p>`,
+<p>Be exact on the wording: <span class="t">a set of six solutions.</span> Say "solutions", never "system" and never "platform".</p>
+<p>Do not explain the name here. Move.</p>`,
 h:`<div class="s tint" style="justify-content:center">
 <p class="p" style="font-size:21px">So it was nobody's job to notice.</p>
 <h1 style="font-size:104px;margin:10px 0 0;color:var(--primary);letter-spacing:-.045em">e-Laya</h1>
 <p class="p beat" style="font-size:27px;color:var(--text);max-width:50ch;margin-top:18px">
-<b>A set of solutions</b> built to help children in conflict with the law, persons deprived of liberty,
-<b>their families</b>, and <b>the agencies that carry them</b> — a real second chance, and the
-infrastructure that makes one possible.</p>
+<b>A set of six solutions</b> for children in conflict with the law, persons deprived of liberty,
+<b>their families</b>, and <b>the agencies that carry them</b>. A real second chance, and the
+infrastructure a second chance runs on.</p>
 <div class="foot" style="margin-top:26px">Team Ala-Eh · <span class="fil">"Walang dapat mawala sa sistema."</span></div></div>`},
 
-/*5*/{t:40,n:`<p><span class="t">2:10–2:50 · HOW it works. Not one system — six solutions, one idea.</span></p>
-<p>"Not a platform. A set of solutions, each aimed at one moment where the current system goes dark."</p>
-<p>Walk the four moments. Then land: <b>we are not building recognition — we are building its portability.</b></p>`,
+/*6*/{t:40,n:`<p><span class="t">2:12 to 2:52 · How it works. One idea, six places to put it.</span></p>
+<p>Say it as four questions a real person asks, in order: <b>Sino siya. Ano na. Ano ang susunod. May nakatingin ba.</b> Sweep the cards left to right, do not read them.</p>
+<p>Land the closing line clean: <span class="t">"We build recognition that travels."</span> Then explain it in one sentence and stop.</p>`,
 h:`<div class="s"><div class="k">How it works</div>
-<h2>Not one system. A set of solutions — each aimed at a moment the system goes dark.</h2>
+<h2>Six solutions, one for each moment a person can drop out of sight.</h2>
 <div class="grid g4 beat" style="margin-top:20px">
-<div class="card"><div class="n">At intake</div><h3>Who is this?</h3><p style="margin-top:5px">A child with no papers is booked as an adult and loses diversion. We resolve identity instead of guessing.</p></div>
-<div class="card"><div class="n">Inside</div><h3>What is my status?</h3><p style="margin-top:5px">Case, hearing, credit — readable by the person it belongs to, and by their family without travelling.</p></div>
-<div class="card"><div class="n">At the gate</div><h3>What happens next?</h3><p style="margin-top:5px">Programmes findable and joinable on the spot, so release is not the end of the support.</p></div>
-<div class="card t"><div class="n">After</div><h3>Is anyone watching?</h3><p style="margin-top:5px">Attendance tracked, missed sessions flagged the same day, the child who cannot finish caught early.</p></div></div>
-<p class="p beat" style="margin-top:22px;font-size:21px"><b>We are not building recognition. We are building its portability</b> — proof the person carries, so the next worker starts where the last one stopped.</p></div>`},
+<div class="card"><div class="n">At intake</div><h3>Who is this?</h3><p style="margin-top:5px">A child with no papers gets booked as an adult and loses diversion. We resolve identity instead of guessing at it.</p></div>
+<div class="card"><div class="n">Inside</div><h3>What is my status?</h3><p style="margin-top:5px">Case, hearing and credit, readable by the person they belong to, and by the family without the trip.</p></div>
+<div class="card"><div class="n">At the gate</div><h3>What happens next?</h3><p style="margin-top:5px">Programmes you can find and join on the spot, so release day is the start of the next step.</p></div>
+<div class="card t"><div class="n">After</div><h3>Is anyone watching?</h3><p style="margin-top:5px">Attendance logged, a missed session flagged the same day, the child who cannot finish on time caught early.</p></div></div>
+<p class="p beat" style="margin-top:22px;font-size:21px"><b>We build recognition that travels.</b> Proof the person carries with them, so the next worker starts where the last one stopped.</p></div>`},
 
-/*6*/{t:40,n:`<p><span class="t">2:50–3:34 · The six solutions. Do NOT read them — sweep and name who each serves.</span></p>
-<p>"Six solutions. Every one of them is running right now, and every card here opens it."</p>
-<p>Point at Kalayaan: <span class="t">that is the one to watch in the demo.</span></p>`,
+/*7*/{t:200,n:`<p><span class="t">2:52 to 6:12 · Name the six in about twenty seconds, then demo live off this slide. Click the cards.</span></p>
+<p>Do NOT read the cards. Say who each one serves, then: "All six are running. Every card on this slide opens the real thing."</p>
+<p><span class="t">KALAYAAN · 90s</span> A child with no papers. Show <b>"Hindi ko alam"</b> being accepted as an answer. Show the profile assembling from fragments. Land on: <b>a child who knows nothing about himself still walks out with a route to a legal identity.</b></p>
+<p><span class="t">THE TERMINAL · 50s</span> Tap Binisaya. The whole screen becomes Cebuano. Five taps to enrol. Read the blue line aloud, word for word.</p>
+<p><span class="t">THE FAMILY · 40s</span> One officer tap, then <b>"Ayos naman siya."</b> Say it plainly: green does not mean healthy. It means somebody looked at him this morning.</p>
+<p>Do not demo login. Do not open cases or sessions. If you are running long, cut the terminal, never Kalayaan.</p>`,
 h:`<div class="s"><div class="k">The six solutions</div>
-<h2 style="margin-bottom:12px">Every one is running — open any of them</h2>
+<h2 style="margin-bottom:12px">All six are running. Open any of them.</h2>
 ${SIX}</div>`},
 
-/*7*/{t:34,n:`<p><span class="t">3:34–4:10 · Integration. 30% of the score. Full sentences, not shorthand.</span></p>
-<p>"eGov SSO is not our login screen — <b>it is why our output has legal weight.</b>"</p>
-<p>Then name the greys yourself. Saying it is what makes everything else believable.</p>`,
+/*8*/{t:34,n:`<p><span class="t">6:12 to 6:46 · Integration. Thirty percent of the score. Full sentences, no shorthand.</span></p>
+<p>Lead with the strongest one: "eGov SSO does more than log people in. <b>It is why what we produce carries legal weight.</b>"</p>
+<p>Then name the gaps yourself, before anyone asks. Saying it out loud is what makes everything else believable.</p>`,
 h:`<div class="s tint"><div class="k">Integration with eGovPH</div>
 <h2>Seven services, doing real work</h2>
 <table style="margin-top:16px">
-<tr><th style="width:150px">eGovPH service</th><th>What it does here</th><th style="width:70px">State</th></tr>
-<tr><td class="k2">eGov SSO</td><td>Establishes who is asking and what their role permits them to see. It is also the lawful basis for handling any of this information at all.</td><td><span class="tag pro">wired</span></td></tr>
-<tr><td class="k2">eVerify</td><td>Reads a National ID the person hands over, to confirm identity and — where a child's future depends on it — age.</td><td><span class="tag pro">wired</span></td></tr>
-<tr><td class="k2">Face Liveness</td><td>Confirms identity at the terminal for someone who no longer holds any ID.</td><td><span class="tag pro">wired</span></td></tr>
-<tr><td class="k2">eMessage</td><td>Delivers every notification by SMS, so a family is reached on a basic phone with no internet.</td><td><span class="tag pro">wired</span></td></tr>
-<tr><td class="k2">eGov AI</td><td>Runs the terminal in nine Philippine languages, reads any screen aloud, and reads whatever document does exist.</td><td><span class="tag pro">wired</span></td></tr>
-<tr><td class="k2">eReport (PSGC)</td><td>Supplies the official barangay hierarchy, so "a programme near me" means a real, matchable place.</td><td><span class="tag live">live</span></td></tr>
-<tr><td class="k2">Compass (DBM)</td><td>Provides published national budget figures, used to ground our cost estimates in real numbers.</td><td><span class="tag live">live</span></td></tr>
+<tr><th style="width:150px">eGovPH service</th><th>What it does here</th></tr>
+<tr><td class="k2">eGov SSO</td><td>Establishes who is asking and what their role permits them to see. It is also the lawful basis for handling any of this information at all.</td></tr>
+<tr><td class="k2">eVerify</td><td>Reads the National ID a person hands over, to confirm identity and, where a child's whole future turns on it, age.</td></tr>
+<tr><td class="k2">Face Liveness</td><td>Confirms identity at the terminal for someone who no longer holds any ID at all.</td></tr>
+<tr><td class="k2">eMessage</td><td>Sends every notification by SMS, so a family on a basic phone with no internet still gets the news.</td></tr>
+<tr><td class="k2">eGov AI</td><td>Runs the terminal in nine Philippine languages, reads any screen aloud, and reads whatever document does exist.</td></tr>
+<tr><td class="k2">eReport (PSGC)</td><td>Supplies the official barangay hierarchy, so "a programme near me" resolves to a real, matchable place.</td></tr>
+<tr><td class="k2">Compass (DBM)</td><td>Pulls published national budget figures, so our cost numbers come from the government's own data.</td></tr>
 </table>
-<div class="foot"><b>What we will not claim:</b> no eCourt, BJMP, BuCor, DSWD or PAO interface exists in the sandbox — those are proposed. Every screen you are about to see runs on a source that exists today.</div></div>`},
+<div class="foot"><b>What we will not claim:</b> no eCourt, BJMP, BuCor, DSWD or PAO interface exists in the sandbox, so those integrations are proposed, not built. Every screen you just saw runs on a source that exists today.</div></div>`},
 
-/*8*/{t:180,n:`<p><span class="t">4:10–7:10 · LIVE DEMO — 3 minutes. Click the cards on this slide.</span></p>
-<p><span class="t">HERO · KALAYAAN (90s)</span> — a child with no papers. Show <b>"Hindi ko alam"</b> as a valid answer. Show the profile assembling from fragments. Land: <b>a child who knows nothing still walks out with a route to a legal identity.</b></p>
-<p><span class="t">KIOSK (50s)</span> — tap Binisaya, the whole terminal becomes Cebuano. Five taps to enrol. Read the blue line aloud.</p>
-<p><span class="t">FAMILY (40s)</span> — one officer tap → <b>"Ayos naman siya."</b> Green does not mean healthy; it means somebody looked at him this morning.</p>
-<p>Do NOT demo login.</p>`,
-h:`<div class="s"><div class="k">Live demo · three minutes</div>
-<h2 style="margin-bottom:12px">Kalayaan first — then the terminal, then the family</h2>
-${SIX}</div>`},
-
-/*9*/{t:36,n:`<p><span class="t">7:10–7:48 · What it changes. Lead with the second chance, close with the peso.</span></p>
-<p>"A second chance is not a feeling. It is a set of things that have to happen — and every one of them is an information operation."</p>
-<p>Then the cost, live from DBM's own API. Then the honesty about recidivism.</p>`,
+/*9*/{t:40,n:`<p><span class="t">6:46 to 7:26 · The emotional slide. Go slower here than anywhere else in the pitch.</span></p>
+<p>Say the headline to the room, not to the screen. <b>"We"</b> includes everyone here, and it includes us. Never point at an agency.</p>
+<p>Two beats in the middle, one per line. Then stop, breathe, and deliver the last line slower than everything before it: <span class="t">"A second chance is not a feeling. It is infrastructure."</span></p>
+<p>Hold the silence after the last line. Do not rush into the next slide.</p>`,
 h:`<div class="s tint"><div class="k">What it changes</div>
-<h2>A second chance is not a feeling. It is infrastructure.</h2>
-<p class="p beat" style="margin-top:12px">To actually give someone one, four things must happen: <b>somebody must know who they are</b>, <b>somebody must know when they are free to go</b>, <b>somebody must offer the next step</b>, and <b>somebody must notice if they stop coming.</b> Every one of those is an information operation. That is what we built.</p>
-<div class="row" style="margin:20px 0 0;gap:0;border-top:1px solid var(--border-strong);border-bottom:1px solid var(--border-strong)">
-<div style="flex:1;padding:15px 16px 15px 0"><div class="stat" style="font-size:34px">₱214.62</div>
-<div class="sl">one detention-day — BJMP FY2026 MOOE ÷ the population the GAA itself assumes <span class="tag live">live · Compass API</span></div></div>
-<div style="flex:1;padding:15px 16px;border-left:1px solid var(--border)"><div class="stat" style="font-size:34px">85,000+</div>
-<div class="sl">releases in twelve months through paralegal-assisted processes — the work already happens, by hand.</div></div>
-<div style="flex:1.1;padding:15px 0 15px 16px;border-left:1px solid var(--border)"><div class="stat" style="font-size:34px">~18,000</div>
-<div class="sl">education-programme completions a year that never link to what happened next.</div></div></div>
-<div class="foot"><b>We do not claim to reduce recidivism</b> — nobody can measure it yet. We claim that a person stops disappearing between the agencies that are already trying to help them, and that the country becomes able to answer the question.</div></div>`},
+<h2>This is the one sector we have all agreed to look away from.</h2>
+<p class="p beat" style="margin-top:12px;max-width:74ch">We judge them, and then we stop looking. A country's systems are built out of what its people are willing to look at.</p>
+<p class="p" style="margin-top:10px;max-width:74ch">The law already promises a second chance. Thousands are working to deliver it. What was never built is the thing that carries it past the gate.</p>
+<p class="p" style="font-size:26px;color:var(--text);margin-top:16px;max-width:74ch"><b>A second chance is not a feeling. It is infrastructure.</b></p>
+</div>`},
 
-/*10*/{t:28,n:`<p><span class="t">7:48–8:20 · Close. Slow. Say the last two lines and stop.</span></p>
-<p>Do not add thank-you filler. Let the name sit.</p>`,
+/*10*/{t:34,n:`<p><span class="t">7:26 to 8:00 · The close. Slower than feels comfortable. Nothing after the last line.</span></p>
+<p>Three images, one breath each: the hope he walks out with, the mother who cannot find out how he is, the child who comes back because nothing was waiting.</p>
+<p>Then the turn, hard: <span class="t">"It was only ever nobody's job to notice. Now it is somebody's."</span></p>
+<p>Read the address out loud, slowly, digit by digit if you have to. Say: <b>"All six are open right now. Open them while we are still standing here."</b></p>
+<p>No thank you, no team bow, no "any questions". Say the name and stop.</p>`,
 h:`<div class="s" style="justify-content:center">
-<div class="big" style="font-size:44px;max-width:30ch">Nobody set out to leave them there.<br>It was only ever <b>nobody's job to notice.</b></div>
-<p class="p beat" style="font-size:30px;color:var(--text);margin-top:24px"><b>Now it is somebody's.</b></p>
-<p class="p beat" style="font-size:21px;max-width:54ch;margin-top:20px">
-Six solutions, for the people we have all agreed to look away from —
-so that finishing a programme, serving your time, or simply being sixteen and having no papers
-is no longer the same thing as disappearing.</p>
-<div class="foot" style="margin-top:26px">
+<div class="big" style="font-size:42px;max-width:31ch">Nobody set out to leave them there.<br>It was only ever <b>nobody's job to notice.</b></div>
+<p class="p beat" style="font-size:30px;color:var(--text);margin-top:20px"><b>Now it is somebody's.</b></p>
+<p class="p beat" style="font-size:19px;max-width:58ch;margin-top:16px">
+A boy walks out <span class="fil">punong-puno ng pag-asa</span>. A mother travels for hours to hear four words.
+A child comes back, not because he failed, but because nothing was waiting for him.
+<b>Six solutions, so that stops being the ordinary ending.</b></p>
+<p class="beat" style="font-size:38px;font-weight:500;letter-spacing:-.02em;color:var(--primary);margin-top:18px">https://e-laya.vercel.app</p>
+<div class="foot" style="margin-top:12px">An index of all six solutions we built, open to anyone, right now.
 <b style="color:var(--primary);font-size:15px">e-Laya</b> · Team Ala-Eh · DICT eGovHackathon 2026 · <span class="fil">"Walang dapat mawala sa sistema."</span></div></div>`}
 ];
 const st=document.getElementById('stage'),bar=document.getElementById('bar'),cnt=document.getElementById('cnt'),
