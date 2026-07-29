@@ -877,10 +877,10 @@
         </div>
       </div>
       <div class="r"><div class="top"><span class="n">2</span>
-        <span class="grow"><span class="t">LSWDO &mdash; Quezon City</span><span class="s">Duty officer, District 4</span></span>
+        <span class="grow"><span class="t">LSWDO &mdash; Batangas City</span><span class="s">Duty officer, City Hall</span></span>
         <span class="chip ok" id="c2">Ready</span></div></div>
       <div class="r"><div class="top"><span class="n">3</span>
-        <span class="grow"><span class="t">Public Attorney&rsquo;s Office</span><span class="s">PAO QC District Office</span></span>
+        <span class="grow"><span class="t">Public Attorney&rsquo;s Office</span><span class="s">PAO Batangas City District Office</span></span>
         <span class="chip ok" id="c3">Ready</span></div></div>
     </div>
 
@@ -997,24 +997,24 @@ const PORTRAIT="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' 
 
 /* -------------------------------------------------------------- seed data */
 const PEOPLE={
-  A :{first:'Juan',middle:'Dela',last:'Cruz',suffix:'Jr.',dob:'2010-03-14',sex:'Male',pob:'Quezon City',
+  A :{first:'Juan',middle:'Dela',last:'Cruz',suffix:'Jr.',dob:'2010-03-14',sex:'Male',pob:'Batangas City',
       guardian:'Maria Dela Cruz — mother',gnum:'+63 917 555 0142'},
   B :{first:'Roberto',middle:'Silva',last:'Aguinaldo',dob:'1992-05-03',sex:'Male',pob:'Caloocan City',
       guardian:'Elena Aguinaldo — sister',gnum:'+63 917 555 0188'},
-  C :{first:'Angelo',middle:'Reyes',last:'Mabini',dob:'2008-07-28',sex:'Male',pob:'Quezon City',
+  C :{first:'Angelo',middle:'Reyes',last:'Mabini',dob:'2008-07-28',sex:'Male',pob:'Batangas City',
       guardian:'Rosalinda Mabini — mother',gnum:'+63 918 555 0277'},
   C1:{first:'Christian',middle:'Bautista',last:'Lim',dob:'2008-07-13',sex:'Male',pob:'Marikina City'},
-  C2:{first:'Marvin',middle:'Ocampo',last:'Salazar',dob:'2008-07-22',sex:'Male',pob:'Quezon City',
+  C2:{first:'Marvin',middle:'Ocampo',last:'Salazar',dob:'2008-07-22',sex:'Male',pob:'Batangas City',
       guardian:'Teresita Salazar — mother',gnum:'+63 906 555 0318'}
 };
 /* `search` = may request the civil-registry reconciliation. Law enforcement never can. */
 const ROLES={
-  DSWD :{agency:'LSWDO',officer:'SW A. Panganiban',full:'Social Worker Ana Panganiban',station:'QC D4',
-         stationFull:'LSWDO Quezon City District 4',search:'Social welfare, acting for the person'},
-  PAO  :{agency:'PAO',officer:'Atty. J. Ramos',full:'Atty. Josefina Ramos',station:'PAO QC',
-         stationFull:'Public Attorney’s Office, Quezon City',search:'Counsel, acting for the client'},
-  BJMP :{agency:'BJMP Records',officer:'JO1 L. Sarmiento',full:'JO1 Luis Sarmiento, Records',station:'QC Jail',
-         stationFull:'Quezon City District Jail — Records',search:'Custodial records officer'},
+  DSWD :{agency:'LSWDO',officer:'SW A. Panganiban',full:'Social Worker Ana Panganiban',station:'LSWDO BC',
+         stationFull:'LSWDO Batangas City',search:'Social welfare, acting for the person'},
+  PAO  :{agency:'PAO',officer:'Atty. J. Ramos',full:'Atty. Josefina Ramos',station:'PAO BC',
+         stationFull:'Public Attorney’s Office, Batangas City',search:'Counsel, acting for the client'},
+  BJMP :{agency:'BJMP Records',officer:'JO1 L. Sarmiento',full:'JO1 Luis Sarmiento, Records',station:'BC Jail',
+         stationFull:'Batangas City District Jail — Records',search:'Custodial records officer'},
   BuCor:{agency:'BuCor Records',officer:'CO2 D. Villanueva',full:'CO2 Delia Villanueva, Records',station:'NBP',
          stationFull:'New Bilibid Prison — Records',search:'Custodial records officer'},
   PNP  :{agency:'PNP',officer:'PO2 R. Marquez',full:'PO2 Ramon Marquez',station:'Stn 6',
@@ -1242,7 +1242,7 @@ const KQ={
     fil:'May kapatid ka ba? Ano ang pangalan nila?',ceb:'Naa kay igsoon? Unsa ilang ngalan?',ilo:'Adda kabsat mo? Ania ti nagan da?'},
   pob:{f:'pob',label:'Lugar ng kapanganakan',gloss:'Where were you born?',
     fil:'Saan ka ipinanganak?',ceb:'Asa ka natawo?',ilo:'Sadino ti nakayanakam?',
-    chips:['Quezon City','Manila','Sa probinsya']},
+    chips:['Batangas City','Manila','Sa probinsya']},
   grew:{f:'grew',label:'Saan lumaki',gloss:'Where did you grow up?',
     fil:'Saan ka lumaki?',ceb:'Asa ka nagdako?',ilo:'Sadino ti nagdakkelam?'},
   now:{f:'now',label:'Tirahan ngayon',gloss:'Where have you been staying?',
@@ -1448,15 +1448,15 @@ function buildCandidates(){
   const cDob=iso(subYM(t,16,4));
   const mother=fact('mother'), pob=fact('pob'), name=fact('name'), brgy=fact('brgy');
   return [
-    {reg:'2010-04521',lcr:'LCR Quezon City',name:'JUAN SANTOS DELA CRUZ',dob:cDob,pob:'Quezon City',
+    {reg:'2010-04521',lcr:'LCR Batangas City',name:'JUAN SANTOS DELA CRUZ',dob:cDob,pob:'Batangas City',
      mother:'MARIA SANTOS SANTOS',father:'PEDRO DELA CRUZ',conf:3,
-     ok:[['Mother’s maiden name',mother||'SANTOS'],['Place of birth',pob||'Quezon City'],['Barangay',brgy||'Commonwealth']],
+     ok:[['Mother’s maiden name',mother||'SANTOS'],['Place of birth',pob||'Batangas City'],['Barangay',brgy||'Pallocan West']],
      cf:[['Given name','record reads “Juan”; they said “'+(name||'Jun-jun')+'”','commonly a nickname']],
      expl:'Mother’s maiden name and place of birth match. The given name differs, which is usual where a child is known by a nickname.'},
-    {reg:'2009-11832',lcr:'LCR Quezon City',name:'JUANITO S. DELA CRUZ',dob:iso(subYM(t,17,1)),pob:'Quezon City',
+    {reg:'2009-11832',lcr:'LCR Batangas City',name:'JUANITO S. DELA CRUZ',dob:iso(subYM(t,17,1)),pob:'Batangas City',
      mother:'MARIA SANTOS SANTOS',father:'—',conf:2,
-     ok:[['Mother’s maiden name',mother||'SANTOS'],['Place of birth',pob||'Quezon City']],
-     cf:[['Barangay','record reads “Payatas”; they said “'+(brgy||'Commonwealth')+'”',''],
+     ok:[['Mother’s maiden name',mother||'SANTOS'],['Place of birth',pob||'Batangas City']],
+     cf:[['Barangay','record reads “Kumintang Ibaba”; they said “'+(brgy||'Pallocan West')+'”',''],
          ['Father','not stated on the record','']],
      expl:'Same mother’s maiden name and city. Different barangay. Could be a sibling rather than this person.'},
     {reg:'2010-00917',lcr:'LCR Caloocan City',name:'JUAN M. SANTOS',dob:iso(subYM(t,16,0)),pob:'Caloocan City',
@@ -1575,7 +1575,7 @@ async function runExtract(file){
     if(r&&r.ok&&!r.dob) return showNoDate();
     const seed=(PEOPLE[S.caseId]&&PEOPLE[S.caseId].dob)?PEOPLE[S.caseId].dob:iso(subYM(S.incident,16,4));
     showExtract(seed,[['Document Type','CERTIFICATE OF LIVE BIRTH'],['Registry Number','2010-04521'],
-      ['Name','JUAN DELA CRUZ'],['Date of Birth',longDate(D(seed))],['Place of Birth','Quezon City'],
+      ['Name','JUAN DELA CRUZ'],['Date of Birth',longDate(D(seed))],['Place of Birth','Batangas City'],
       ['Mother','MARIA SANTOS SANTOS']],'Date of Birth');
   },1300);
 }
@@ -1716,7 +1716,7 @@ function openMeasure(k){
     body='<h3>Evaluate the physical appearance</h3>'+
       '<div class="banner warn mt2">Weakest evidence. It cannot by itself show that a person is 18 or over.</div>'+
       '<p>'+esc(m.r)+' · Tier 3. RA 9344 Sec. 20 puts the LSWDO in the loop.</p>'+
-      '<div class="field mt2"><label for="mSw">LSWDO consulted</label><input class="input" id="mSw" value="SW Ana Panganiban — LSWDO QC D4"></div>'+
+      '<div class="field mt2"><label for="mSw">LSWDO consulted</label><input class="input" id="mSw" value="SW Ana Panganiban — LSWDO Batangas City"></div>'+
       '<button class="btn" onclick="saveAppearance()">Record the consultation</button>'+
       '<div class="tiny mt1 mb2">There is no control here that records "appears to be an adult".</div><div class="footspace"></div>';
   } else {
@@ -1768,7 +1768,7 @@ function paintLookupSlot(){
       '<p style="margin-top:6px">No registry search, and no civil-registry retrieval. Refer to the LSWDO or to counsel.</p>'+
       '<button class="btn ghost mt2" onclick="handoff()">Refer to the duty social worker</button></div>';
 }
-function handoff(){ addEvidence(2,'Referred to the LSWDO duty social worker','QC District 4.','RA 9344 Sec. 20');
+function handoff(){ addEvidence(2,'Referred to the LSWDO duty social worker','Batangas City.','RA 9344 Sec. 20');
   toast('Referred. Reference '+S.ref+'.'); }
 function referIdentity(kind){
   S.referral=kind;
@@ -2081,9 +2081,9 @@ function smsText(){
   const who=(p&&p.first)?initials(p):'ang taong nasa custody';
   const r=ROLES[S.role];
   const when=clock(S.custody)+', '+filDate(S.custody);
-  if(L==='Cebuano') return 'e-Laya: Si '+who+' naa sa pag-atiman sa '+r.stationFull+', Quezon City sukad '+when+'. Giila siya nga BATA ubos sa RA 9344 — naa siyay katungod sa diversion o interbensyon, ug dili siya prisohon uban sa mga hamtong. Naay social worker nga gitudlo. Libre ang abogado sa PAO. Tawag: 8988-4444.';
-  if(L==='Ilocano') return 'e-Laya: Ni '+who+' ket adda iti aywan ti '+r.stationFull+', Quezon City manipud '+when+'. Nabigbig isuna kas UBING iti RA 9344 — adda karbengan na iti diversion wenno interbension, ken saan a maibalud kadagiti nataengan. Adda naitudingan a social worker. Libre ti abogado ti PAO. Tawagan: 8988-4444.';
-  return 'e-Laya: Si '+who+' ay nasa pangangalaga ng '+r.stationFull+', Quezon City mula '+when+'. Kinilala siya bilang BATA sa ilalim ng RA 9344 — may karapatan siya sa diversion o interbensyon, at hindi siya ikukulong kasama ng matatanda. May nakatalagang social worker. Libre ang abogado ng PAO. Tawagan: 8988-4444.';
+  if(L==='Cebuano') return 'e-Laya: Si '+who+' naa sa pag-atiman sa '+r.stationFull+', Batangas City sukad '+when+'. Giila siya nga BATA ubos sa RA 9344 — naa siyay katungod sa diversion o interbensyon, ug dili siya prisohon uban sa mga hamtong. Naay social worker nga gitudlo. Libre ang abogado sa PAO. Tawag: 8988-4444.';
+  if(L==='Ilocano') return 'e-Laya: Ni '+who+' ket adda iti aywan ti '+r.stationFull+', Batangas City manipud '+when+'. Nabigbig isuna kas UBING iti RA 9344 — adda karbengan na iti diversion wenno interbension, ken saan a maibalud kadagiti nataengan. Adda naitudingan a social worker. Libre ti abogado ti PAO. Tawagan: 8988-4444.';
+  return 'e-Laya: Si '+who+' ay nasa pangangalaga ng '+r.stationFull+', Batangas City mula '+when+'. Kinilala siya bilang BATA sa ilalim ng RA 9344 — may karapatan siya sa diversion o interbensyon, at hindi siya ikukulong kasama ng matatanda. May nakatalagang social worker. Libre ang abogado ng PAO. Tawagan: 8988-4444.';
 }
 function paintSMS(){
   const t=smsText(), n=t.length<=160?1:Math.ceil(t.length/153);
@@ -2128,7 +2128,7 @@ async function sendAll(){
   ['c1','c2','c3'].forEach(function(i){ $(i).className='chip ok'; $(i).textContent='Sent '+t; });
   S.sent=true;
   $('sentList').innerHTML=[['Guardian',(S.person&&S.person.guardian)?S.person.guardian:'Registered guardian'],
-    ['LSWDO QC D4','Duty officer, District 4'],['PAO QC','QC District Office']]
+    ['LSWDO Batangas City','Duty officer, City Hall'],['PAO Batangas City','Batangas City District Office']]
     .map(function(r){return '<div style="display:flex;gap:12px;padding:14px;border-bottom:1px solid var(--border);align-items:center">'+
       '<span class="grow"><span style="font-size:15px;font-weight:500">'+esc(r[0])+'</span>'+
       '<span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">'+esc(r[1])+'</span></span>'+

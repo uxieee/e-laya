@@ -328,7 +328,7 @@ button.offline{display:block;width:100%;border:none;border-bottom:1px solid var(
     </header>
     <button class="offline" id="s1Off" hidden></button>
     <div class="ctx">
-      <span class="who" id="s1Who">&#128100; Ms. A. Villanueva &middot; LSWDO Quezon City</span>
+      <span class="who" id="s1Who">&#128100; Ms. A. Villanueva &middot; LSWDO Batangas City</span>
       <span class="mono" id="s1Date">Miy &middot; 22 Hul</span>
     </div>
     <div class="scroll" id="s1Scroll"></div>
@@ -359,7 +359,7 @@ button.offline{display:block;width:100%;border:none;border-bottom:1px solid var(
     <button class="offline" id="s3Off" hidden></button>
     <div class="shead">
       <div class="l1" id="s3L1">Anger management &middot; Group B &middot; Session 9</div>
-      <div class="l2" id="s3L2">Miy 22 Hul 2026 &middot; 2:00 PM &middot; Bahay Pag-asa Payatas</div>
+      <div class="l2" id="s3L2">Miy 22 Hul 2026 &middot; 2:00 PM &middot; Bahay Pag-asa, Batangas City</div>
     </div>
     <div class="scroll" id="s3Scroll" style="padding-top:0"></div>
     <div class="foot">
@@ -499,10 +499,10 @@ const shortHash=h=>h.slice(0,4)+"…"+h.slice(-4);
 const groupHash=h=>h.slice(0,8)+" "+h.slice(8,16)+" … "+h.slice(-16,-8)+" "+h.slice(-8);
 
 /* ============================ seed data ============================ */
-const WORKER={name:"Ms. A. Villanueva",office:"LSWDO Quezon City",id:"LSWDO-QC-0447"};
+const WORKER={name:"Ms. A. Villanueva",office:"LSWDO Batangas City",id:"LSWDO-BC-0447"};
 
 const PROGRAMS=[
- {id:"pg1",name:"Anger management",group:"Group B",venue:"Bahay Pag-asa Payatas, Quezon City",
+ {id:"pg1",name:"Anger management",group:"Group B",venue:"Bahay Pag-asa, Batangas City",
   order:"CO-2025-0417",expires:new Date(2026,8,30),required:12,held:8,avg:87,
   sessions:[
    {n:9, at:new Date(2026,6,22,14,0),end:"4:00 PM",state:"today"},
@@ -510,35 +510,35 @@ const PROGRAMS=[
    {n:11,at:new Date(2026,7,5,14,0), end:"4:00 PM",state:"upcoming"},
    {n:8, at:new Date(2026,6,15,14,0),end:"4:00 PM",state:"logged",present:13,follow:2,hash:"4f2a1c88a71d6e0b95c4d2f38e77a1b0c6d3095f2ea41bb7cc0d9e88f16d9b1c"},
    {n:7, at:new Date(2026,6,8,14,0), end:"4:00 PM",state:"logged",present:15,follow:0,hash:"8c07be31d2a94f5077cc10bb6e5321af90d4c2e7b83a1f6d5509cc7712ab22de"}]},
- {id:"pg2",name:"Life skills",group:"Group A",venue:"Brgy. Holy Spirit Multi-purpose Hall",
+ {id:"pg2",name:"Life skills",group:"Group A",venue:"Brgy. Alangilan Multi-purpose Hall",
   order:"CO-2025-0388",expires:new Date(2026,9,15),required:10,held:5,avg:79,
   sessions:[
    {n:6,at:new Date(2026,6,24,9,0),end:"11:00 AM",state:"upcoming"},
    {n:7,at:new Date(2026,6,31,9,0),end:"11:00 AM",state:"upcoming"},
    {n:8,at:new Date(2026,7,7,9,0), end:"11:00 AM",state:"upcoming"},
    {n:5,at:new Date(2026,6,17,9,0),end:"11:00 AM",state:"logged",present:11,follow:1,hash:"71bd44a0c39e7f2183ba55d1c7e9048f6a2b31cd90ee7745bb2c8f0a3e6103af"}]},
- {id:"pg3",name:"Community service",group:"Brgy. Holy Spirit",venue:"Brgy. Holy Spirit, Quezon City",
+ {id:"pg3",name:"Community service",group:"Brgy. Alangilan",venue:"Brgy. Alangilan, Batangas City",
   order:"CO-2026-0031",expires:new Date(2026,10,30),required:10,held:6,avg:82,
   sessions:[{n:7,at:new Date(2026,6,25,7,30),end:"11:30 AM",state:"upcoming"}]}
 ];
 
 /* roster of Anger management · Group B — 15 enrolled */
 const ROSTER=[
- {id:"r1", name:"Bautista, Renz A.",       age:16,done:5,of:12,missStreak:3,last:new Date(2026,6,3), guardian:"Mrs. Editha Bautista",gno:"0917 445 2210",no:"0917 445 2211",brgy:"Payatas"},
- {id:"r2", name:"Santos, Kyle M.",         age:16,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Rolando Santos", gno:"0918 330 1145",no:"0918 330 1146",brgy:"Payatas",tight:true},
- {id:"r3", name:"Ocampo, Jerome L.",       age:15,done:0,of:12,missStreak:0,never:true,enrolled:new Date(2026,5,12),guardian:"Mrs. Lita Ocampo",gno:"0995 771 0032",no:"0995 771 0033",brgy:"Bagong Silangan"},
- {id:"r4", name:"Dizon, Angelo B.",        age:16,done:6,of:12,missStreak:1,last:new Date(2026,6,8), guardian:"Mrs. Fe Dizon",     gno:"0917 220 8890",no:"0917 220 8891",brgy:"Commonwealth"},
- {id:"r5", name:"Aguinaldo, Paolo M.",     age:17,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Ruel Aguinaldo",gno:"0920 114 5567",no:"",brgy:"Batasan Hills"},
- {id:"r6", name:"Buenaventura, Rey Mark T.",age:16,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Aida Buenaventura",gno:"0939 887 2201",no:"",brgy:"Payatas"},
- {id:"r7", name:"Castañeda, Jomar L.",     age:15,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Nilo Castañeda",gno:"0917 663 4410",no:"",brgy:"Holy Spirit"},
- {id:"r8", name:"Dela Peña, Kirby S.",     age:17,done:6,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Susan Dela Peña",gno:"0908 442 7712",no:"",brgy:"Commonwealth"},
- {id:"r9", name:"Escobar, Nino Fritz D.",  age:16,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Fritz Escobar", gno:"0966 200 3388",no:"",brgy:"Payatas"},
- {id:"r10",name:"Gonzales, Aljon P.",      age:15,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Ester Gonzales",gno:"0977 551 9902",no:"",brgy:"Batasan Hills"},
- {id:"r11",name:"Hilario, Dexter R.",      age:17,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Boy Hilario",   gno:"0912 774 6650",no:"",brgy:"Bagong Silangan"},
- {id:"r12",name:"Lapuz, Christian Jay B.", age:16,done:5,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Rina Lapuz",   gno:"0947 118 2204",no:"",brgy:"Payatas"},
- {id:"r13",name:"Marasigan, Jethro V.",    age:15,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Elmer Marasigan",gno:"0918 991 0074",no:"",brgy:"Holy Spirit"},
- {id:"r14",name:"Pagulayan, Ryan Cris M.", age:16,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Dolores Pagulayan",gno:"0929 330 1188",no:"",brgy:"Commonwealth"},
- {id:"r15",name:"Ventura, Joshua Emmanuel C.",age:17,done:6,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Jun Ventura",gno:"0917 004 5521",no:"",brgy:"Payatas"}
+ {id:"r1", name:"Bautista, Renz A.",       age:16,done:5,of:12,missStreak:3,last:new Date(2026,6,3), guardian:"Mrs. Editha Bautista",gno:"0917 445 2210",no:"0917 445 2211",brgy:"Balagtas"},
+ {id:"r2", name:"Santos, Kyle M.",         age:16,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Rolando Santos", gno:"0918 330 1145",no:"0918 330 1146",brgy:"Kumintang Ibaba",tight:true},
+ {id:"r3", name:"Ocampo, Jerome L.",       age:15,done:0,of:12,missStreak:0,never:true,enrolled:new Date(2026,5,12),guardian:"Mrs. Lita Ocampo",gno:"0995 771 0032",no:"0995 771 0033",brgy:"Balagtas"},
+ {id:"r4", name:"Dizon, Angelo B.",        age:16,done:6,of:12,missStreak:1,last:new Date(2026,6,8), guardian:"Mrs. Fe Dizon",     gno:"0917 220 8890",no:"0917 220 8891",brgy:"Pallocan West"},
+ {id:"r5", name:"Aguinaldo, Paolo M.",     age:17,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Ruel Aguinaldo",gno:"0920 114 5567",no:"",brgy:"Bolbok"},
+ {id:"r6", name:"Buenaventura, Rey Mark T.",age:16,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Aida Buenaventura",gno:"0939 887 2201",no:"",brgy:"Kumintang Ibaba"},
+ {id:"r7", name:"Castañeda, Jomar L.",     age:15,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Nilo Castañeda",gno:"0917 663 4410",no:"",brgy:"Alangilan"},
+ {id:"r8", name:"Dela Peña, Kirby S.",     age:17,done:6,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Susan Dela Peña",gno:"0908 442 7712",no:"",brgy:"Pallocan West"},
+ {id:"r9", name:"Escobar, Nino Fritz D.",  age:16,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Fritz Escobar", gno:"0966 200 3388",no:"",brgy:"Kumintang Ibaba"},
+ {id:"r10",name:"Gonzales, Aljon P.",      age:15,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Ester Gonzales",gno:"0977 551 9902",no:"",brgy:"Bolbok"},
+ {id:"r11",name:"Hilario, Dexter R.",      age:17,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Boy Hilario",   gno:"0912 774 6650",no:"",brgy:"Balagtas"},
+ {id:"r12",name:"Lapuz, Christian Jay B.", age:16,done:5,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Rina Lapuz",   gno:"0947 118 2204",no:"",brgy:"Kumintang Ibaba"},
+ {id:"r13",name:"Marasigan, Jethro V.",    age:15,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Elmer Marasigan",gno:"0918 991 0074",no:"",brgy:"Alangilan"},
+ {id:"r14",name:"Pagulayan, Ryan Cris M.", age:16,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Dolores Pagulayan",gno:"0929 330 1188",no:"",brgy:"Pallocan West"},
+ {id:"r15",name:"Ventura, Joshua Emmanuel C.",age:17,done:6,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Jun Ventura",gno:"0917 004 5521",no:"",brgy:"Kumintang Ibaba"}
 ];
 
 /* S-1 caseload — the arithmetic band is computed, never typed */
@@ -547,9 +547,9 @@ function schedulableBefore(prog,person){
 }
 const CASELOAD=[
  {id:"r1", prog:"pg1"},{id:"r3",prog:"pg1"},{id:"r4",prog:"pg1"},
- {id:"x1", prog:"pg3",name:"Reyes, Mark Anthony",age:17,done:4,of:10,missStreak:2,last:new Date(2026,6,11),guardian:"Mrs. Delia Reyes",gno:"0917 553 2288",brgy:"Holy Spirit"},
+ {id:"x1", prog:"pg3",name:"Reyes, Mark Anthony",age:17,done:4,of:10,missStreak:2,last:new Date(2026,6,11),guardian:"Mrs. Delia Reyes",gno:"0917 553 2288",brgy:"Alangilan"},
  {id:"r2", prog:"pg1"},
- {id:"x2", prog:"pg2",name:"Navarro, Precious Joy A.",age:15,done:6,of:10,missStreak:0,last:new Date(2026,6,17),guardian:"Mrs. Amy Navarro",gno:"0921 448 7710",brgy:"Batasan Hills",tight:true}
+ {id:"x2", prog:"pg2",name:"Navarro, Precious Joy A.",age:15,done:6,of:10,missStreak:0,last:new Date(2026,6,17),guardian:"Mrs. Amy Navarro",gno:"0921 448 7710",brgy:"Bolbok",tight:true}
 ];
 function person(id){return ROSTER.find(r=>r.id===id)||CASELOAD.find(c=>c.id===id);}
 function prog(id){return PROGRAMS.find(p=>p.id===id);}
@@ -760,7 +760,7 @@ function renderS1(){
   h+='<div class="nextsec"><div class="bandh2"><span class="bt">Susunod</span></div>'
     +'<button class="nextrow" data-go2="s2b"><span class="nt">Life skills · Group A · Biy 24 Hul, 9:00 AM</span>'
     +'<span class="pchev">›</span></button></div>';
-  h+='<p class="tiny" style="text-align:center;padding:12px 0 8px">44 people assigned · LSWDO Quezon City<br>Bands are computed on this device. Last sync '
+  h+='<p class="tiny" style="text-align:center;padding:12px 0 8px">44 people assigned · LSWDO Batangas City<br>Bands are computed on this device. Last sync '
     +(S.offline?"7:42 AM — offline":fTime(new Date(NOW.getTime()-40*6e4)))+"</p>";
   el.innerHTML=h;
 }
@@ -968,7 +968,7 @@ async function saveAttendance(){
   ROSTER.forEach(r=>{if(S.marks[r.id]==="missed"){
     api("/api/sms",{numbers:[r.gno.replace(/\s/g,"")],
       message:"e-Laya: Hindi po nakadalo si "+r.name.split(",")[1].trim()+" sa sesyon ngayong "+fShort(s.at)
-      +". Makipag-ugnayan po sa LSWDO QC. Salamat."});}});
+      +". Makipag-ugnayan po sa LSWDO Batangas City. Salamat."});}});
   renderS1();
 }
 
@@ -1151,7 +1151,7 @@ function personParts(id){
   const a=c?arithmetic(c):null;
   const warn=!!(r.never||r.missStreak||r.tight);
   return {r:r,p:p,a:a,warn:warn,
-    meta:esc(p.name+" · "+p.group)+" · Brgy. "+esc(r.brgy||"Payatas"),
+    meta:esc(p.name+" · "+p.group)+" · Brgy. "+esc(r.brgy||"Kumintang Ibaba"),
     explain:(r.never?"Never attended since enrolling "+fDate(r.enrolled)+". Zero attendance has no pattern to break, so a streak rule would never fire — this person is flagged from day one."
       :r.missStreak?r.missStreak+" missed sessions in a row. This person needs a follow-up."
       :a&&a.short>0?"Attendance is perfect. "+a.remaining+" sessions are still required and only "+a.sched
@@ -1243,7 +1243,7 @@ function smsSend(r){
   toast("SMS to "+esc(r.guardian||r.name)+" queued · sends in 12s.","I-BALIK ↺",()=>{cancelled=true;toast("SMS cancelled. Nothing was sent.","",null);});
   setTimeout(async()=>{if(cancelled)return;
     await api("/api/sms",{numbers:[(r.gno||"").replace(/\s/g,"")],
-      message:"e-Laya: Paalala po sa susunod na sesyon. LSWDO Quezon City."});},12000);
+      message:"e-Laya: Paalala po sa susunod na sesyon. LSWDO Batangas City."});},12000);
 }
 function copy(s){try{navigator.clipboard.writeText(s);}catch(e){
   const ta=document.createElement("textarea");ta.value=s;document.body.appendChild(ta);ta.select();
@@ -1345,7 +1345,7 @@ document.addEventListener("keydown",function(e){
   $("#s1Date").textContent=DAY_S[NOW.getDay()]+" · "+NOW.getDate()+" "+MON_S[NOW.getMonth()];
   renderS1();renderS2();renderS3();renderS4();
   const sso=await api("/api/sso");
-  if(sso&&(sso.name||sso.full_name))$("#s1Who").textContent="👤 "+(sso.name||sso.full_name)+" · LSWDO Quezon City";
+  if(sso&&(sso.name||sso.full_name))$("#s1Who").textContent="👤 "+(sso.name||sso.full_name)+" · LSWDO Batangas City";
   setTimeout(()=>{S.loading=false;renderS1();},480);
 })();
 </script>

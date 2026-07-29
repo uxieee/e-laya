@@ -287,7 +287,7 @@ button.bandh:active{background:#0040E70D}
     </header>
     <button class="offline" id="c1Off" hidden>&#9888; Offline &middot; Naka-offline &mdash; showing your last download, 7:42 AM &rsaquo;</button>
     <div class="ctx">
-      <span class="who" id="c1Who">&#9878; Atty. M. Reyes &middot; PAO Quezon City</span>
+      <span class="who" id="c1Who">&#9878; Atty. M. Reyes &middot; PAO Batangas City</span>
       <span class="mono" id="c1Date">Miy &middot; 22 Hul</span>
     </div>
     <div class="scroll" id="c1Scroll"></div>
@@ -395,7 +395,7 @@ let _id=0;
 function mk(o){
   CASES.push(Object.assign({
     id:"c"+(++_id),age:null,cicl:false,status:"Detained",stage:"Pre-trial",
-    facility:"BJMP Quezon City Male Dormitory",detainedSince:D(3,3),offence:"",
+    facility:"Batangas City District Jail — Male Dorm",detainedSince:D(3,3),offence:"",
     idle:14,milestone:null,milestoneDays:null,unrecorded:null,unrecordedLabel:"",
     hearing:null,starred:false,vcUnconfirmed:false,prepIncomplete:false,diversionFlag:false,
     history:[],programs:[],docs:[],notes:[],gcta:null,family:{name:"",rel:"",no:""}
@@ -403,9 +403,9 @@ function mk(o){
 }
 
 /* --- 1. attended but never recorded (hard top tier, ages upward) --- */
-mk({name:"Manalo, Eduardo P.",age:47,docket:"Crim. Case 2023-08820",court:"RTC Br. 104",
-  courtLong:"Regional Trial Court Branch 104, Quezon City",offence:"Robbery with violence",
-  stage:"Trial",facility:"BJMP Quezon City Male Dormitory",detainedSince:new Date(2025,10,18),
+mk({name:"Manalo, Eduardo P.",age:47,docket:"Crim. Case 2023-08820",court:"RTC Br. 4",
+  courtLong:"Regional Trial Court Branch 4, Batangas City",offence:"Robbery with violence",
+  stage:"Trial",facility:"Batangas City District Jail — Male Dorm",detainedSince:new Date(2025,10,18),
   unrecorded:D(7,3,9,0),unrecordedLabel:"Continuation of trial",idle:17,
   family:{name:"Perla Manalo",rel:"spouse",no:"0917 812 4409"},
   history:[
@@ -417,22 +417,22 @@ mk({name:"Manalo, Eduardo P.",age:47,docket:"Crim. Case 2023-08820",court:"RTC B
   notes:[{t:"SMS to Perla Manalo — hearing reminder",d:D(7,4,16,20)}]});
 
 /* --- 2..5 hearings today --- */
-mk({name:"Reyes, Anton B.",age:34,docket:"Crim. Case 2025-01188",court:"RTC Br. 87",
-  courtLong:"Regional Trial Court Branch 87, Quezon City",offence:"Theft",stage:"Arraignment",
+mk({name:"Reyes, Anton B.",age:34,docket:"Crim. Case 2025-01188",court:"RTC Br. 3",
+  courtLong:"Regional Trial Court Branch 3, Batangas City",offence:"Theft",stage:"Arraignment",
   detainedSince:D(5,9),idle:3,
-  hearing:{at:D(7,22,9,0),type:"Arraignment",mode:"In person",room:"RTC Br. 87"},
+  hearing:{at:D(7,22,9,0),type:"Arraignment",mode:"In person",room:"RTC Br. 3"},
   family:{name:"Lorna Reyes",rel:"mother",no:"0921 774 1188"},
-  history:[{d:D(7,14),l:"Counsel conference at BJMP QC",p:"Source: e-Laya visit log",open:true},
+  history:[{d:D(7,14),l:"Counsel conference at BJMP Batangas City",p:"Source: e-Laya visit log",open:true},
            {d:D(5,9),l:"Commitment order",p:"Source: BJMP intake record · verified 10 May 2026"}],
   docs:[{n:"Information (Theft)",p:"Court copy · 12 May 2026"}]});
 
-mk({name:"Dela Cruz, Josefina M.",age:41,docket:"Crim. Case 2024-11938",court:"RTC Br. 87",
-  courtLong:"Regional Trial Court Branch 87, Quezon City",offence:"Estafa",stage:"Pre-trial",
-  facility:"BJMP Quezon City Female Dormitory",detainedSince:new Date(2025,2,3),idle:5,vcUnconfirmed:true,
-  hearing:{at:D(7,22,10,0),type:"Pre-trial",mode:"Videoconference",room:"RTC Br. 87"},
+mk({name:"Dela Cruz, Josefina M.",age:41,docket:"Crim. Case 2024-11938",court:"RTC Br. 3",
+  courtLong:"Regional Trial Court Branch 3, Batangas City",offence:"Estafa",stage:"Pre-trial",
+  facility:"Batangas City District Jail — Female Dorm",detainedSince:new Date(2025,2,3),idle:5,vcUnconfirmed:true,
+  hearing:{at:D(7,22,10,0),type:"Pre-trial",mode:"Videoconference",room:"RTC Br. 3"},
   family:{name:"Rowena Dela Cruz",rel:"sister",no:"0917 331 8802"},
   gcta:{tier:"Tier 2 · good conduct",days:118,projected:"14 Feb 2027"},
-  programs:[{n:"Livelihood · Dressmaking",prov:"BJMP QC Female Dorm",att:"11 of 12 sessions",flag:false}],
+  programs:[{n:"Livelihood · Dressmaking",prov:"Batangas City District Jail — Female Dorm",att:"11 of 12 sessions",flag:false}],
   history:[
     {d:D(7,18),l:"Videoconference link requested from the court",p:"Source: e-Laya request log · no reply yet",open:true},
     {d:D(6,30),l:"Pre-trial conference reset",p:"Source: court order · verified 01 Jul 2026"},
@@ -440,41 +440,41 @@ mk({name:"Dela Cruz, Josefina M.",age:41,docket:"Crim. Case 2024-11938",court:"R
   docs:[{n:"Commitment order",p:"Family upload · verified 04 Mar 2025"},{n:"Counter-affidavit",p:"Counsel filing · 22 Apr 2025"}],
   notes:[{t:"SMS to Rowena Dela Cruz — hearing reminder",d:D(7,21,17,2)}]});
 
-mk({name:"Ocampo, Liza R.",age:29,docket:"Crim. Case 2024-10233",court:"MTC Br. 12",
-  courtLong:"Metropolitan Trial Court Branch 12, Quezon City",offence:"Illegal possession",
-  stage:"Promulgation",facility:"BJMP Quezon City Female Dormitory",detainedSince:new Date(2025,5,14),idle:2,
-  hearing:{at:D(7,22,10,0),type:"Promulgation",mode:"In person",room:"MTC Br. 12"},
+mk({name:"Ocampo, Liza R.",age:29,docket:"Crim. Case 2024-10233",court:"MTC Br. 2",
+  courtLong:"Municipal Trial Court in Cities Branch 2, Batangas City",offence:"Illegal possession",
+  stage:"Promulgation",facility:"Batangas City District Jail — Female Dorm",detainedSince:new Date(2025,5,14),idle:2,
+  hearing:{at:D(7,22,10,0),type:"Promulgation",mode:"In person",room:"MTC Br. 2"},
   family:{name:"Danilo Ocampo",rel:"father",no:"0918 220 7741"},
   history:[{d:D(7,10),l:"Case submitted for decision",p:"Source: court order · verified 11 Jul 2026",open:true},
            {d:new Date(2025,5,14),l:"Commitment order",p:"Source: BJMP intake record"}],
   docs:[{n:"Memorandum for the accused",p:"Counsel filing · 02 Jul 2026"}]});
 
-mk({name:"Bautista, Renz A.",age:16,cicl:true,docket:"Crim. Case 2025-00417",court:"MTC Br. 12",
-  courtLong:"Metropolitan Trial Court Branch 12, Quezon City",offence:"Theft (diversion)",
-  status:"Released to parents",stage:"Diversion",facility:"Bahay Pag-asa Payatas (day programme)",
+mk({name:"Bautista, Renz A.",age:16,cicl:true,docket:"Crim. Case 2025-00417",court:"MTC Br. 2",
+  courtLong:"Municipal Trial Court in Cities Branch 2, Batangas City",offence:"Theft (diversion)",
+  status:"Released to parents",stage:"Diversion",facility:"Bahay Pag-asa, Batangas City (day programme)",
   detainedSince:null,idle:6,diversionFlag:true,prepIncomplete:true,
-  hearing:{at:D(7,22,14,30),type:"Diversion review",mode:"In person",room:"MTC Br. 12"},
+  hearing:{at:D(7,22,14,30),type:"Diversion review",mode:"In person",room:"MTC Br. 2"},
   family:{name:"Mrs. Editha Bautista",rel:"mother",no:"0917 445 2210"},
-  programs:[{n:"Anger management · Group B",prov:"Bahay Pag-asa Payatas",att:"5 of 12 sessions · 3 missed in a row",flag:true}],
+  programs:[{n:"Anger management · Group B",prov:"Bahay Pag-asa, Batangas City",att:"5 of 12 sessions · 3 missed in a row",flag:true}],
   history:[
     {d:D(7,15),l:"Diversion attendance flag raised by LSWDO",p:"Source: e-Laya S-4 flag · Ms. A. Villanueva",open:true},
     {d:D(6,3),l:"Diversion contract approved",p:"Source: court order CO-2025-0417 · verified 04 Jun 2026"},
-    {d:D(5,20),l:"Intake and social case study",p:"Source: LSWDO Quezon City"}],
-  docs:[{n:"Diversion contract CO-2025-0417",p:"Court copy · 04 Jun 2026"},{n:"Social case study report",p:"LSWDO QC · 21 May 2026"}]});
+    {d:D(5,20),l:"Intake and social case study",p:"Source: LSWDO Batangas City"}],
+  docs:[{n:"Diversion contract CO-2025-0417",p:"Court copy · 04 Jun 2026"},{n:"Social case study report",p:"LSWDO Batangas City · 21 May 2026"}]});
 
 /* --- milestone band --- */
-mk({name:"Villaflor, Anecito R.",age:58,docket:"Crim. Case 2020-02231",court:"RTC Br. 220",
-  courtLong:"Regional Trial Court Branch 220, Quezon City",offence:"Frustrated homicide",stage:"Trial",
-  facility:"Quezon City Jail Male Dormitory",detainedSince:new Date(2020,3,11),idle:96,
+mk({name:"Villaflor, Anecito R.",age:58,docket:"Crim. Case 2020-02231",court:"RTC Br. 7",
+  courtLong:"Regional Trial Court Branch 7, Batangas City",offence:"Frustrated homicide",stage:"Trial",
+  facility:"Batangas City District Jail — Male Dorm",detainedSince:new Date(2020,3,11),idle:96,
   milestone:"Time served exceeds the maximum imposable penalty",milestoneDays:112,
   gcta:{tier:"Tier 3 · exemplary",days:734,projected:"eligible now"},
   family:{name:"Nenita Villaflor",rel:"spouse",no:"0906 118 3320"},
   history:[{d:D(4,1),l:"Time-served threshold crossed",p:"Computed by the Laya calculator · advisory only",open:true},
            {d:new Date(2020,3,11),l:"Commitment order",p:"Source: BJMP intake record"}],
-  docs:[{n:"Certificate of detention",p:"BJMP QC · 03 Apr 2026"}]});
+  docs:[{n:"Certificate of detention",p:"BJMP Batangas City · 03 Apr 2026"}]});
 
-mk({name:"Santos, Melchor D.",age:52,docket:"Crim. Case 2019-04455",court:"RTC Br. 41",
-  courtLong:"Regional Trial Court Branch 41, Quezon City",offence:"Serious physical injuries",stage:"Promulgated",
+mk({name:"Santos, Melchor D.",age:52,docket:"Crim. Case 2019-04455",court:"RTC Br. 8",
+  courtLong:"Regional Trial Court Branch 8, Batangas City",offence:"Serious physical injuries",stage:"Promulgated",
   facility:"New Bilibid Prison, Muntinlupa",detainedSince:new Date(2019,7,2),idle:71,
   milestone:"GCTA tier 3 reached — release computation unacted",milestoneDays:47,
   gcta:{tier:"Tier 3 · exemplary",days:612,projected:"09 Nov 2026"},
@@ -483,17 +483,17 @@ mk({name:"Santos, Melchor D.",age:52,docket:"Crim. Case 2019-04455",court:"RTC B
            {d:new Date(2019,7,2),l:"Commitment order",p:"Source: court copy"}],
   docs:[{n:"Good conduct certification",p:"BJMP · 05 Jun 2026"}]});
 
-mk({name:"Ompoc, Marilou T.",age:36,docket:"Crim. Case 2022-06714",court:"MTC Br. 33",
-  courtLong:"Metropolitan Trial Court Branch 33, Quezon City",offence:"Estafa (bouncing check)",stage:"Trial",
-  facility:"BJMP Quezon City Female Dormitory",detainedSince:new Date(2024,8,30),idle:44,
+mk({name:"Ompoc, Marilou T.",age:36,docket:"Crim. Case 2022-06714",court:"MTC Br. 1",
+  courtLong:"Municipal Trial Court in Cities Branch 1, Batangas City",offence:"Estafa (bouncing check)",stage:"Trial",
+  facility:"Batangas City District Jail — Female Dorm",detainedSince:new Date(2024,8,30),idle:44,
   milestone:"Recognizance eligible — bail gap threshold crossed",milestoneDays:23,
   family:{name:"Arnel Ompoc",rel:"brother",no:"0908 552 6714"},
   history:[{d:D(6,29),l:"Recognizance eligibility crossed",p:"Computed by the Laya calculator · advisory only",open:true}],
-  docs:[{n:"Barangay certification of residence",p:"Brgy. Bagong Silangan · 12 Jun 2026"}]});
+  docs:[{n:"Barangay certification of residence",p:"Brgy. Balagtas · 12 Jun 2026"}]});
 
-mk({name:"Ramirez, Alfonso G.",age:44,docket:"Crim. Case 2021-03390",court:"RTC Br. 76",
-  courtLong:"Regional Trial Court Branch 76, Quezon City",offence:"Carnapping",stage:"Trial",
-  facility:"Quezon City Jail Male Dormitory",detainedSince:new Date(2021,10,8),idle:33,
+mk({name:"Ramirez, Alfonso G.",age:44,docket:"Crim. Case 2021-03390",court:"RTC Br. 1",
+  courtLong:"Regional Trial Court Branch 1, Batangas City",offence:"Carnapping",stage:"Trial",
+  facility:"Batangas City District Jail — Male Dorm",detainedSince:new Date(2021,10,8),idle:33,
   milestone:"GCTA tier 2 reached — recomputation unacted",milestoneDays:9,
   gcta:{tier:"Tier 2 · good conduct",days:398,projected:"22 Mar 2027"},
   family:{name:"Cristy Ramirez",rel:"spouse",no:"0915 209 3390"},
@@ -501,38 +501,38 @@ mk({name:"Ramirez, Alfonso G.",age:44,docket:"Crim. Case 2021-03390",court:"RTC 
   docs:[]});
 
 /* --- tomorrow --- */
-mk({name:"Padilla, Kyle Jerome R.",age:17,cicl:true,docket:"Crim. Case 2026-00142",court:"MTC Br. 12",
-  courtLong:"Metropolitan Trial Court Branch 12, Quezon City",offence:"Malicious mischief (diversion)",
-  status:"Released to parents",stage:"Diversion",facility:"Brgy. Holy Spirit (community service)",
+mk({name:"Padilla, Kyle Jerome R.",age:17,cicl:true,docket:"Crim. Case 2026-00142",court:"MTC Br. 2",
+  courtLong:"Municipal Trial Court in Cities Branch 2, Batangas City",offence:"Malicious mischief (diversion)",
+  status:"Released to parents",stage:"Diversion",facility:"Brgy. Alangilan (community service)",
   detainedSince:null,idle:9,
-  hearing:{at:D(7,23,8,30),type:"Diversion conference",mode:"In person",room:"MTC Br. 12"},
+  hearing:{at:D(7,23,8,30),type:"Diversion conference",mode:"In person",room:"MTC Br. 2"},
   family:{name:"Mr. Danilo Padilla",rel:"father",no:"0977 118 0142"},
-  programs:[{n:"Community service · Brgy. Holy Spirit",prov:"Brgy. Holy Spirit LSWDO",att:"6 of 10 sessions",flag:false}],
+  programs:[{n:"Community service · Brgy. Alangilan",prov:"Brgy. Alangilan LSWDO",att:"6 of 10 sessions",flag:false}],
   history:[{d:D(7,2),l:"Referred for diversion conference",p:"Source: court order · verified 03 Jul 2026",open:true}],
-  docs:[{n:"Social case study report",p:"LSWDO QC · 28 Jun 2026"}]});
+  docs:[{n:"Social case study report",p:"LSWDO Batangas City · 28 Jun 2026"}]});
 
-mk({name:"Aguilar, Marissa D.",age:38,docket:"Crim. Case 2024-09071",court:"RTC Br. 220",
-  courtLong:"Regional Trial Court Branch 220, Quezon City",offence:"Qualified theft",stage:"Trial",
-  facility:"BJMP Quezon City Female Dormitory",detainedSince:new Date(2025,0,26),idle:11,vcUnconfirmed:true,
-  hearing:{at:D(7,23,13,30),type:"Motion hearing",mode:"Videoconference",room:"RTC Br. 220"},
+mk({name:"Aguilar, Marissa D.",age:38,docket:"Crim. Case 2024-09071",court:"RTC Br. 7",
+  courtLong:"Regional Trial Court Branch 7, Batangas City",offence:"Qualified theft",stage:"Trial",
+  facility:"Batangas City District Jail — Female Dorm",detainedSince:new Date(2025,0,26),idle:11,vcUnconfirmed:true,
+  hearing:{at:D(7,23,13,30),type:"Motion hearing",mode:"Videoconference",room:"RTC Br. 7"},
   family:{name:"Joel Aguilar",rel:"spouse",no:"0947 220 9071"},
   history:[{d:D(7,9),l:"Motion to quash filed",p:"Source: e-Laya filing log",open:true}],
   docs:[{n:"Motion to quash",p:"Counsel filing · 09 Jul 2026"}]});
 
 /* --- this week (3–10 days out) --- */
-[["Ignacio, Rowena C.",33,"2024-07712","RTC Br. 96","Regional Trial Court Branch 96, Quezon City","Estafa",D(7,27,9,0),"Pre-trial","In person"],
- ["Mendoza, Arnel B.",45,"2023-05540","RTC Br. 104","Regional Trial Court Branch 104, Quezon City","Homicide",D(7,27,13,30),"Continuation of trial","Videoconference"],
- ["Salvacion, Petra L.",52,"2022-04120","MTC Br. 33","Metropolitan Trial Court Branch 33, Quezon City","Slight physical injuries",D(7,28,8,30),"Arraignment","In person"],
- ["Tolentino, Jaypee M.",24,"2025-02011","RTC Br. 87","Regional Trial Court Branch 87, Quezon City","Robbery",D(7,28,14,0),"Bail hearing","In person"],
- ["Alvarez, Necita R.",60,"2021-01887","RTC Br. 41","Regional Trial Court Branch 41, Quezon City","Estafa",D(7,29,9,30),"Promulgation","In person"],
- ["Gutierrez, Bong D.",31,"2024-08834","MTC Br. 12","Metropolitan Trial Court Branch 12, Quezon City","Theft",D(7,29,13,0),"Pre-trial","Videoconference"],
- ["Baclig, Marlon S.",27,"2025-00902","RTC Br. 220","Regional Trial Court Branch 220, Quezon City","Illegal possession",D(7,30,10,0),"Motion hearing","In person"],
- ["Fajardo, Cristina P.",36,"2023-09615","RTC Br. 76","Regional Trial Court Branch 76, Quezon City","Qualified theft",D(7,31,9,0),"Continuation of trial","In person"],
- ["Lumbao, Jayson T.",19,"2025-03047","MTC Br. 33","Metropolitan Trial Court Branch 33, Quezon City","Malicious mischief",D(7,31,14,0),"Arraignment","In person"]
+[["Ignacio, Rowena C.",33,"2024-07712","RTC Br. 2","Regional Trial Court Branch 2, Batangas City","Estafa",D(7,27,9,0),"Pre-trial","In person"],
+ ["Mendoza, Arnel B.",45,"2023-05540","RTC Br. 4","Regional Trial Court Branch 4, Batangas City","Homicide",D(7,27,13,30),"Continuation of trial","Videoconference"],
+ ["Salvacion, Petra L.",52,"2022-04120","MTC Br. 1","Municipal Trial Court in Cities Branch 1, Batangas City","Slight physical injuries",D(7,28,8,30),"Arraignment","In person"],
+ ["Tolentino, Jaypee M.",24,"2025-02011","RTC Br. 3","Regional Trial Court Branch 3, Batangas City","Robbery",D(7,28,14,0),"Bail hearing","In person"],
+ ["Alvarez, Necita R.",60,"2021-01887","RTC Br. 8","Regional Trial Court Branch 8, Batangas City","Estafa",D(7,29,9,30),"Promulgation","In person"],
+ ["Gutierrez, Bong D.",31,"2024-08834","MTC Br. 2","Municipal Trial Court in Cities Branch 2, Batangas City","Theft",D(7,29,13,0),"Pre-trial","Videoconference"],
+ ["Baclig, Marlon S.",27,"2025-00902","RTC Br. 7","Regional Trial Court Branch 7, Batangas City","Illegal possession",D(7,30,10,0),"Motion hearing","In person"],
+ ["Fajardo, Cristina P.",36,"2023-09615","RTC Br. 1","Regional Trial Court Branch 1, Batangas City","Qualified theft",D(7,31,9,0),"Continuation of trial","In person"],
+ ["Lumbao, Jayson T.",19,"2025-03047","MTC Br. 1","Municipal Trial Court in Cities Branch 1, Batangas City","Malicious mischief",D(7,31,14,0),"Arraignment","In person"]
 ].forEach(function(r,i){
   mk({name:r[0],age:r[1],docket:"Crim. Case "+r[2],court:r[3],courtLong:r[4],offence:r[5],
     stage:r[7],idle:7+i,vcUnconfirmed:r[8]==="Videoconference"&&i%3===1,
-    facility:r[1]%2?"BJMP Quezon City Male Dormitory":"BJMP Quezon City Female Dormitory",
+    facility:r[1]%2?"Batangas City District Jail — Male Dorm":"Batangas City District Jail — Female Dorm",
     detainedSince:new Date(2025,(i*3)%12,4+i),
     hearing:{at:r[6],type:r[7],mode:r[8],room:r[3]},
     family:{name:"Family contact on file",rel:"guardian",no:"0917 000 00"+(10+i)},
@@ -549,7 +549,7 @@ mk({name:"Aguilar, Marissa D.",age:38,docket:"Crim. Case 2024-09071",court:"RTC 
   const GIV=["Jose Mari","Maria Teresa","Ricardo","Anabelle","Ferdinand","Luzviminda","Rogelio","Marilyn",
   "Emmanuel","Cristina","Nestor","Divina","Rolando","Josephine","Wilfredo","Grace","Danilo","Editha",
   "Reynaldo","Lourdes","Alfredo","Norma","Bernardo","Precious","Fidel","Analyn"];
-  const CRT=["RTC Br. 87","RTC Br. 104","MTC Br. 12","MTC Br. 33","RTC Br. 41","RTC Br. 76","RTC Br. 96","RTC Br. 220"];
+  const CRT=["RTC Br. 3","RTC Br. 4","MTC Br. 2","MTC Br. 1","RTC Br. 8","RTC Br. 1","RTC Br. 2","RTC Br. 7"];
   const OFF=["Theft","Estafa","Illegal possession","Slight physical injuries","Malicious mischief","Robbery","Qualified theft"];
   let s=20260722;const rnd=()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};
   for(let i=0;i<280;i++){
@@ -557,10 +557,10 @@ mk({name:"Aguilar, Marissa D.",age:38,docket:"Crim. Case 2024-09071",court:"RTC 
     const ini=giv.split(" ")[0][0]+".";
     mk({name:sur+", "+giv.split(" ")[0]+" "+ini,age:19+Math.floor(rnd()*44),
       docket:"Crim. Case "+(2019+Math.floor(rnd()*7))+"-"+String(1000+Math.floor(rnd()*8999)).padStart(5,"0"),
-      court:CRT[Math.floor(rnd()*CRT.length)],courtLong:"Regional Trial Court, Quezon City",
+      court:CRT[Math.floor(rnd()*CRT.length)],courtLong:"Regional Trial Court, Batangas City",
       offence:OFF[Math.floor(rnd()*OFF.length)],stage:"Trial",
       idle:38+Math.floor(rnd()*520),detainedSince:new Date(2022+Math.floor(rnd()*3),Math.floor(rnd()*12),1+Math.floor(rnd()*27)),
-      facility:rnd()>.5?"BJMP Quezon City Male Dormitory":"BJMP Quezon City Female Dormitory",
+      facility:rnd()>.5?"Batangas City District Jail — Male Dorm":"Batangas City District Jail — Female Dorm",
       family:{name:"Family contact on file",rel:"guardian",no:"0917 555 "+String(1000+Math.floor(rnd()*8999)).slice(0,4)},
       history:[{d:new Date(NOW.getTime()-(38+Math.floor(rnd()*520))*864e5),l:"Last recorded activity — counsel conference",p:"Source: e-Laya visit log"}],
       docs:[]});
@@ -727,7 +727,7 @@ function renderC1(){
     });
   }
   h+='<p class="tiny" style="text-align:center;padding:8px 0 4px">'+CASES.length
-    +' active clients · sorted by triage score, computed on this device.<br>Last sync 7:42 AM · PAO Quezon City District Office</p>';
+    +' active clients · sorted by triage score, computed on this device.<br>Last sync 7:42 AM · PAO Batangas City District Office</p>';
   el.innerHTML=h;
   $("#c1Find").setAttribute("aria-pressed",String(S.searchOpen));
   $("#bulkN").textContent=S.picked.size+" selected";
@@ -752,7 +752,7 @@ function renderC2(){
   /* identity — flat header */
   h+='<div class="dhead"><h2>'+esc(c.name.toUpperCase())+"</h2>"
     +'<div class="dmeta"><span><span class="v">'+esc(c.docket.replace("Crim. Case","Crim. Case No."))+"</span>"
-    +" · "+esc(c.court)+", Quezon City</span>"
+    +" · "+esc(c.court)+", Batangas City</span>"
     +'<button class="copy" data-copy="'+esc(c.docket)+'" aria-label="Copy docket number">⧉</button></div>'
     +'<div class="drow"><span class="schip">'+esc(c.status)+'</span><span class="schip">'+esc(c.stage)+"</span>"
     +(c.cicl?'<span class="schip">CICL · '+c.age+" y/o</span>":"")
@@ -951,13 +951,13 @@ $("#tabs").addEventListener("click",function(e){
 /* ====================== C-4 · account ====================== */
 function renderC4(){
   const hearings=CASES.filter(c=>c.hearing).length;
-  const rows=[["Office","PAO Quezon City District Office"],["Role","Public Attorney II"],
+  const rows=[["Office","PAO Batangas City District Office"],["Role","Public Attorney II"],
     ["Roll of Attorneys","No. 68412"],["Active clients",String(CASES.length)],
     ["Hearings scheduled",String(hearings)],
     ["Last sync",S.offline?"7:42 AM · offline":"7:42 AM, 22 Jul 2026"]];
   $("#c4Scroll").innerHTML='<div class="mecard"><div class="meav">MR</div>'
     +'<div class="grow"><div class="mn">Atty. M. Reyes</div>'
-    +'<div class="mr">Public Attorney II · PAO Quezon City</div></div></div>'
+    +'<div class="mr">Public Attorney II · PAO Batangas City</div></div></div>'
     +'<div class="'+(S.offline?"banner warn":"banner ok")+'">'
     +(S.offline
       ?"Naka-offline. Your caseload is the 7:42 AM download; anything you flag queues on this phone."
@@ -1060,7 +1060,7 @@ $("#c2Copy").onclick=()=>{
   const s=c.name+" · "+c.docket.replace("Crim. Case","Crim. Case No.")+" · "+c.courtLong
     +(c.hearing?" · Next hearing "+fDate(c.hearing.at)+", "+fTime(c.hearing.at)+" ("+c.hearing.mode.toLowerCase()+")":" · No hearing scheduled")
     +(c.detainedSince?" · Detained since "+fDate(c.detainedSince)+" ("+since(c.detainedSince)+")":"")
-    +" · Counsel: Atty. M. Reyes, PAO QC";
+    +" · Counsel: Atty. M. Reyes, PAO Batangas City";
   copy(s);toast("Case summary copied — paste it into a message or a pleading.","",null);
 };
 function copy(s){try{navigator.clipboard.writeText(s);}catch(e){
@@ -1071,7 +1071,7 @@ document.addEventListener("click",async function(e){
   if(e.target.id==="sms"){
     const c=CASES.find(x=>x.id===S.sel);if(!c)return;
     const msg="e-Laya: Ang pagdinig ni "+c.name.split(",")[0]+" ay sa "+(c.hearing?fDate(c.hearing.at)+", "+fTime(c.hearing.at):"susunod na iskedyul")
-      +". PAO QC · huwag sagutin ang mensaheng ito.";
+      +". PAO Batangas City · huwag sagutin ang mensaheng ito.";
     let cancelled=false;
     toast("SMS to "+esc(c.family.name)+" queued · sends in 12s.","I-BALIK ↺",()=>{cancelled=true;toast("SMS cancelled. Nothing was sent.","",null);});
     setTimeout(async()=>{
@@ -1201,7 +1201,7 @@ document.addEventListener("keydown",function(e){
   renderC1();renderC3();
   const sso=await api("/api/sso");
   if(sso&&(sso.name||sso.full_name))
-    $("#c1Who").textContent="⚖ "+(sso.name||sso.full_name)+" · PAO Quezon City";
+    $("#c1Who").textContent="⚖ "+(sso.name||sso.full_name)+" · PAO Batangas City";
   setTimeout(()=>{S.loading=false;renderC1();},520);
 })();
 </script>
