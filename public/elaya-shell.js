@@ -53,128 +53,98 @@
 
   /* -------------------------------------------------------- space reserve
    * The bar is position:fixed, so it covers whatever is underneath it
-   * unless we reserve room.
+   * unless the page reserves room for it. Doing that from JavaScript by
+   * poking at whichever box happens to be the "real" viewport on each
+   * surface does not work, because the seven surfaces use three different
+   * layout regimes and none of them responds to padding on <body>:
    *
-   * kiosk.html is a fixed, non-scrolling simulated touchscreen
-   * (html,body{overflow:hidden}, around line 42) with a tuned internal
-   * flex layout — reserving space there would either be clipped or
-   * perturb #kbody's flex sizing. That is feature-detected out below
-   * (scrollableTop() is false) rather than hardcoded by filename.
+   *   - elaya.css sets html,body{height:100%}. body is therefore a
+   *     fixed-height box, and padding-bottom on a fixed-height box does
+   *     NOT extend the scrollable area past overflowing content. So the
+   *     body-padding approach is inert on index.html.
+   *   - app/cases/sessions/verify/custody render inside a `.phone` device
+   *     frame — 390x844 and centred by `.phone-wrap` above 480px, and
+   *     100%/100dvh below it. Either way it clips its own overflow, so it
+   *     is a second, inner viewport that body padding cannot reach.
+   *   - kiosk.html is a 1080x1920 #stage CSS-scaled to fit, on a
+   *     deliberately non-scrolling html,body{overflow:hidden} page.
    *
-   * app.html/cases.html/sessions.html/verify.html/custody.html don't set
-   * overflow:hidden on html/body, but at narrow widths they render inside
-   * a `.phone` device-frame div (elaya.css, @media max-width:480px) that
-   * itself becomes height:100dvh; overflow:hidden — a second, inner
-   * "viewport" that body-level padding cannot reach (body never actually
-   * overflows there, so padding on it is inert — verified by checking
-   * whether it actually grows document.documentElement.scrollHeight).
-   * Inside that frame, pinned-bottom content is laid out two different
-   * ways — a flex `flex:none` footer (app.html/custody.html's `.foot`)
-   * that responds to the frame's content-box height, and an absolutely
-   * positioned `bottom:0` tab bar (cases.html/sessions.html's `.tabs`)
-   * that is anchored to the frame's border box and does NOT respond to
-   * padding at all. Shrinking the frame's own `height` (rather than
-   * padding it) moves both, since it moves the border edge itself. So:
-   * try body first (feature-detected + verified); if that's inert, find
-   * that kind of full-viewport self-clipping frame and shrink its height
-   * instead. Either way the original inline value is restored on hide.
+   * So instead of guessing, this publishes the bar's measured height as a
+   * custom property on <html> and lets each regime's own stylesheet decide
+   * what to do with it:
+   *
+   *     document.documentElement.style --elaya-shell-h: <measured>px
+   *     document.documentElement.classList  .elaya-reserve
+   *
+   * elaya.css consumes it for the `.phone` regimes and appends a body::after
+   * spacer for ordinary flow pages; kiosk.html's fit() subtracts it from the
+   * height it scales #stage into. The class gates all of it, so a surface
+   * loaded with ?bare=1 (no bar, property never set) is byte-for-byte the
+   * layout it always was.
+   *
+   * The height is MEASURED, never assumed: the bar wraps onto two rows at
+   * narrow widths, so it is 45px on a desktop and 81px on a phone. onResize
+   * re-measures and re-publishes; restoreReserve puts back whatever inline
+   * value the surface itself had (usually none) and drops the class.
    */
-  var bodyPad = null;   // { prevInline, base } while we've padded <body>
-  var framePad = null;  // { el, prevInline, base } while we've shrunk a device frame's height
+  var RESERVE_VAR = '--elaya-shell-h';
+  var RESERVE_CLASS = 'elaya-reserve';
+  var reserved = null;  // snapshot of <html>'s pre-bar state, while reserved
 
-  function scrollableTop() {
+  /* kiosk.html scales #stage in script and cannot observe a custom property
+   * changing, so tell it. Any surface may listen; none is required to. */
+  function announce(h) {
     try {
-      var docOv = getComputedStyle(document.documentElement).overflowY;
-      var bodyOv = getComputedStyle(document.body).overflowY;
-      return docOv !== 'hidden' && bodyOv !== 'hidden';
-    } catch (e) {
-      return false; // can't tell — safest is to not touch layout
-    }
+      window.dispatchEvent(new CustomEvent('elaya:reserve', { detail: { height: h } }));
+    } catch (e) { /* ignore */ }
   }
 
-  /* A full-viewport element that clips its own overflow acts as a second,
-   * inner "device screen" — e.g. .phone at mobile widths. Feature-detect
-   * it generically (size + overflow) rather than hardcoding the class. */
-  function findFrame() {
-    try {
-      var all = document.body.getElementsByTagName('*');
-      for (var i = 0; i < all.length; i++) {
-        var el = all[i];
-        var cs = getComputedStyle(el);
-        if (cs.overflowY !== 'hidden' && cs.overflow !== 'hidden') continue;
-        var r = el.getBoundingClientRect();
-        if (r.width >= window.innerWidth * 0.95 &&
-            r.height >= window.innerHeight * 0.9 &&
-            r.top <= 4 && r.top >= -4) {
-          return el;
-        }
-      }
-    } catch (e) { /* ignore */ }
-    return null;
+  function publish(h) {
+    var root = document.documentElement;
+    if (reserved === null) {
+      reserved = {
+        prevInline: root.style.getPropertyValue(RESERVE_VAR),
+        prevPriority: root.style.getPropertyPriority(RESERVE_VAR),
+        hadClass: root.classList.contains(RESERVE_CLASS)
+      };
+    }
+    if (root.style.getPropertyValue(RESERVE_VAR) === h + 'px' &&
+        root.classList.contains(RESERVE_CLASS)) return false;
+    root.style.setProperty(RESERVE_VAR, h + 'px');
+    root.classList.add(RESERVE_CLASS);
+    announce(h);
+    return true;
   }
 
   function applyReserve(nav) {
     try {
-      var barHeight = nav.getBoundingClientRect().height;
-      if (!barHeight) return;
-      // Surfaces that declare html/body{overflow:hidden} (kiosk.html) are
-      // opting out of scroll entirely by design — leave them untouched.
-      if (!scrollableTop()) return;
-
-      if (bodyPad === null) {
-        var beforeScroll = document.documentElement.scrollHeight;
-        var prevInline = document.body.style.paddingBottom;
-        var base = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
-        document.body.style.paddingBottom = (base + barHeight) + 'px';
-        // Confirm body padding actually created scroll room. If the page's
-        // true content lives inside an inner clipped frame (see above),
-        // body was already exactly viewport-height and padding is inert —
-        // revert and fall back to the frame instead.
-        if (document.documentElement.scrollHeight > beforeScroll) {
-          bodyPad = { prevInline: prevInline, base: base };
-        } else {
-          document.body.style.paddingBottom = prevInline;
-        }
-      } else {
-        document.body.style.paddingBottom = (bodyPad.base + barHeight) + 'px';
-      }
-
-      if (bodyPad === null) {
-        var frame = (framePad && framePad.el) || findFrame();
-        if (frame) {
-          if (!framePad || framePad.el !== frame) {
-            framePad = {
-              el: frame,
-              prevInline: frame.style.height,
-              prevAlignSelf: frame.style.alignSelf,
-              base: frame.getBoundingClientRect().height
-            };
-            // The frame's own parent may center it (e.g. .phone-wrap's
-            // align-items:center), which would otherwise donate half of
-            // the height we free up to empty space ABOVE the frame instead
-            // of reserving it below. Pin the frame to the start of its
-            // flex parent's cross axis so the full amount lands at the
-            // bottom, where the bar is. A no-op if the parent isn't flex.
-            frame.style.alignSelf = 'flex-start';
-          }
-          frame.style.height = (framePad.base - barHeight) + 'px';
-        }
-      }
+      var h = nav.getBoundingClientRect().height;
+      if (!h) return;
+      if (!publish(h)) return;
+      /* Reserving space can add or remove a scrollbar, which changes the
+       * width the bar has to lay out in, which can change how many rows it
+       * wraps onto. Re-measure once; publish() is a no-op if it settled. */
+      var after = nav.getBoundingClientRect().height;
+      if (after && after !== h) publish(after);
     } catch (e) { /* ignore */ }
   }
 
   function restoreReserve() {
     try {
-      if (bodyPad !== null) document.body.style.paddingBottom = bodyPad.prevInline;
-    } catch (e) { /* ignore */ }
-    try {
-      if (framePad !== null) {
-        framePad.el.style.height = framePad.prevInline;
-        framePad.el.style.alignSelf = framePad.prevAlignSelf;
+      var root = document.documentElement;
+      if (reserved !== null) {
+        // Put back exactly what was there — a surface that set the property
+        // itself keeps its own value; one that did not gets it removed.
+        if (reserved.prevInline) {
+          root.style.setProperty(RESERVE_VAR, reserved.prevInline, reserved.prevPriority);
+        } else {
+          root.style.removeProperty(RESERVE_VAR);
+        }
+        if (!reserved.hadClass) root.classList.remove(RESERVE_CLASS);
       }
     } catch (e) { /* ignore */ }
-    bodyPad = null;
-    framePad = null;
+    reserved = null;
+    announce(0);
   }
 
   function onResize() {

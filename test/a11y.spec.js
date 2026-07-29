@@ -95,16 +95,33 @@ async function measureTapTargets(page, skipWithin) {
 /* The coverage the 390px test gives up, taken back at the resolution the
    terminal actually runs at. Nothing is excluded here — the language tiles,
    the nine read-aloud circles, #demodot, the control rail and the reviewer bar
-   are all measured, unscaled. */
+   are all measured.
+
+   Sizes are measured AS RENDERED, deliberately. The stage is very slightly
+   under 1:1 here (see the fit assertion below) and a thumb does not care what
+   a control was designed to be — 32px is a floor on the pixels actually drawn. */
 test('kiosk has no tap target under 32px at its own 1080x1920', async ({ page }) => {
   await page.setViewportSize({ width: 1080, height: 1920 });
   await page.goto('/kiosk.html');
   await page.waitForTimeout(300);
-  const scale = await page.evaluate(() => {
+  /* This viewport has exactly the stage's 1080x1920 aspect ratio, so the stage
+     would be 1:1 — except that the reviewer bar is fixed to the bottom of the
+     viewport and the kiosk cannot scroll out from under it (it is deliberately
+     html,body{overflow:hidden}). elaya-shell.js publishes the bar's measured
+     height and kiosk.html's fit() scales the stage into what is left. So the
+     scale here is not 1, and it is not "about 1" either: it is exactly the
+     fraction of the height the stage keeps. Asserted to four places, because
+     a stage that scaled by some other amount is reserving the wrong thing —
+     which is the bug this whole mechanism exists to fix. */
+  const fit = await page.evaluate(() => {
     const m = new DOMMatrix(getComputedStyle(document.getElementById('stage')).transform);
-    return m.a;
+    const bar = document.getElementById('elaya-shell');
+    const barH = bar ? bar.getBoundingClientRect().height : 0;
+    return { scale: m.a, barH, expected: Math.min(innerWidth / 1080, (innerHeight - barH) / 1920) };
   });
-  expect(scale, 'the stage should be unscaled at its own resolution').toBeCloseTo(1, 2);
+  expect(fit.barH, 'the reviewer bar did not render at 1080x1920').toBeGreaterThan(0);
+  expect(fit.scale, 'the stage is not fitted to the height left by the reviewer bar')
+    .toBeCloseTo(fit.expected, 4);
 
   const m = await measureTapTargets(page, null);
   expect(m.total, 'no measurable tap targets at all on kiosk').toBeGreaterThan(0);
@@ -203,13 +220,21 @@ test('the kiosk keeps its designed control sizes', async ({ page }) => {
   await page.setViewportSize({ width: 1080, height: 1920 });
   await page.goto('/kiosk.html');
   const boxes = await page.evaluate(() => {
+    /* These are assertions about the DESIGN, so they are read in design px.
+       #stage is CSS-scaled to whatever height the reviewer bar leaves it (see
+       the 1080x1920 tap-target test), so dividing by that scale is what turns
+       a rendered rect back into the number the kiosk was drawn with. Without
+       this the constants below would silently track the bar's height instead
+       of the design. */
+    const s = new DOMMatrix(getComputedStyle(document.getElementById('stage')).transform).a;
     const R = e => { const r = e.getBoundingClientRect();
-      return [Math.round(r.width), Math.round(r.height)]; };
+      return [Math.round(r.width / s), Math.round(r.height / s)]; };
     const tile = document.querySelector('.ltile').getBoundingClientRect();
     const spk = document.querySelector('.spk').getBoundingClientRect();
     return { spk: R(document.querySelector('.spk')),
              demodot: R(document.getElementById('demodot')),
-             /* the speaker must not reach across the tile it sits on */
+             /* the speaker must not reach across the tile it sits on — a ratio,
+                so the stage scale cancels out */
              spkShareOfTile: Math.round((spk.width / tile.width) * 100) };
   });
   expect(boxes.spk).toEqual([68, 68]);

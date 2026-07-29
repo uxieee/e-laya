@@ -1298,12 +1298,29 @@ async function translateDynamic(lang){
   }
 }
 
-/* ---------- stage scaling ---------- */
+/* ---------- stage scaling ----------
+   This page is deliberately non-scrolling (html,body{overflow:hidden} — it is
+   a terminal bolted to a wall, not a document), so the reviewer bar cannot be
+   scrolled out from under. Instead the stage is fitted into the viewport MINUS
+   whatever height elaya-shell.js has reserved, and re-centred in that shorter
+   box by lifting it half the reserve. With no bar (?bare=1, dismissed, or the
+   script absent) the property reads 0px and both terms vanish, leaving the
+   original full-viewport fit untouched. */
+function reserveH(){
+  try{ return parseFloat(getComputedStyle(document.documentElement)
+        .getPropertyValue('--elaya-shell-h')) || 0; }
+  catch(e){ return 0; }
+}
 function fit(){
-  const s = Math.min(innerWidth/1080, innerHeight/1920);
-  $('stage').style.transform = 'translate(-50%,-50%) scale('+s+')';
+  const rv = reserveH();
+  const s = Math.min(innerWidth/1080, Math.max(1, innerHeight - rv)/1920);
+  $('stage').style.transform =
+    'translate(-50%,calc(-50% - '+(rv/2)+'px)) scale('+s+')';
 }
 addEventListener('resize', fit);
+/* The bar measures itself after this script has already run once, and again
+   whenever it re-wraps or is dismissed. It announces each new value. */
+addEventListener('elaya:reserve', fit);
 
 /* ---------- API with silent fallback ----------
    The abort is DELIBERATE, and it is the point of this helper. A terminal in a

@@ -42,7 +42,29 @@
   --font:'Lexend',system-ui,-apple-system,sans-serif;
 
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+
+  /* Height of the out-of-fiction reviewer bar (elaya-shell.js), which is
+     position:fixed along the bottom of the viewport and would otherwise
+     cover the last line of every surface. The bar MEASURES itself and
+     republishes this on <html> as an inline style, together with the
+     .elaya-reserve class that gates every rule below — it wraps to two rows
+     on a phone, so it is not a constant. 0 here is the no-bar case: ?bare=1,
+     a dismissed bar, or elaya-shell.js not loaded at all. */
+  --elaya-shell-h:0px;
 }
+
+/* ---------- reviewer-bar space reserve ----------
+   Only ever active while the bar is actually on screen. Nothing here fires
+   under ?bare=1 or after the bar is dismissed, so the surfaces keep their
+   original layout exactly. */
+
+/* Ordinary flow pages (index.html): body is height:100% and its content
+   overflows it, so padding-bottom on body is inert — a fixed-height box does
+   not extend its scroll area past overflowing content. An in-flow block after
+   the last child does. Harmless on the surfaces that don't need it: kiosk
+   clips it (overflow:hidden) and .phone-wrap below gives back exactly the
+   height this takes, so neither grows a scrollbar. */
+.elaya-reserve body::after{content:"";display:block;height:var(--elaya-shell-h)}
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -58,6 +80,22 @@ body{
 @media (max-width:480px){
   .phone-wrap{padding:0;background:var(--bg)}
   .phone{width:100%;height:100dvh;border-radius:0;box-shadow:none}
+}
+
+/* The frame is a self-clipping inner viewport — a `.tabs` bar is
+   position:absolute;bottom:0 against its border box and a `.foot` is a
+   flex:none last child of it, so the only thing that moves BOTH clear of the
+   reviewer bar is shrinking the frame itself. Capping its height (rather than
+   setting it) means the frame keeps its 844px design size whenever there is
+   room, and gives up only what the bar actually needs when there is not — so
+   a viewport shorter than 844 + bar never pushes the top of the frame off
+   screen. The wrapper gives back exactly the height body::after above takes,
+   so the page height is unchanged and no scrollbar appears. */
+.elaya-reserve .phone-wrap{min-height:calc(100% - var(--elaya-shell-h))}
+.elaya-reserve .phone{max-height:calc(100dvh - 48px - var(--elaya-shell-h))}
+@media (max-width:480px){
+  /* .phone-wrap's 24px padding is 0 here, so there is nothing to subtract. */
+  .elaya-reserve .phone{max-height:calc(100dvh - var(--elaya-shell-h))}
 }
 
 /* ---------- type ---------- */
