@@ -674,7 +674,9 @@ function programsFor(c){
   if(!a.live)return c.programs;
   return [Object.assign({},c.programs[0],{
     att:a.done+" of "+a.of+" sessions"+(a.streak?" · "+a.streak+" missed in a row":""),
-    flag:a.streak>=1
+    /* Same rule as the chip: a raised flag stays raised until a human closes
+       it, so the dated LSWDO note below does not vanish because of one log. */
+    flag:a.streak>=1||!!c.diversionFlag
   })].concat(c.programs.slice(1));
 }
 
@@ -687,9 +689,15 @@ function chipsFor(c){
     if(c.vcUnconfirmed)out.push(['amber',"VC link unconfirmed"]);
   }
   if(c.milestoneDays!=null)out.push(['amber',(c.gcta?c.gcta.tier.split(" · ")[0]:"Milestone")+" · "+c.milestoneDays+"d unacted"]);
+  /* The flag is the LSWDO's judgement, and it is what the +120 modifier, the
+     warn rail and this case's place in NEEDS YOU TODAY are built on. A social
+     worker logging one attended session moves the count; it does not close the
+     flag. So while the flag stands this chip reports the count when there is a
+     streak to report, and otherwise reports the flag itself — it never
+     announces the problem resolved over a warn rail that says it isn't. */
   if(c.diversionFlag){const a=attFor(c);
-    out.push(a.streak?['amber',"Diversion: "+a.streak+" missed"]
-                     :['blue',"Diversion: attendance back on track"]);}
+    out.push(['amber',a.streak?"Diversion: "+a.streak+" missed"
+                              :"Diversion: flag open"]);}
   if(!out.length)out.push(['slate',"Last activity "+c.idle+"d ago"]);
   return out;
 }
@@ -860,7 +868,7 @@ function renderC2(){
     :'<p style="font-size:14px;color:var(--muted)">No GCTA computation on file yet.</p><button class="linkbtn">Add a commitment order</button>');
 
   const progs=programsFor(c),pflag=progs.some(p=>p.flag),pstreak=attFor(c).streak;
-  h+=acc("programs","Programmes & attendance"+(pflag?" · "+pstreak+" sessions missed":""),pflag,
+  h+=acc("programs","Programmes & attendance"+(pflag&&pstreak?" · "+pstreak+" sessions missed":""),pflag,
     progs.length?progs.map(p=>'<div class="kv"><span class="k">'+esc(p.n)+'<br><span class="tiny">'+esc(p.prov)+"</span></span>"
       +'<span class="v">'+esc(p.att)+"</span></div>").join("")
       +(pflag?'<div class="note amber" style="margin-top:12px"><span class="g">⚠</span><span>The LSWDO raised a follow-up flag on 15 Jul. This is a support trigger, not a breach — the diversion contract is not yet at risk.</span></div>':"")

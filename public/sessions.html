@@ -814,10 +814,16 @@ function renderS2(){
         +'<span class="pchev">›</span></button>').join("")+"</div></div>";
     h+='<p class="tiny">Every logged session carries a receipt computed on the phone that logged it. Tapping a receipt re-computes it here, offline.</p>';
   }else{
-    h+='<div class="fchips"><button class="fchip" aria-pressed="true">All 15</button>'
-      +'<button class="fchip" aria-pressed="false">Follow-up 3</button>'
-      +'<button class="fchip" aria-pressed="false">Won\'t finish 1</button>'
-      +'<button class="fchip" aria-pressed="false">Complete 0</button></div>';
+    /* Counted from the roster these chips sit above, never typed: a chip
+       reading "All 15" over 16 names is the kind of thing a judge notices. The
+       follow-up predicate is the same one the amber rails and chips below use. */
+    const nFollow=ROSTER.filter(r=>r.never||r.missStreak>=1).length;
+    const nTight=ROSTER.filter(r=>r.tight).length;
+    const nDone=ROSTER.filter(r=>r.done>=r.of).length;
+    h+='<div class="fchips"><button class="fchip" aria-pressed="true">All '+ROSTER.length+'</button>'
+      +'<button class="fchip" aria-pressed="false">Follow-up '+nFollow+'</button>'
+      +'<button class="fchip" aria-pressed="false">Won\'t finish '+nTight+'</button>'
+      +'<button class="fchip" aria-pressed="false">Complete '+nDone+'</button></div>';
     h+='<div class="bandcard">'+ROSTER.map(r=>{
       const pctv=Math.round(r.done/r.of*100);
       const chip=r.never?["amber","Never attended"]:r.missStreak>=1?["amber",r.missStreak+" missed in a row"]
@@ -953,12 +959,23 @@ function nuanceSheet(id){
    and this screen's own ROSTER/PROGRAMS model is untouched by all of it. */
 const givenName=n=>{const parts=String(n).split(",");return (parts[1]||parts[0]||"").trim();};
 
-function mirrorToStore(p,receipt){
+/* The record: {done, of, missed, missStreak, lastAt, receipt, receiptFull}.
+
+   `missed` and `missStreak` are two different facts and must never be
+   collapsed into one. missStreak is consecutive misses — what a social worker
+   escalates on, and what /cases reports. `missed` is misses to date — what a
+   family card means by "hindi nadaluhan". Reading the streak as the total made
+   /app print "0 missed" over its own note explaining a missed session.
+
+   receiptFull is carried alongside the short form so a surface can display the
+   short receipt and hand over the matching 64 characters. Showing one hash and
+   copying another is the single thing a chain-of-custody screen must not do. */
+function mirrorToStore(p,hashFull){
   if(!window.Elaya)return null;
   /* Captured BEFORE the write so the 12-second undo can put it all back —
      an undone save must not leave the lawyer looking at a phantom miss. */
   const undo={paths:[],notifs:(window.Elaya.get("notifications",[])||[]).slice()};
-  const at=new Date().toISOString();
+  const at=new Date().toISOString(), receipt=shortHash(hashFull);
   ROSTER.forEach(r=>{
     if(!r.castId)return;
     const mark=S.marks[r.id];
@@ -967,9 +984,15 @@ function mirrorToStore(p,receipt){
     const path="attendance."+r.castId+"."+p.id;
     undo.paths.push({path:path,value:window.Elaya.get(path,null)});
     window.Elaya.update(path,a=>{
-      a=a||{done:r.done,of:r.of,missStreak:r.missStreak||0};
+      /* The roster carries no running total, so the streak it was seeded with
+         is the best first estimate of misses to date. It only ever grows from
+         here, and it never shrinks because someone turned up once. */
+      a=a||{done:r.done,of:r.of,missed:r.missStreak||0,missStreak:r.missStreak||0};
+      const total=(typeof a.missed==="number")?a.missed:(a.missStreak||0);
       return {done:missed?a.done:a.done+1, of:a.of,
-              missStreak:missed?(a.missStreak||0)+1:0, lastAt:at, receipt:receipt};
+              missed:missed?total+1:total,
+              missStreak:missed?(a.missStreak||0)+1:0,
+              lastAt:at, receipt:receipt, receiptFull:hashFull};
     });
     window.Elaya.notify({
       /* The guardian is texted about their own child. name is "Surname, Given",
@@ -1014,7 +1037,7 @@ async function saveAttendance(){
     hash:hash,state:S.synced?"synced":"saved",at:fTime(new Date(NOW.getTime()+2*6e4))});
   s.state="logged";s.present=presentCount();s.follow=missedCount();s.hash=hash;
   p.held=p.required-p.sessions.filter(x=>x.state!=="logged").length;
-  const storeUndo=mirrorToStore(p,shortHash(hash));
+  const storeUndo=mirrorToStore(p,hash);
   renderConfirm();show("s3c");
   commitAfterUndo=()=>{S.committed=true;};
   toast("Naitala na · Attendance saved."+(S.offline?" Nakasave sa telepono.":""),"I-BALIK ↺",()=>{
@@ -1353,7 +1376,7 @@ $("#s2Menu").onclick=()=>openSheet('<h3>Programme options</h3>'
   +'<button class="opt"><span class="g">⎙</span><span>Print sign-in sheet<span class="sub">Paper is the honest fallback for a hall with no signal</span></span></button>'
   +'<button class="opt"><span class="g">ⓘ</span><span>Programme details</span></button>');
 $("#s3Menu").onclick=()=>openSheet('<h3>Session options</h3>'
-  +'<button class="opt" data-do="cancel"><span class="g">⊘</span><span>Mark the whole session as not held<span class="sub">Requires a reason. A cancelled session must never record 15 misses.</span></span></button>'
+  +'<button class="opt" data-do="cancel"><span class="g">⊘</span><span>Mark the whole session as not held<span class="sub">Requires a reason. A cancelled session must never record '+ROSTER.length+' misses.</span></span></button>'
   +'<button class="opt" data-do="draft2"><span class="g">▤</span><span>Save as draft</span></button>'
   +'<button class="opt" data-do="offline"><span class="g">⚡</span><span>'+(S.offline?"Go back online":"Go offline")+'</span></button>'
   +'<button class="opt" data-do="readonly"><span class="g">🔒</span><span>Show the already-logged state</span></button>');

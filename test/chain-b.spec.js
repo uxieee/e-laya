@@ -209,6 +209,101 @@ test('a session logged in /sessions reaches /app, /cases and /kiosk', async ({ p
 });
 
 /* ------------------------------------------------------------------ *
+ * Review round 1                                                      *
+ * ------------------------------------------------------------------ */
+
+/* A. Adding r16 moved every roster-derived count. Two S-2 filter chips were
+   still typed, so they announced "All 15" over 16 names and "Follow-up 3"
+   beside four amber rails. */
+test('the S-2 roster filter chips are derived from the roster, not typed', async ({ page }) => {
+  await page.goto('/sessions.html');
+  await page.locator('.tab[data-tab="s2"]').click();
+  await page.locator('.utab[data-tab="people"]').click();
+
+  const chips = page.locator('#s2Scroll .fchips');
+  const rows = page.locator('#s2Scroll .bandcard .row');
+  await expect(chips).toContainText('All ' + await rows.count());
+
+  // Follow-up counts the same people the warn rails and the amber chips mark:
+  // never attended, or currently on a miss streak.
+  const expected = await page.evaluate(() =>
+    ROSTER.filter(r => r.never || r.missStreak >= 1).length);
+  expect(expected).toBe(4);                 // r1, r3, r4, r16
+  await expect(chips).toContainText('Follow-up ' + expected);
+  await expect(chips).toContainText("Won't finish " +
+    await page.evaluate(() => ROSTER.filter(r => r.tight).length));
+});
+
+test('the cancel-session warning counts the roster it would blank', async ({ page }) => {
+  await page.goto('/sessions.html');
+  await page.locator('#goLog').click();
+  await page.locator('#s3Menu').click();
+  const n = await page.evaluate(() => ROSTER.length);
+  await expect(page.locator('#sheet')).toContainText('must never record ' + n + ' misses');
+});
+
+/* B. The +120 diversion modifier, the warn rail and the NEEDS YOU TODAY band
+   are the LSWDO's raised flag — a human judgement, not an arithmetic
+   threshold. One logged session moves the count; it does not close the flag.
+   The chip must not say otherwise while the flag stands. */
+test('/cases never announces the diversion flag resolved while it stands', async ({ page }) => {
+  await logSession(page, null);             // everyone present — Renz's streak goes to 0
+
+  await page.goto('/cases.html');
+  expect(await page.evaluate(() => window.Elaya.get('attendance.renz.pg1.missStreak'))).toBe(0);
+
+  const row = page.locator('#c1Scroll .row', { hasText: 'Bautista, Renz A.' });
+  await expect(row).toHaveCount(1);
+  await expect(row).not.toContainText('back on track');
+  await expect(row).toContainText('Diversion: flag open');
+
+  // The rail and the band follow the seeded score, so they must not have moved.
+  await expect(row.locator('.rail')).toHaveClass(/warn/);
+  await expect(page.locator('#band-today')).toContainText('Bautista, Renz A.');
+
+  // And the accordion keeps the LSWDO's note: it is a dated historical fact,
+  // not a live readout.
+  await row.click();
+  await page.locator('#c2Scroll [data-acc="programs"]').click();
+  await expect(page.locator('#c2Scroll')).toContainText('The LSWDO raised a follow-up flag on 15 Jul');
+});
+
+/* C. missStreak is consecutive misses; /app's "hindi nadaluhan" is misses to
+   date. Mapping one onto the other made the family card read "0 missed"
+   directly above its own note explaining a miss. */
+test('/app never contradicts its own note about a missed session', async ({ page }) => {
+  await logSession(page, null);             // Jomar present: streak 0, total unchanged
+
+  await page.goto('/app.html#/list');
+  await page.locator('[data-person="jomar"]').click();
+  await page.locator('[data-ptab="programa"]').click();
+
+  const body = page.locator('#personBody');
+  await expect(body).toContainText('5 of 12 sessions · 1 missed');
+  await expect(body).not.toContainText('· 0 missed');
+  await expect(body).toContainText('Hindi siya nakadalo noong Hul 13');
+});
+
+/* D. The short receipt on screen and the 64 characters behind Kopyahin have to
+   be the same receipt. Handing a judge a hash that does not match the one
+   displayed is the one thing this screen exists not to do. */
+test('/app copies the receipt it is showing, not the seeded one', async ({ page }) => {
+  await logSession(page, null);
+
+  await page.goto('/app.html#/list');
+  await page.locator('[data-person="jomar"]').click();
+  await page.locator('[data-ptab="programa"]').click();
+
+  const shown = await page.locator('#personBody .mono11').innerText();
+  const short = shown.split('·').pop().trim();
+  const full = await page.locator('#personBody [data-act="copyhash"]').getAttribute('data-hash');
+
+  expect(full).toHaveLength(64);
+  expect(short.startsWith(full.slice(0, 4)), `${short} is not the head of ${full}`).toBe(true);
+  expect(short.endsWith(full.slice(-4)), `${short} is not the tail of ${full}`).toBe(true);
+});
+
+/* ------------------------------------------------------------------ *
  * The store is an enhancement layer, never a dependency               *
  * ------------------------------------------------------------------ */
 

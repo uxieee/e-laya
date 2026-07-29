@@ -1084,11 +1084,24 @@ function attendanceFor(p){
     const a = window.Elaya.get('attendance.'+p.id+'.'+pr.progId, null);
     if(a && typeof a.done === 'number' && typeof a.of === 'number'){
       return {attended:a.done, total:a.of,
-              missed:(typeof a.missStreak === 'number') ? a.missStreak : pr.missed,
-              receipt:a.receipt || pr.receipt, live:true};
+              /* "hindi nadaluhan" on this card means misses to date, which is
+                 the record's `missed`. Its `missStreak` is consecutive misses
+                 — a different fact, and never a substitute for this one: the
+                 note below this line explains a real missed session, so a
+                 streak of 0 printed here would contradict it. */
+              missed:(typeof a.missed === 'number') ? a.missed : pr.missed,
+              receipt:a.receipt || pr.receipt,
+              /* The 64 characters behind Kopyahin must be the 64 characters
+                 the short receipt above was cut from. Once a live receipt is
+                 on screen the seeded full hash is the wrong hash; if the
+                 record carries no full form, hand over what is displayed
+                 rather than something that does not match it. */
+              receiptFull:a.receiptFull || (a.receipt ? a.receipt : pr.receiptFull),
+              live:true};
     }
   }
-  return {attended:pr.attended, total:pr.total, missed:pr.missed, receipt:pr.receipt, live:false};
+  return {attended:pr.attended, total:pr.total, missed:pr.missed,
+          receipt:pr.receipt, receiptFull:pr.receiptFull, live:false};
 }
 
 function progTab(p,first){
