@@ -708,13 +708,37 @@ const DEMO_STATES = [
 ];
 
 /* The store wins when the officer has confirmed something more recent.
-   With no store, this is a no-op and the seed renders unchanged. */
+   With no store, this is a no-op and the seed renders unchanged.
+
+   A stored record decays on the same 24-hour rule /custody enforces and the
+   SMS promises. `expiresAt` is the confirmation time plus 24h, so the
+   confirmation time is `expiresAt - 24h`; past it, the family sees "Walang
+   update ngayong araw" with the last confirmation kept underneath, exactly as
+   /custody's own `shown()` does. A record written without an `expiresAt` is
+   treated as just-confirmed rather than as an error. */
+const WF_DAY_MS = 86400000;
+const FIL_DAYS = ['Linggo','Lunes','Martes','Miyerkules','Huwebes','Biyernes','Sabado'];
+const FIL_MONS = ['Ene','Peb','Mar','Abr','May','Hun','Hul','Ago','Set','Okt','Nob','Dis'];
+
 function welfareFor(p){
-  if(window.Elaya){
-    const w = window.Elaya.get('welfare.'+p.id, null);
-    if(w && w.key) return {key:w.key, at:w.at, day:'ngayong araw', ageHours:0, live:true};
-  }
-  return p.welfare;
+  if(!window.Elaya) return p.welfare;
+  const w = window.Elaya.get('welfare.'+p.id, null);
+  /* Only a key this surface can actually render is honoured. welfareFor now
+     trusts data another surface wrote, so an unknown or stale-vocabulary key
+     must fall back to the seed rather than reach the renderers. */
+  if(!w || !w.key || !WELFARE[w.key]) return p.welfare;
+
+  const conf = (typeof w.expiresAt === 'number') ? w.expiresAt - WF_DAY_MS : Date.now();
+  const ageHours = Math.max(0, (Date.now() - conf) / 3600000);
+  const d = new Date(conf);
+  const day = ageHours < 24  ? 'ngayong araw'
+            : ageHours < 48  ? 'kahapon'
+            : ageHours < 168 ? FIL_DAYS[d.getDay()]
+            : FIL_MONS[d.getMonth()] + ' ' + d.getDate();
+  const at = w.at || '';
+  const expired = typeof w.expiresAt === 'number' && Date.now() > w.expiresAt;
+
+  return {key: expired ? 'noupdate' : w.key, at:at, day:day, ageHours:ageHours, live:true};
 }
 
 /* The freshness ladder, §5.6 — three different kinds of "old", never conflated. */
@@ -798,7 +822,12 @@ function welfareHTML(p){
       + '<p class="meta dim" style="margin-top:10px">Binura na sa telepono mo ang huling nakita mong kalagayan niya.<br>His last known welfare status has been erased from this phone.</p></div>';
   }
 
-  const w = WELFARE[v.key];
+  /* Defence in depth: welfareFor already rejects an unknown key, but v.key can
+     also arrive from the demo control, and an unrenderable key must degrade to
+     "wala pang update" rather than throw before innerHTML is assigned — a throw
+     here would leave A-4 showing the previous screen. welfareChip guards the
+     same way. */
+  const w = WELFARE[v.key] || WELFARE.none;
   let cls = 'welfare';
   if(v.stale) cls += ' stale';
   else if(w.tone==='info') cls += ' info';

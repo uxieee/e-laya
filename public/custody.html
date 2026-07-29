@@ -256,16 +256,18 @@ const FACILITIES=['Manila City Jail — Male Dorm','Caloocan City Jail','Marikin
 const WELFARE_KEY={ok:'ok',clinic:'clinic',hospital:'hospital',court:'hearing',
   prog:'program',moved:'transferred',free:'released'};
 
-/* The SMS a family would receive. Demo copy: written for the bridge person,
-   so it is only queued for the roster row that carries a castId. */
+/* The SMS a family would receive. Written as a function of the person, never
+   with a name baked in: a fixed name would send one family's guardian a
+   welfare claim about somebody else's relative the moment a second roster row
+   carries a castId — and the cast gives two people the same guardian name. */
 const WELFARE_SMS={
-  ok:          'Miguel is doing OK. Confirmed today by the facility.',
-  clinic:      'Miguel is in the facility clinic, being monitored by a nurse.',
-  hospital:    'Miguel was taken to hospital for care. Call the facility for details.',
-  hearing:     'Miguel is at a hearing today.',
-  program:     'Miguel is in a programme session today.',
-  transferred: 'Miguel was transferred. Check the new address before travelling.',
-  released:    'Miguel has been released.'
+  ok:          n=>n+' is doing OK. Confirmed today by the facility.',
+  clinic:      n=>n+' is in the facility clinic, being monitored by a nurse.',
+  hospital:    n=>n+' was taken to hospital for care. Call the facility for details.',
+  hearing:     n=>n+' is at a hearing today.',
+  program:     n=>n+' is in a programme session today.',
+  transferred: n=>n+' was transferred. Check the new address before travelling.',
+  released:    n=>n+' has been released.'
 };
 
 /* ------------------------------------------------------------- seed data */
@@ -450,7 +452,7 @@ function quickOK(id){ commit(id,'ok'); }
 
 function commit(id,statusId,extra){
   const p=people.find(x=>x.id===id); if(!p) return;
-  const prev={status:p.status,at:p.at,extra:p.extra,
+  const prev={status:p.status,at:p.at,extra:p.extra,notifId:null,
     welfare:(window.Elaya&&p.castId)?window.Elaya.get('welfare.'+p.castId,null):undefined};
   p.stay=updatedToday(p)?'done':needsLook(p)?'look':'todo';   // where the row holds its place
   p.status=statusId; p.at=nowMs(); p.extra=extra||null; p.queued=offline; p.justSet=true;
@@ -467,12 +469,13 @@ function commit(id,statusId,extra){
       source:'manual',
       expiresAt:nowMs()+DAY
     });
-    window.Elaya.notify({
+    const rec=window.Elaya.notify({
       to:p.kinName,
-      body:WELFARE_SMS[statusKey],
+      body:WELFARE_SMS[statusKey](p.first),
       surface:'custody',
       personId:p.castId
     });
+    prev.notifId = rec && rec.id;   // so undo can retract the queued SMS too
   }
   closeSheets();
   // The rail animates to green and the family-reach note shows for ~2s, then the row drains into "Done today".
@@ -488,12 +491,18 @@ function undo(){
   if(!pending) return;
   clearTimeout(pending.timer);
   const p=people.find(x=>x.id===pending.id);
-  /* Undo has to reach the store too, or /app keeps showing a status the
-     officer took back. Guarded, like every other store touch here. */
-  if(window.Elaya && p.castId && pending.prev.welfare!==undefined){
-    window.Elaya.set('welfare.'+p.castId, pending.prev.welfare);
+  /* Undo has to reach the store too, or /app keeps showing a status the officer
+     took back — and keeps showing "the SMS that would have been sent" for a
+     message the clearTimeout above just cancelled. Both are retracted.
+     Guarded, like every other store touch here. */
+  if(window.Elaya && p.castId){
+    if(pending.prev.welfare!==undefined) window.Elaya.set('welfare.'+p.castId, pending.prev.welfare);
+    if(pending.prev.notifId){
+      const id=pending.prev.notifId;
+      window.Elaya.update('notifications', list=>(list||[]).filter(n=>n.id!==id));
+    }
   }
-  const {welfare:_w, ...prevFields}=pending.prev;
+  const {welfare:_w, notifId:_n, ...prevFields}=pending.prev;
   Object.assign(p,prevFields); p.queued=false; p.justSet=false;
   seq=Math.max(0,seq-1); saveTimes.pop();
   pending=null; hideSnack(); render();
