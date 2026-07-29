@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>e-Laya · Welfare status</title>
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="elaya.css">
 <style>
 /* ------------------------------------------------------------------
@@ -11,6 +12,12 @@
    stylesheet does not carry (roster row, progress meter, status sheet).
    Nothing in elaya.css is overridden.
    ------------------------------------------------------------------ */
+.bar-emblem{display:inline-block;width:20px;height:20px;vertical-align:middle;margin-right:5px}
+.nav-home{position:fixed;top:10px;left:10px;z-index:200;line-height:0}
+.nav-home a{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;
+  color:var(--primary);text-decoration:none;padding:8px 14px;border-radius:8px;
+  background:var(--surface);border:1px solid var(--border);transition:.15s}
+.nav-home a:hover{border-color:var(--primary)}
 .fac{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px 12px;flex:none}
 .fac .f1{font-size:16px;font-weight:500;color:var(--text)}
 .fac .f2{font-size:13px;color:var(--muted);margin-top:2px}
@@ -130,6 +137,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 </style>
 </head>
 <body>
+<div class="nav-home"><a href="index.html">&larr; e-Laya</a></div>
 <div class="phone-wrap">
 <div class="phone" id="phone">
 
@@ -137,7 +145,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 <section class="screen on" id="s-w1" aria-labelledby="w1-h">
   <header class="bar plain">
     <button class="back" aria-label="Back">‹</button>
-    <div class="title">Welfare status</div>
+    <div class="title"><img class="bar-emblem" src="images/e-laya-emblem.png" alt="">Welfare status</div>
     <div class="right"><button class="back" aria-label="Menu" onclick="openMenu()">⋯</button></div>
   </header>
 

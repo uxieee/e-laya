@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>e-Laya · Team Ala-Eh · eGovHackathon 2026</title>
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="elaya.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
@@ -118,7 +119,10 @@ const D=[
 <p>Do not say good morning. Do not say the team name. <b>Do not read the members aloud.</b> This slide orients the room, it is not something you narrate.</p>
 <p>One beat, then click straight into the opener and start with <span class="t">"You are sixteen."</span></p>`,
 h:`<div class="s tint" style="justify-content:center;text-align:center">
+<div style="display:flex;align-items:center;justify-content:center;gap:clamp(12px,2vw,32px)">
+<img src="images/e-laya-logo.png" alt="" style="width:clamp(60px,10vw,120px);height:auto;flex:none">
 <h1 style="font-size:104px;margin:0;color:var(--primary);letter-spacing:-.045em">e-Laya</h1>
+</div>
 <p class="p" style="font-size:22px;max-width:64ch;margin:16px auto 0">A set of six solutions for children in conflict with the law, persons deprived of liberty, their families, and the agencies that carry them.</p>
 <div class="k" style="margin:44px 0 14px">Team Ala-Eh</div>
 <div style="display:flex;justify-content:center;gap:38px">
@@ -273,4 +277,7 @@ document.getElementById('hud').onclick=e=>{const a=e.target.dataset.a;if(!a)retu
  if(a==='f'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}};
 st.onclick=e=>{if(e.target.closest('a'))return;go(e.clientX<innerWidth*.25?i-1:i+1)};
 addEventListener('resize',fit);fit();go(0);
-</script></body></html>
+</script>
+<div style="position:fixed;left:16px;bottom:16px;z-index:100;font-size:12px;background:rgba(255,255,255,.85);backdrop-filter:blur(4px);padding:5px 12px;border-radius:8px;border:1px solid #d0d5e0;font-weight:500">
+<a href="index.html" style="color:var(--primary);text-decoration:none">&larr; e-Laya</a></div>
+</body></html>

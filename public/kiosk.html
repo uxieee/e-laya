@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>e-Laya · Kiosk</title>
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="elaya.css">
 <style>
 /* ================================================================
@@ -66,7 +67,13 @@ h1,h2,h3,h4,.khead-fil,#k1hero .h1,#doneTitle,.kmodal .mh,#sheet .sh1,.fullres .
 #khead{flex:none;background:var(--surface);border-bottom:var(--k-hair);
   display:flex;flex-direction:column;justify-content:center;gap:10px;padding:22px var(--k-pad) 24px}
 #khead .hrow{display:flex;align-items:baseline;gap:32px;min-width:0}
-#khead .m1{font-size:var(--k-body);font-weight:500;color:var(--primary);letter-spacing:.05em;flex:none}
+#khead .m1{flex:none;line-height:0}
+#khead .m1 img{height:38px;width:auto;display:block}
+#khead .m1 a{text-decoration:none;display:inline-flex;align-items:center;gap:12px}
+#khead .m1 .bn{font-size:var(--k-body);font-weight:500;color:var(--text);white-space:nowrap}
+.khome{position:absolute;top:14px;left:14px;z-index:99;font-size:13px;font-weight:500;
+  color:var(--faint);text-decoration:none;opacity:.6;transition:opacity .15s;letter-spacing:0}
+.khome:hover{opacity:1;color:var(--primary)}
 #khead .clockT{margin-left:auto;font-size:var(--k-body);font-weight:500;color:var(--text);
   font-variant-numeric:tabular-nums;flex:none;white-space:nowrap}
 #khead .f1{flex:1;min-width:0;font-size:var(--k-meta);font-weight:400;color:var(--k-sec);
@@ -546,7 +553,7 @@ h1,h2,h3,h4,.khead-fil,#k1hero .h1,#doneTitle,.kmodal .mh,#sheet .sh1,.fullres .
   <!-- ============ IDENTITY HEADER ============ -->
   <header id="khead">
     <div class="hrow">
-      <div class="m1">e-Laya</div>
+      <div class="m1"><a href="index.html"><img src="images/e-laya-logo.png" alt=""><span class="bn">e-Laya</span></a></div>
       <div class="clockT" id="clockT">10:42 AM</div>
     </div>
     <div class="hrow">

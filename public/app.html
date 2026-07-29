@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>e-Laya · Kapamilya</title>
 <meta name="description" content="Kalagayan, kaso at programa ng iyong kapamilya — inside eGovPH.">
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="elaya.css">
 <style>
 /* ==========================================================================
@@ -24,6 +25,13 @@
 }
 :where(button,a,input,[tabindex]):focus-visible{outline:3px solid var(--primary);outline-offset:2px;border-radius:8px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.bar-emblem{display:inline-block;width:20px;height:20px;vertical-align:middle;margin-right:5px}
+.signin-logo{display:block;margin:0 auto;width:clamp(100px,40vw,160px);height:auto}
+.nav-home{position:fixed;top:10px;left:10px;z-index:200;line-height:0}
+.nav-home a{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;
+  color:var(--primary);text-decoration:none;padding:8px 14px;border-radius:8px;
+  background:var(--surface);border:1px solid var(--border);transition:.15s}
+.nav-home a:hover{border-color:var(--primary)}
 
 /* ---------- bilingual pair. FIL primary; .phone.eng flips primacy ---------- */
 .bi{display:flex;flex-direction:column;gap:2px;--p-size:16px;--p-w:500;--p-c:var(--text);--s-size:13px;--s-c:var(--muted)}
@@ -250,6 +258,7 @@
 </style>
 </head>
 <body>
+<div class="nav-home"><a href="index.html">&larr; e-Laya</a></div>
 <div class="phone-wrap">
 <div class="phone" id="phone">
 
@@ -257,7 +266,7 @@
   <section class="screen on" id="s-signin" aria-labelledby="t-signin">
     <header class="bar">
       <span class="back" aria-hidden="true"></span>
-      <h1 class="title" id="t-signin">e-Laya</h1>
+      <h1 class="title" id="t-signin"><img class="bar-emblem" src="images/e-laya-emblem.png" alt="">e-Laya</h1>
       <span class="right"></span>
     </header>
     <div class="offline" id="off-signin" hidden>
@@ -265,8 +274,7 @@
     </div>
     <div class="scroll" style="display:flex;flex-direction:column">
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px 0 8px">
-        <div class="well" style="width:64px;height:64px" aria-hidden="true"><span class="ic" style="width:32px;height:32px" data-ico="heart"></span></div>
-        <p style="font-size:24px;font-weight:500;margin-top:20px;letter-spacing:-.01em;color:var(--text)">e-Laya</p>
+        <img class="signin-logo" src="images/e-laya-logo.png" alt="e-Laya">
         <div class="bi ctr" style="max-width:290px;margin-top:8px;--p-size:16px;--p-w:400">
           <span class="b-fil">Kalagayan, kaso at programa ng iyong kapamilya</span>
           <span class="b-eng">Welfare, case and programme updates for your family</span>

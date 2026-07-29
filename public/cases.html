@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>e-Laya · PAO Caseload</title>
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="elaya.css">
 <style>
 /* =========================================================================
@@ -23,6 +24,12 @@
 .bar.pro .side.end{justify-content:flex-end}
 .bar.pro .title{grid-column:2;font-size:17px;text-align:center;padding:0 8px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-emblem{width:18px;height:18px;margin:0 6px;flex:none}
+.nav-home{position:fixed;top:10px;left:10px;z-index:200;line-height:0}
+.nav-home a{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;
+  color:var(--primary);text-decoration:none;padding:8px 14px;border-radius:8px;
+  background:var(--surface);border:1px solid var(--border);transition:.15s}
+.nav-home a:hover{border-color:var(--primary)}
 .iconbtn{min-width:44px;height:44px;display:grid;place-items:center;background:none;border:none;
   color:var(--primary);font-size:20px;line-height:1;cursor:pointer;border-radius:10px;
   font-family:var(--font);padding:0 6px}
@@ -266,13 +273,14 @@ button.bandh:active{background:#0040E70D}
 </style>
 </head>
 <body>
+<div class="nav-home"><a href="index.html">&larr; e-Laya</a></div>
 <div class="phone-wrap">
 <div class="phone" id="phone">
 
   <!-- ============================== C-1 caseload ============================== -->
   <section class="screen on" id="c1" aria-label="Caseload">
     <header class="bar pro">
-      <div class="side"><button class="iconbtn" id="c1Back" aria-label="Back">&lsaquo;</button></div>
+      <div class="side"><img class="bar-emblem" src="images/e-laya-emblem.png" alt=""><button class="iconbtn" id="c1Back" aria-label="Back">&lsaquo;</button></div>
       <div class="title" id="c1Title">Caseload</div>
       <div class="side end">
         <button class="iconbtn" id="c1Find" aria-label="Search cases" aria-pressed="false" title="Search">
