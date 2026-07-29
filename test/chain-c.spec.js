@@ -199,6 +199,102 @@ test('a person nobody could name still becomes a case, and stays out of /app', a
   expect(errors).toEqual([]);
 });
 
+test('the case a determination opens never names the city twice', async ({ page }) => {
+  await page.goto('/verify.html');
+  await page.evaluate(() => window.Elaya.reset());
+  await determine(page, '1');
+
+  await page.goto('/cases.html');
+  await page.locator('#c1Scroll .row', { hasText: 'Cruz, Juan Dela' }).click();
+  const header = page.locator('#c2Scroll .dhead');
+  await expect(header).toContainText('Batangas City');
+  await expect(header).not.toContainText(/Batangas City,\s*Batangas City/);
+  // The whole detail pane, not just the header the suffix is appended in.
+  await expect(page.locator('#c2Scroll')).not.toContainText(/Batangas City,\s*Batangas City/);
+});
+
+/* A real session must never be filed under a demo scenario's reference. The
+   reference IS the identity a determination is stored under, so a collision
+   silently overwrites one person with another. Driven deterministically: the
+   manual claim path is walked with real controls after a reload, which is the
+   case that used to collide with certainty. */
+test('a manually entered session does not overwrite a demo scenario', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+
+  await page.goto('/verify.html');
+  await page.evaluate(() => window.Elaya.reset());
+  await determine(page, '1');                        // scenario a, reference VF-8241
+
+  // A reload puts S.ref back to VF-8241 — the certain case, not the chancy one.
+  await page.goto('/verify.html');
+  await page.waitForFunction(() => typeof window.openCase === 'function');
+  expect(await page.evaluate(() => S.ref)).toBe('VF-8241');
+
+  await page.locator('#s-entry .tri button').first().click();          // a person just brought in
+  await expect(page.locator('#s-step1')).toHaveClass(/\bon\b/);
+  const manualRef = await page.evaluate(() => S.ref);
+  expect(manualRef).not.toBe('VF-8241');
+  expect(['VF-8241','VF-8242','VF-8243','VF-8244','VF-8245',
+          'VF-8246','VF-8247','VF-8248','VF-8249']).not.toContain(manualRef);
+
+  await page.locator('#s-step1 .fbar .btn').click();                   // continue
+  await page.locator('#s-what .tri button').nth(2).click();            // a name and a claimed birth date
+  await expect(page.locator('#s-claim')).toHaveClass(/\bon\b/);
+  await page.locator('#cLast').fill('Bituin');                         // a different person entirely
+  await page.locator('#s-claim .fbar .btn').click();                   // confirm this claim
+  await expect(page.locator('#s-v2')).toHaveClass(/\bon\b/, { timeout: 15000 });
+
+  // The claim path must not have adopted the scenario reference it classified as.
+  expect(await page.evaluate(() => S.ref)).toBe(manualRef);
+
+  await expect(page.locator('#idmBtns')).toHaveClass(/\blive\b/);
+  await page.locator('#idmYes').click();
+  await page.locator('#v2foot .btn').click();
+  await page.locator('#sendBtn').click();
+  await expect(page.locator('#s-done')).toHaveClass(/\bon\b/, { timeout: 15000 });
+
+  const { dets, people } = await readStore(page);
+  expect(Object.keys(dets)).toHaveLength(2);
+  const names = Object.keys(dets).map(id => people[id].full).sort();
+  expect(names).toEqual(['Juan Bituin', 'Juan Dela Cruz Jr.']);
+
+  await page.goto('/cases.html');
+  await expect(page.locator('#c1Scroll .row', { hasText: 'Cruz, Juan Dela' })).toHaveCount(1);
+  await expect(page.locator('#c1Scroll .row', { hasText: 'Bituin, Juan' })).toHaveCount(1);
+  expect(errors).toEqual([]);
+});
+
+/* linkedPeople() is dynamic where PEOPLE was static, so person() can now come
+   back undefined — a Reset demo in another tab while /app sits on a store
+   person. renderLive catches that; the enrolment path did not. */
+test('/app does not throw when the person an enrolment is for disappears', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+
+  await page.goto('/verify.html');
+  await page.evaluate(() => window.Elaya.reset());
+  await determine(page, '1');
+
+  await page.goto('/app.html#/list');
+  await page.locator('#listBody [data-person="intake-VF-8241"]').click();
+  await page.locator('[data-ptab="programa"]').click();
+  await expect(page.locator('#personBody')).toContainText('Wala pa siyang programa.');
+  await page.locator('#personBody [data-act="programs"]').click();
+  await page.locator('#programsBody [data-prog="div-b"]').click();
+
+  // Another tab hits Reset demo: the person this enrolment is for is gone.
+  await page.evaluate(() => window.Elaya.reset());
+  expect(await page.evaluate(() =>
+    Object.keys(window.Elaya.get('people', {})).some(id => id.indexOf('intake') === 0))).toBe(false);
+
+  await page.locator('#progdetailFoot .btn').click();
+  await expect(page.locator('#toast')).toHaveClass(/\bon\b/);
+  await expect(page.locator('#toastMsg')).toContainText('Nawala ang taong ito sa listahan mo');
+  await expect(page.locator('#sheet')).not.toHaveClass(/\bon\b/);
+  expect(errors).toEqual([]);
+});
+
 /* ------------------------------------------------------------------ *
  * The store is an enhancement layer, never a dependency               *
  * ------------------------------------------------------------------ */

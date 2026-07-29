@@ -642,7 +642,11 @@ if(window.Elaya){
       const child=d.category==="CICL";
       mk({name:p.sortName||p.full,age:d.age,cicl:child,castId:pid,
         docket:"No docket yet · "+(d.ref||pid),
-        court:child?"LSWDO Batangas City":"BJMP Batangas City",
+        /* The C-2 header appends ", Batangas City" to c.court itself, and the
+           seeded courts are bare ("RTC Br. 4"). Naming the city here too would
+           render "LSWDO Batangas City, Batangas City" — the same doubling the
+           guardian SMS already carries. Let the existing suffix do the work. */
+        court:child?"LSWDO":"BJMP Records",
         courtLong:child?"City Social Welfare and Development Office, Batangas City"
                        :"Batangas City District Jail — Records",
         offence:"Not yet charged",status:"Intake",stage:"Age determination recorded",

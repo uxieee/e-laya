@@ -1528,7 +1528,13 @@ async function psgcStep(){
 /* ---- enrolment ---- */
 function sheetEnrol(){
   const p = PROGRAMS.find(x=>x.id===S.enrolProgram);
-  const who = linkedPeople().find(x=>x.id===S.enrolFor).full.split(' ')[0];
+  /* linkedPeople() is dynamic where PEOPLE was static: a cross-tab Reset demo
+     can remove the store person this enrolment is for between opening the
+     sheet and confirming it. Inside renderLive that is caught; here it is not,
+     and .full.split() on undefined would take the screen down. */
+  const target = linkedPeople().find(x=>x.id===S.enrolFor);
+  if(!target){ closeSheet(); toast('Nawala ang taong ito sa listahan mo. Buksan ulit ang pahina.'); return; }
+  const who = target.full.split(' ')[0];
   S.agree = false;
   openSheet('<div class="bi h2" style="margin-bottom:14px"><span class="b-fil">Bago ka mag-enroll</span><span class="b-eng">Before you enrol</span></div>'
     + '<div class="ticklist">'+ico('check')+'<span>Kailangan ng valid ID ni '+esc(who)+' sa unang session.</span></div>'
@@ -1543,7 +1549,13 @@ function sheetEnrol(){
 
 async function doEnrol(){
   const p = PROGRAMS.find(x=>x.id===S.enrolProgram);
-  const who = linkedPeople().find(x=>x.id===S.enrolFor).full.split(' ')[0];
+  /* linkedPeople() is dynamic where PEOPLE was static: a cross-tab Reset demo
+     can remove the store person this enrolment is for between opening the
+     sheet and confirming it. Inside renderLive that is caught; here it is not,
+     and .full.split() on undefined would take the screen down. */
+  const target = linkedPeople().find(x=>x.id===S.enrolFor);
+  if(!target){ closeSheet(); toast('Nawala ang taong ito sa listahan mo. Buksan ulit ang pahina.'); return; }
+  const who = target.full.split(' ')[0];
   closeSheet();
   /* fire-and-forget; only ever to a number a live SSO profile gave us */
   if(PROFILE.mobile){

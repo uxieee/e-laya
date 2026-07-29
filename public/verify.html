@@ -1168,18 +1168,32 @@ function go(id){
   const sc=$(id).querySelector('.scroll'); if(sc) sc.scrollTop=0;
   closeSheets(); poke();
 }
+/* The session reference is the identity a determination is filed under, so two
+   different sessions must never share one. The nine demo scenarios own the
+   block VF-8241…VF-8249, and the old draw (8240 + random*60) sat straight on
+   top of it — a real session could silently take scenario a's reference and
+   overwrite scenario a's person. Real sessions are drawn from a disjoint block
+   instead, and a counter keeps this page's sessions apart from each other. */
+let refBase=null, refSeq=0;
+function newSessionRef(){
+  if(refBase===null) refBase=9000+Math.floor(Math.random()*900);
+  return 'VF-'+(refBase+(refSeq++%100));
+}
 function restartFlow(){
   S.person=null;S.idMatch=null;S.sent=false;S.failCount=0;S.subjectHash=null;
   S.record=[];S.sources={};S.measures={};S.contested=false;S.path=null;S.basis=null;
   S.facts={};S.asked=[];S.qi=0;S.queue=[];S.chosen=null;S.searched=false;S.referral=null;
-  S.ref='VF-'+(8240+Math.floor(Math.random()*60));
+  S.ref=newSessionRef();
   S.started=new Date(); S.custody=new Date();
   S.incident=new Date(); S.incidentEstimated=false; S.estLabel='';
   $('chat').innerHTML=''; paintProfile();
   paintSession(); paintIncidentChip(); paintRecords(); unveil(); go('s-entry');
 }
 function setEntry(k){
-  S.entry=k;
+  /* The page boots with scenario a preloaded behind S-V2, which means it also
+     boots holding scenario a's reference. Choosing an entry is where a real
+     session begins, so it takes a reference of its own from here on. */
+  S.entry=k; S.ref=newSessionRef(); paintSession();
   if(k==='custody') toast('Custody began before this session. Record the actual date with the LSWDO.');
   go('s-step1');
 }
@@ -1785,7 +1799,7 @@ function referIdentity(kind){
 <script>
 "use strict";
 /* ---------------------------------------------------------- determination */
-function openCase(id,keep){
+function openCase(id,keep,demo){
   S.caseId=id;
   if(PEOPLE[id]&&!keep){
     const plan=planFor(id);
@@ -1797,8 +1811,14 @@ function openCase(id,keep){
   if(id==='D'||id==='F'||id==='H'){ S.person=null; if(!keep){ S.basis=null; S.chosen=null; } }
   if(id==='E'){ S.person={first:'—',middle:'',last:'—',dob:null}; if(!keep){ S.basis=null; S.chosen=null; } }
   S.idMatch=null;
+  /* A demo scenario owns its reference; a real session owns its own. Only the
+     case picker and its keyboard shortcut hand over a scenario. Every other
+     caller here is a live flow that merely CLASSIFIED as one of them — a
+     manual claim that resolves to a 16-year-old is not scenario a, and must
+     not adopt scenario a's reference, or the store would file two different
+     people under one id. */
   const refs={A:'VF-8241',B:'VF-8242',C:'VF-8244',C1:'VF-8245',C2:'VF-8246',D:'VF-8247',E:'VF-8248',F:'VF-8243',H:'VF-8249'};
-  S.ref=refs[id]||S.ref;
+  if(demo) S.ref=refs[id]||S.ref;
   S.custody=new Date();
   paintSession(); renderV2(); go('s-v2'); closeSheets();
 }
@@ -2137,7 +2157,12 @@ function determinationOf(){
   const p=S.person, c=S.caseId, inc=S.incident;
   const adult=(c==='B'||c==='C1');
   const named=!!(p&&p.first&&p.first!=='—');
-  const dated=!!(p&&p.dob)&&['D','E','F'].indexOf(c)<0;
+  /* C2 is the screen that refuses to decide — the person turns 18 on the day
+     of the incident and only the Family Court can settle it. Publishing an age
+     for it would have /cases print "a child in conflict with the law — 18
+     years old" for a determination that was explicitly not made. Its CTA does
+     not reach here today; this keeps that true if a later change routes it. */
+  const dated=!!(p&&p.dob)&&['C2','D','E','F'].indexOf(c)<0;
   return {
     category: adult?'PDL':'CICL',
     age: dated?ymd(D(p.dob),inc).y:null,
@@ -2224,7 +2249,7 @@ function closeSheets(){ $('scrim').classList.remove('on');
   document.querySelectorAll('.sheet').forEach(function(s){s.classList.remove('on');}); }
 function openMenu(){
   $('caseList').innerHTML=CASES.map(function(c){return '<button class="optrow'+(c.id===S.caseId?' sel':'')+
-    '" onclick="openCase(\''+c.id+'\')"><span class="grow">'+
+    '" onclick="openCase(\''+c.id+'\',false,true)"><span class="grow">'+
     '<span style="display:block;font-size:15px;font-weight:500">'+esc(c.label)+'</span>'+
     '<span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">'+esc(c.sub)+'</span></span>'+
     '<span class="tick" style="color:var(--faint)">'+c.key+'</span></button>';}).join('');
@@ -2266,7 +2291,7 @@ document.addEventListener('visibilitychange',function(){ if(document.hidden) vei
 /* --------------------------------------------------------------------- boot */
 document.addEventListener('keydown',function(e){
   const c=CASES.filter(function(x){return x.key===e.key;})[0];
-  if(c&&!/input|textarea/i.test(e.target.tagName)) openCase(c.id);
+  if(c&&!/input|textarea/i.test(e.target.tagName)) openCase(c.id,false,true);
   if(e.key==='Escape') closeSheets();
 });
 (async function boot(){
