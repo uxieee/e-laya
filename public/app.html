@@ -1765,9 +1765,19 @@ document.addEventListener('click', async e=>{
       toast(p.hearing.remind ? 'Papaalalahanan ka namin 1 araw bago.' : 'Hindi ka na paaalalahanan.');
       break; }
     case 'copyhash': {
-      const h = d.hash;
+      const h = d.hash || '';
       if(navigator.clipboard) navigator.clipboard.write ? navigator.clipboard.writeText(h) : null;
-      toast('Nakopya ang buong SHA-256.'); break; }
+      /* What is copied always matches what is on screen — attendanceFor() hands
+         over the displayed receipt when no 64-character form exists (a stale
+         persisted record, or one written before receiptFull was carried). But
+         on that path the copied value IS the abbreviation, and a screen whose
+         whole claim is a verifiable chain of custody must not say it handed
+         over a full SHA-256 when it handed over eleven characters. Say which
+         one it was. */
+      toast(/^[0-9a-f]{64}$/i.test(h)
+        ? 'Nakopya ang buong SHA-256.'
+        : 'Nakopya ang resibo (pinaikling anyo).');
+      break; }
     case 'psgc': psgcPath = []; openPsgc(); break;
     case 'psgcdone': {
       const muni = psgcPath[2] ? psgcPath[2].name : (psgcPath[1] ? psgcPath[1].name : 'Batangas City');

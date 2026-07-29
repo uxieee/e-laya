@@ -1493,7 +1493,16 @@ function renderProgAttendance(){
   if(att) att.innerHTML = 'Nakapunta ka sa <strong>'+a.done+' sa '+a.of+'</strong> na sesyon '
     + '<span class="en">· You attended '+a.done+' of '+a.of+'</span>';
   if(dots){
-    const miss = Math.max(0, a.missStreak || 0);
+    /* Misses to date, not the consecutive streak. This legend reads "hindi
+       nakapunta · missed" — the same family-facing fact /app prints as "hindi
+       nadaluhan", and /app reads it from `missed`. Painting the streak here
+       made the two family-facing surfaces disagree about one record: after
+       Jomar was logged present his streak went to 0, so /app showed a miss dot
+       and "1 hindi nadaluhan" while this terminal showed a clean row. The
+       streak is the social worker's escalation signal and belongs to /cases,
+       which labels it "missed in a row". Fall back to the streak only for a
+       record written before `missed` was carried. */
+    const miss = Math.max(0, (typeof a.missed === 'number') ? a.missed : (a.missStreak || 0));
     let h = '';
     for(let i=0;i<a.of;i++){
       h += '<span class="adot'+(i < a.done ? '' : (i < a.done + miss ? ' miss' : ' next'))+'"></span>';

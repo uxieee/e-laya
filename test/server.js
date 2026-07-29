@@ -63,8 +63,22 @@ function cannedBodyFor(pathname) {
   return { ok: true };
 }
 
+// Identity marker. `reuseExistingServer: true` adopts ANY process already
+// listening on 127.0.0.1:5173 that answers 200 — including the stray Vite dev
+// server this port belongs to by convention. global-setup.js fetches this path
+// and refuses to run the suite unless it gets exactly this string back, so a
+// squatter fails the run loudly instead of silently serving a stranger's app
+// to every spec.
+const HARNESS_MARKER = 'e-laya-test-harness';
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${HOST}:${PORT}`);
+
+  if (url.pathname === '/__harness') {
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end(HARNESS_MARKER);
+    return;
+  }
 
   if (url.pathname.startsWith('/api/')) {
     // Drain the request body (if any) so the client's fetch always resolves cleanly.

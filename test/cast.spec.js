@@ -23,6 +23,11 @@ test('the store seeds people from the cast', async ({ page }) => {
 for (const file of MIGRATED) {
   test(`${file} contains no Quezon City locality strings`, async ({ page }) => {
     const res = await page.request.get('/' + file);
+    /* Without this the grep runs against whatever came back. A renamed surface
+       or a typo in MIGRATED returns a 404 body ("Not found"), which contains no
+       Quezon City string at all — so the whole Batangas migration guard would
+       report green while checking nothing. */
+    expect(res.status(), `${file} did not resolve`).toBe(200);
     const body = await res.text();
     const found = STALE.filter(s => body.includes(s));
     expect(found, `${file} still contains: ${found.join(', ')}`).toEqual([]);

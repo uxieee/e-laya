@@ -45,9 +45,13 @@ for (const s of SURFACES) {
     await page.goto('/' + s);
     const m = await measureTapTargets(page, '#stage');
     expect(m.total, `no measurable tap targets at all on ${s}`).toBeGreaterThan(0);
-    if (m.shellPresent) {
-      expect(m.shellMeasured, `the reviewer bar fell out of scope on ${s}`).toBeGreaterThan(0);
-    }
+    /* Asserted, not branched on. Wrapped in `if (m.shellPresent)` this check
+       evaporated the moment the bar stopped rendering — exactly the regression
+       it exists to catch — and the test went green with the reviewer bar
+       silently outside its scope. The bar is on every surface at every
+       viewport, so its absence is itself a failure. */
+    expect(m.shellPresent, `#elaya-shell did not render on ${s}`).toBe(true);
+    expect(m.shellMeasured, `the reviewer bar fell out of scope on ${s}`).toBeGreaterThan(0);
     expect(m.small, `small tap targets on ${s}`).toEqual([]);
   });
 }
@@ -70,6 +74,13 @@ async function measureTapTargets(page, skipWithin) {
          (e.g. the offline warning), and a hidden control is not a tap target. */
       shellPresent: !!document.getElementById('elaya-shell'),
       shellMeasured: all.filter(e => e.closest('#elaya-shell')).length,
+      /* Coverage, derived from the measured set rather than re-queried. A
+         separate querySelectorAll would count a control that never entered
+         `all` — a hidden or zero-box .spk still answers the query — so the
+         1080x1920 test could report nine speakers covered while measuring
+         eight. These are the same elements the assertions above ran over. */
+      spkMeasured: all.filter(e => e.classList.contains('spk')).length,
+      demodotMeasured: all.some(e => e.id === 'demodot'),
       small: all
         .filter(e => { const r = e.getBoundingClientRect(); return r.height < 32 || r.width < 32; })
         .map(e => {
@@ -101,10 +112,11 @@ test('kiosk has no tap target under 32px at its own 1080x1920', async ({ page })
   expect(m.small, 'small tap targets on kiosk at 1080x1920').toEqual([]);
 
   /* The controls this test exists to cover must actually be among the ones it
-     measured, or it is asserting over an empty stage. */
-  const covered = await page.evaluate(() =>
-    ({ speakers: document.querySelectorAll('.spk').length, demodot: !!document.getElementById('demodot') }));
-  expect(covered).toEqual({ speakers: 9, demodot: true });
+     measured, or it is asserting over an empty stage. Read off the measured
+     list — not off the DOM, which would count a K-1 that was rendered but
+     never measured. */
+  expect({ speakers: m.spkMeasured, demodot: m.demodotMeasured })
+    .toEqual({ speakers: 9, demodot: true });
 });
 
 /* The demo dot sits in the same corner as the control rail, and #railmain is
