@@ -7,6 +7,10 @@
 <meta name="description" content="Kalagayan, kaso at programa ng iyong kapamilya — inside eGovPH.">
 <link rel="stylesheet" href="elaya.css">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<!-- Cast before store: the store reads window.ELAYA_CAST when it seeds.
+     Classic scripts, not modules — every surface must still run from file://. -->
+<script src="elaya-cast.js"></script>
+<script src="elaya-store.js"></script>
 <style>
 /* ==========================================================================
    e-Laya citizen app — module-scoped additions only.
@@ -703,9 +707,19 @@ const DEMO_STATES = [
   ['loading','Loading'],['slow','Mabagal ang koneksyon'],['error','Error'],['offline','Offline'],['revoked','Walang access']
 ];
 
+/* The store wins when the officer has confirmed something more recent.
+   With no store, this is a no-op and the seed renders unchanged. */
+function welfareFor(p){
+  if(window.Elaya){
+    const w = window.Elaya.get('welfare.'+p.id, null);
+    if(w && w.key) return {key:w.key, at:w.at, day:'ngayong araw', ageHours:0, live:true};
+  }
+  return p.welfare;
+}
+
 /* The freshness ladder, §5.6 — three different kinds of "old", never conflated. */
 function wfAuto(p){
-  const w = p.welfare, h = w.ageHours, base = {key:w.key, at:w.at, stale:false, aging:null, offline:false, mode:'card'};
+  const w = welfareFor(p), h = w.ageHours, base = {key:w.key, at:w.at, stale:false, aging:null, offline:false, mode:'card'};
   if(h < 24)  return {...base, ts:{fil:'Na-update ngayong araw, '+w.at, eng:'Updated today, '+w.at}};
   if(h < 48)  return {...base, ts:{fil:'Na-update kahapon, '+w.at, eng:'Updated yesterday, '+w.at}};
   if(h < 120) return {...base, ts:{fil:'Na-update noong '+w.day+', '+w.at, eng:'Updated '+w.day+', '+w.at},
@@ -718,7 +732,8 @@ function wfAuto(p){
 function wfView(p){
   /* the demo control only ever overrides the person currently on screen */
   const d = (S.demo==='auto' || p.id!==S.personId) ? 'auto' : S.demo;
-  const base = {key:p.welfare.key, at:p.welfare.at, stale:false, aging:null, offline:false, mode:'card'};
+  const wf = welfareFor(p);
+  const base = {key:wf.key, at:wf.at, stale:false, aging:null, offline:false, mode:'card'};
   const fresh = at => ({fil:'Na-update ngayong araw, '+at, eng:'Updated today, '+at});
   if(d==='auto') return wfAuto(p);
   switch(d){
@@ -855,9 +870,10 @@ function welfareChip(p){
   const glyph = v.stale ? 'circledashed' : w.ico;
   /* the chip never appears without a timestamp — a status without a time is a rumour */
   let ts = 'Wala pang naitala';
-  if(v.key!=='none' && v.ts) ts = v.stale ? ('Huli: '+p.welfare.day+', '+p.welfare.at)
-        : (p.welfare.ageHours<24 ? 'Ngayong araw, '+p.welfare.at
-        : (p.welfare.ageHours<48 ? 'Kahapon, '+p.welfare.at : p.welfare.day+', '+p.welfare.at));
+  const wf = welfareFor(p);
+  if(v.key!=='none' && v.ts) ts = v.stale ? ('Huli: '+wf.day+', '+wf.at)
+        : (wf.ageHours<24 ? 'Ngayong araw, '+wf.at
+        : (wf.ageHours<48 ? 'Kahapon, '+wf.at : wf.day+', '+wf.at));
   return {chip:'<span class="'+c+'">'+ico(glyph)+esc(w.fil)+'</span>', ts:ts};
 }
 
@@ -867,9 +883,10 @@ function welfareChip(p){
 let listLoading = true;
 function renderList(){
   const b = $('listBody');
-  $('bellBadge').textContent = NOTIFS.filter(n=>n.unread).length;
-  $('bellBadge').style.display = NOTIFS.some(n=>n.unread) ? 'grid' : 'none';
-  $('btnBell').setAttribute('aria-label','Mga abiso, '+NOTIFS.filter(n=>n.unread).length+' hindi pa nabasa');
+  const NN = allNotifs();
+  $('bellBadge').textContent = NN.filter(n=>n.unread).length;
+  $('bellBadge').style.display = NN.some(n=>n.unread) ? 'grid' : 'none';
+  $('btnBell').setAttribute('aria-label','Mga abiso, '+NN.filter(n=>n.unread).length+' hindi pa nabasa');
   $('btnLang').textContent = S.lang==='FIL' ? 'FIL' : 'ENG';
 
   let h = '<div class="pagehead">'+bi('Kamusta sila','How are they','h1')
@@ -1131,9 +1148,31 @@ function renderProgDetail(){
 /* ==========================================================================
    A-6 · Mga abiso
    ========================================================================== */
+/* The SMS the family would actually have received. An officer confirming in
+   /custody queues one through the store; it is shown here as an unread abiso
+   above the seeded history. Guarded: with no store this returns NOTIFS
+   untouched and A-6 renders exactly as it always did. */
+const liveRead = {};   // ids of store notifications this session has marked read
+function allNotifs(){
+  if(!window.Elaya) return NOTIFS;
+  const live = window.Elaya.get('notifications', []);
+  if(!live || !live.length) return NOTIFS;
+  const mapped = live.map(function(n){
+    const d = new Date(n.at);
+    let hr = d.getHours(); const ap = hr<12?'AM':'PM'; hr = hr%12||12;
+    return {id:n.id, day:'NGAYONG ARAW', unread:!liveRead[n.id], live:true, ico:'mail',
+      time:hr+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap,
+      fil:'Bagong update sa kalagayan', eng:'New welfare update',
+      body:n.body, src:'Galing sa: '+(n.surface==='custody'?'BJMP · Batangas City District Jail':n.surface),
+      sms:'Ipinadala rin kay '+n.to+', '+PROFILE.mobileMasked};
+  });
+  return mapped.concat(NOTIFS);
+}
+
 function renderNotifs(){
-  const list = NOTIFS.filter(n=> S.notifTab==='unread' ? n.unread : true);
-  const unread = NOTIFS.filter(n=>n.unread).length;
+  const ALL = allNotifs();
+  const list = ALL.filter(n=> S.notifTab==='unread' ? n.unread : true);
+  const unread = ALL.filter(n=>n.unread).length;
   let h = '<div class="utabs flush" role="tablist" aria-label="Salain ang abiso">'
     + '<button class="utab'+(S.notifTab==='all'?' on':'')+'" role="tab" aria-selected="'+(S.notifTab==='all')+'" data-ntab="all">Lahat</button>'
     + '<button class="utab'+(S.notifTab==='unread'?' on':'')+'" role="tab" aria-selected="'+(S.notifTab==='unread')+'" data-ntab="unread">Hindi pa nabasa ('+unread+')</button></div>';
@@ -1518,9 +1557,11 @@ document.addEventListener('click', async e=>{
   if(d.prog){ S.enrolProgram = d.prog; go('s-progdetail'); return; }
   if(d.demo){ S.demo = d.demo; S.wfResolved = true; closeSheet(); paintOffline(); renderPerson(); return; }
   if(d.notif){
-    const n = NOTIFS.find(x=>x.id===d.notif);
+    const n = allNotifs().find(x=>x.id===d.notif);
+    if(!n) return;
     if(n.action){ location.href = 'tel:'+n.action.tel; }
-    n.unread = false; renderNotifs();
+    if(n.live) liveRead[n.id] = true; else n.unread = false;
+    renderNotifs(); renderList();
     return;
   }
   if(d.psgc){ psgcPath.push({code:d.psgc, name:d.name}); psgcStep(); return; }
@@ -1602,7 +1643,8 @@ $('btnRoleGo').addEventListener('click', ()=>{
 });
 $('btnBell').addEventListener('click', ()=>go('s-notifs'));
 $('btnMore').addEventListener('click', sheetMore);
-$('btnReadAll').addEventListener('click', ()=>{ NOTIFS.forEach(n=>n.unread=false); renderNotifs(); renderList(); toast('Nabasa na lahat.'); });
+$('btnReadAll').addEventListener('click', ()=>{ allNotifs().forEach(n=>{ if(n.live) liveRead[n.id]=true; else n.unread=false; });
+  renderNotifs(); renderList(); toast('Nabasa na lahat.'); });
 $('btnLang').addEventListener('click', toggleLang);
 $('demoFab').addEventListener('click', sheetDemo);
 $('scrim').addEventListener('click', closeSheet);
@@ -1628,6 +1670,37 @@ document.querySelectorAll('[data-ico]').forEach(n=>{
   n.setAttribute('aria-hidden','true');
 });
 renderRoles(); renderList(); renderNotifs(); renderAccount(); renderScan(); renderId(); renderPrograms();
+
+/* Re-render when another tab writes — /custody and /app open side by side
+   track each other. Only the screens that read welfare are repainted.
+
+   Elaya.emit has no re-entrancy guard and Elaya.set emits synchronously, so a
+   subscriber that ever wrote back would recurse without bound. Nothing on this
+   path writes (welfareFor only reads), and the flag below keeps it that way
+   even if a future renderer starts writing. */
+let liveRendering = false;
+function renderLive(){
+  if(liveRendering) return;
+  liveRendering = true;
+  try{
+    /* A-3 is repainted whatever screen is showing — it is already in the DOM
+       and must not be stale the moment the reader taps back to it. The person
+       and notification screens carry side effects (the demo FAB, the card
+       re-fit), so they are only repainted while actually on screen. */
+    renderList();
+    if(S.screen==='s-person')      renderPerson();
+    else if(S.screen==='s-notifs') renderNotifs();
+  }catch(e){ /* a render fault must never break the store's other subscribers */ }
+  finally{ liveRendering = false; }
+}
+if(window.Elaya){
+  window.Elaya.on('change', function(e){
+    /* '*' is a reset or a cross-tab re-hydrate; otherwise only the paths this
+       surface displays are worth a repaint. */
+    const path = e ? String(e.path) : '*';
+    if(path==='*' || path.indexOf('welfare')===0 || path==='notifications') renderLive();
+  });
+}
 
 /* Deep link, for a presenter who wants to open straight into a state:
    #/person/stale · #/person/hospital · #/programs · #/notifs · #/list        */

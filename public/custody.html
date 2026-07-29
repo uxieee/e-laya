@@ -6,6 +6,10 @@
 <title>e-Laya · Welfare status</title>
 <link rel="stylesheet" href="elaya.css">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<!-- Cast before store: the store reads window.ELAYA_CAST when it seeds.
+     Classic scripts, not modules — every surface must still run from file://. -->
+<script src="elaya-cast.js"></script>
+<script src="elaya-store.js"></script>
 <style>
 /* ------------------------------------------------------------------
    Additive layout only. New classes for components the shared
@@ -247,6 +251,23 @@ const REASSURE=['Being seen by the facility nurse','Family may visit','The socia
 const FACILITIES=['Manila City Jail — Male Dorm','Caloocan City Jail','Marikina City Jail','Pasig City Jail',
   'NBP Reception & Diagnostic Centre, Muntinlupa','Bahay Pag-asa, Batangas City','Valenzuela City Jail'];
 
+/* This module's status ids are the officer's vocabulary; the shared store
+   carries the citizen-facing one that /app and /kiosk already speak. */
+const WELFARE_KEY={ok:'ok',clinic:'clinic',hospital:'hospital',court:'hearing',
+  prog:'program',moved:'transferred',free:'released'};
+
+/* The SMS a family would receive. Demo copy: written for the bridge person,
+   so it is only queued for the roster row that carries a castId. */
+const WELFARE_SMS={
+  ok:          'Miguel is doing OK. Confirmed today by the facility.',
+  clinic:      'Miguel is in the facility clinic, being monitored by a nurse.',
+  hospital:    'Miguel was taken to hospital for care. Call the facility for details.',
+  hearing:     'Miguel is at a hearing today.',
+  program:     'Miguel is in a programme session today.',
+  transferred: 'Miguel was transferred. Check the new address before travelling.',
+  released:    'Miguel has been released.'
+};
+
 /* ------------------------------------------------------------- seed data */
 const FIRST=['Jose','Ana','Ramon','Elena','Pedro','Maria','Andres','Rosalinda','Emilio','Teresita','Rizal','Corazon',
   'Danilo','Imelda','Ernesto','Lourdes','Rogelio','Nenita','Alfredo','Marilou','Benigno','Cecilia','Ferdinand','Divina',
@@ -295,6 +316,19 @@ function buildRoster(){
     people[i].at=sod+Math.floor(rnd()*Math.max(60000,now-sod-60000)); }
   // Registered family carry the person's own surname.
   people.forEach(p=>p.kin.forEach(k=>{k.name=k.name.split(' ')[0]+' '+p.last;}));
+  /* The first row of "Not yet updated" is a bridge person: the same human /app
+     calls Rosa's son. Only the identity changes — status, timestamp and cell
+     stay as seeded, so the shift statistics are untouched. Guarded: with the
+     cast absent this row keeps its generated name and the surface is unharmed. */
+  const _cast=(window.ELAYA_CAST&&window.ELAYA_CAST.people.miguel)||null;
+  if(_cast){
+    const b=people[2];
+    b.name=_cast.full; b.first='Miguel'; b.mi='A'; b.last='Reyes';
+    b.castId=_cast.id; b.kinName=_cast.guardian;
+    b.kin.forEach(k=>{k.name=k.name.split(' ')[0]+' '+b.last;});
+    if(b.kin.length) b.kin[0]=Object.assign({},b.kin[0],{name:_cast.guardian,rel:'mother'});
+    else b.kin.push({name:_cast.guardian,rel:'mother',num:'+63 917 5554567'});
+  }
   seq=0; saveTimes=[]; pending=null;
 }
 
@@ -416,10 +450,30 @@ function quickOK(id){ commit(id,'ok'); }
 
 function commit(id,statusId,extra){
   const p=people.find(x=>x.id===id); if(!p) return;
-  const prev={status:p.status,at:p.at,extra:p.extra};
+  const prev={status:p.status,at:p.at,extra:p.extra,
+    welfare:(window.Elaya&&p.castId)?window.Elaya.get('welfare.'+p.castId,null):undefined};
   p.stay=updatedToday(p)?'done':needsLook(p)?'look':'todo';   // where the row holds its place
   p.status=statusId; p.at=nowMs(); p.extra=extra||null; p.queued=offline; p.justSet=true;
   seq++; saveTimes.push(Date.now());
+  /* Mirror the confirmation into the shared store so /app can see it.
+     Guarded: the surface must keep working when the store is absent, and the
+     in-page model above stays the standalone fallback path either way. */
+  const statusKey=WELFARE_KEY[statusId];
+  if(window.Elaya && p.castId && statusKey){
+    window.Elaya.set('welfare.'+p.castId,{
+      key:statusKey,
+      at:clock(new Date(nowMs())),
+      by:OFFICER.short,
+      source:'manual',
+      expiresAt:nowMs()+DAY
+    });
+    window.Elaya.notify({
+      to:p.kinName,
+      body:WELFARE_SMS[statusKey],
+      surface:'custody',
+      personId:p.castId
+    });
+  }
   closeSheets();
   // The rail animates to green and the family-reach note shows for ~2s, then the row drains into "Done today".
   render();
@@ -434,7 +488,13 @@ function undo(){
   if(!pending) return;
   clearTimeout(pending.timer);
   const p=people.find(x=>x.id===pending.id);
-  Object.assign(p,pending.prev); p.queued=false; p.justSet=false;
+  /* Undo has to reach the store too, or /app keeps showing a status the
+     officer took back. Guarded, like every other store touch here. */
+  if(window.Elaya && p.castId && pending.prev.welfare!==undefined){
+    window.Elaya.set('welfare.'+p.castId, pending.prev.welfare);
+  }
+  const {welfare:_w, ...prevFields}=pending.prev;
+  Object.assign(p,prevFields); p.queued=false; p.justSet=false;
   seq=Math.max(0,seq-1); saveTimes.pop();
   pending=null; hideSnack(); render();
 }
