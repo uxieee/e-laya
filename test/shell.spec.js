@@ -36,3 +36,19 @@ test('the custody Back button leaves the page', async ({ page }) => {
   await page.getByRole('button', { name: 'Back', exact: true }).click();
   await expect(page).not.toHaveURL(/custody\.html/);
 });
+
+test('the reviewer bar does not cover app.html\'s sign-in CTA at 390x844', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/app.html');
+  const cta = page.locator('#btnSSO');
+  const bar = page.locator('#elaya-shell');
+  await expect(cta).toBeVisible();
+  await expect(bar).toBeVisible();
+  const ctaBox = await cta.boundingBox();
+  const barBox = await bar.boundingBox();
+  expect(ctaBox).not.toBeNull();
+  expect(barBox).not.toBeNull();
+  // The CTA's bottom edge must sit at or above the bar's top edge —
+  // no vertical overlap between the two rects.
+  expect(ctaBox.y + ctaBox.height).toBeLessThanOrEqual(barBox.y);
+});

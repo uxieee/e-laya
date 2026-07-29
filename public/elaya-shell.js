@@ -24,10 +24,143 @@
     try { return localStorage.getItem(HIDDEN_KEY) === '1'; } catch (e) { return false; }
   }
 
+  /* -------------------------------------------------------- space reserve
+   * The bar is position:fixed, so it covers whatever is underneath it
+   * unless we reserve room.
+   *
+   * kiosk.html is a fixed, non-scrolling simulated touchscreen
+   * (html,body{overflow:hidden}, around line 42) with a tuned internal
+   * flex layout — reserving space there would either be clipped or
+   * perturb #kbody's flex sizing. That is feature-detected out below
+   * (scrollableTop() is false) rather than hardcoded by filename.
+   *
+   * app.html/cases.html/sessions.html/verify.html/custody.html don't set
+   * overflow:hidden on html/body, but at narrow widths they render inside
+   * a `.phone` device-frame div (elaya.css, @media max-width:480px) that
+   * itself becomes height:100dvh; overflow:hidden — a second, inner
+   * "viewport" that body-level padding cannot reach (body never actually
+   * overflows there, so padding on it is inert — verified by checking
+   * whether it actually grows document.documentElement.scrollHeight).
+   * Inside that frame, pinned-bottom content is laid out two different
+   * ways — a flex `flex:none` footer (app.html/custody.html's `.foot`)
+   * that responds to the frame's content-box height, and an absolutely
+   * positioned `bottom:0` tab bar (cases.html/sessions.html's `.tabs`)
+   * that is anchored to the frame's border box and does NOT respond to
+   * padding at all. Shrinking the frame's own `height` (rather than
+   * padding it) moves both, since it moves the border edge itself. So:
+   * try body first (feature-detected + verified); if that's inert, find
+   * that kind of full-viewport self-clipping frame and shrink its height
+   * instead. Either way the original inline value is restored on hide.
+   */
+  var bodyPad = null;   // { prevInline, base } while we've padded <body>
+  var framePad = null;  // { el, prevInline, base } while we've shrunk a device frame's height
+
+  function scrollableTop() {
+    try {
+      var docOv = getComputedStyle(document.documentElement).overflowY;
+      var bodyOv = getComputedStyle(document.body).overflowY;
+      return docOv !== 'hidden' && bodyOv !== 'hidden';
+    } catch (e) {
+      return false; // can't tell — safest is to not touch layout
+    }
+  }
+
+  /* A full-viewport element that clips its own overflow acts as a second,
+   * inner "device screen" — e.g. .phone at mobile widths. Feature-detect
+   * it generically (size + overflow) rather than hardcoding the class. */
+  function findFrame() {
+    try {
+      var all = document.body.getElementsByTagName('*');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i];
+        var cs = getComputedStyle(el);
+        if (cs.overflowY !== 'hidden' && cs.overflow !== 'hidden') continue;
+        var r = el.getBoundingClientRect();
+        if (r.width >= window.innerWidth * 0.95 &&
+            r.height >= window.innerHeight * 0.9 &&
+            r.top <= 4 && r.top >= -4) {
+          return el;
+        }
+      }
+    } catch (e) { /* ignore */ }
+    return null;
+  }
+
+  function applyReserve(nav) {
+    try {
+      var barHeight = nav.getBoundingClientRect().height;
+      if (!barHeight) return;
+      // Surfaces that declare html/body{overflow:hidden} (kiosk.html) are
+      // opting out of scroll entirely by design — leave them untouched.
+      if (!scrollableTop()) return;
+
+      if (bodyPad === null) {
+        var beforeScroll = document.documentElement.scrollHeight;
+        var prevInline = document.body.style.paddingBottom;
+        var base = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+        document.body.style.paddingBottom = (base + barHeight) + 'px';
+        // Confirm body padding actually created scroll room. If the page's
+        // true content lives inside an inner clipped frame (see above),
+        // body was already exactly viewport-height and padding is inert —
+        // revert and fall back to the frame instead.
+        if (document.documentElement.scrollHeight > beforeScroll) {
+          bodyPad = { prevInline: prevInline, base: base };
+        } else {
+          document.body.style.paddingBottom = prevInline;
+        }
+      } else {
+        document.body.style.paddingBottom = (bodyPad.base + barHeight) + 'px';
+      }
+
+      if (bodyPad === null) {
+        var frame = (framePad && framePad.el) || findFrame();
+        if (frame) {
+          if (!framePad || framePad.el !== frame) {
+            framePad = {
+              el: frame,
+              prevInline: frame.style.height,
+              prevAlignSelf: frame.style.alignSelf,
+              base: frame.getBoundingClientRect().height
+            };
+            // The frame's own parent may center it (e.g. .phone-wrap's
+            // align-items:center), which would otherwise donate half of
+            // the height we free up to empty space ABOVE the frame instead
+            // of reserving it below. Pin the frame to the start of its
+            // flex parent's cross axis so the full amount lands at the
+            // bottom, where the bar is. A no-op if the parent isn't flex.
+            frame.style.alignSelf = 'flex-start';
+          }
+          frame.style.height = (framePad.base - barHeight) + 'px';
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  function restoreReserve() {
+    try {
+      if (bodyPad !== null) document.body.style.paddingBottom = bodyPad.prevInline;
+    } catch (e) { /* ignore */ }
+    try {
+      if (framePad !== null) {
+        framePad.el.style.height = framePad.prevInline;
+        framePad.el.style.alignSelf = framePad.prevAlignSelf;
+      }
+    } catch (e) { /* ignore */ }
+    bodyPad = null;
+    framePad = null;
+  }
+
+  function onResize() {
+    var nav = document.getElementById('elaya-shell');
+    if (nav) applyReserve(nav);
+  }
+
   function hide() {
     try { localStorage.setItem(HIDDEN_KEY, '1'); } catch (e) { /* ignore */ }
     var el = document.getElementById('elaya-shell');
     if (el) el.remove();
+    try { window.removeEventListener('resize', onResize); } catch (e) { /* ignore */ }
+    restoreReserve();
   }
 
   function build() {
@@ -104,6 +237,8 @@
     nav.appendChild(close);
 
     document.body.appendChild(nav);
+    applyReserve(nav);
+    window.addEventListener('resize', onResize);
   }
 
   if (document.readyState === 'loading') {
