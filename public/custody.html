@@ -311,14 +311,28 @@ function buildRoster(){
   // Two people who need a look — a non-OK status that has aged past 24 hours.
   people[0]=Object.assign(people[0],{first:'Ramon',mi:'C',last:'Bautista',name:'Ramon C. Bautista',cell:'4-B',status:'clinic', at:now-30*HOUR});
   people[1]=Object.assign(people[1],{first:'Elena',mi:'S',last:'Marquez',name:'Elena S. Marquez', cell:'4-D',status:'hospital',at:now-50*HOUR});
+  // The midnight this roster is seeded around. Nothing below may cross it.
+  const sod=(()=>{const d=new Date(now);d.setHours(0,0,0,0);return d.getTime();})();
+  /* These offsets are relative to `now`, so a 20-hour offset lands BEFORE
+     midnight in the morning and AFTER it in the evening. Once it lands after,
+     updatedToday() turns true, the row silently leaves "Not yet updated" for
+     the collapsed done group, and the headline climbs through the evening —
+     84 of 128 at 09:00, 90 of 128 at 20:23, measured. The seed means "these
+     were confirmed yesterday", so it is pinned to say that at every hour.
+
+     Offsets here are 20-28h, so this only ever bites from 20:00 local: before
+     that it is a strict no-op and the daytime roster is byte-identical. The
+     rows aged 24h or more below (30h, 50h, 3d, 4d, 2d4h) cannot straddle at
+     all — anything 24h or older is necessarily before this morning's midnight
+     — so they are left exactly as they were. */
+  const yesterday=at=>Math.min(at,sod-1);
   // 42 not updated on this shift — nearly all confirmed yesterday, three left too long.
-  for(let i=2;i<44;i++){ people[i].status='ok'; people[i].at=now-(20+Math.floor(rnd()*9))*HOUR; }
-  people[2] =Object.assign(people[2], {first:'Jose', mi:'D',last:'Dela Cruz',name:'Jose D. Dela Cruz',cell:'4-A',at:now-20*HOUR});
-  people[3] =Object.assign(people[3], {first:'Ana',  mi:'M',last:'Reyes',    name:'Ana M. Reyes',     cell:'4-A',at:now-20*HOUR});
+  for(let i=2;i<44;i++){ people[i].status='ok'; people[i].at=yesterday(now-(20+Math.floor(rnd()*9))*HOUR); }
+  people[2] =Object.assign(people[2], {first:'Jose', mi:'D',last:'Dela Cruz',name:'Jose D. Dela Cruz',cell:'4-A',at:yesterday(now-20*HOUR)});
+  people[3] =Object.assign(people[3], {first:'Ana',  mi:'M',last:'Reyes',    name:'Ana M. Reyes',     cell:'4-A',at:yesterday(now-20*HOUR)});
   people[4] =Object.assign(people[4], {first:'Pedro',mi:'C',last:'Santos',   name:'Pedro C. Santos',  cell:'4-A',at:now-3*DAY});
   people[12].at=now-4*DAY; people[27].at=now-2*DAY-4*HOUR;
   // 84 already done on this shift — all timestamped inside today.
-  const sod=(()=>{const d=new Date(now);d.setHours(0,0,0,0);return d.getTime();})();
   const mix=['ok','ok','ok','ok','ok','ok','ok','ok','court','ok','ok','prog','ok','ok','ok','ok','clinic','ok','ok','prog'];
   for(let i=44;i<128;i++){ people[i].status=mix[(i-44)%mix.length];
     people[i].at=sod+Math.floor(rnd()*Math.max(60000,now-sod-60000)); }
@@ -645,7 +659,24 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheets(); });
   const sso=await api('/api/sso',{exchange_code:'demo'});
   if(sso&&sso.profile&&sso.profile.name){ OFFICER.full=sso.profile.name; }
   setInterval(render,60000);   // keeps "no update for N days" and the decay honest
+  reseedAtMidnight();
 })();
+
+/* A roster is seeded around the midnight it was built for: the 84 rows already
+   confirmed "today" are timestamped inside that day. Left open across a real
+   midnight, startOfToday() moves on without them and all 84 would fall out of
+   the done group at once. Re-seed for the new day instead — which is what a
+   facility roster does at the turn of a shift day.
+
+   Skipped while the demo clock is shifted, so "Advance the clock 24 hours"
+   still decays the roster it was pointed at rather than being undone. */
+function reseedAtMidnight(){
+  const d=new Date(); d.setHours(24,0,0,0);
+  setTimeout(function(){
+    if(!clockShift){ buildRoster(); render(); }
+    reseedAtMidnight();
+  }, Math.max(1000, d.getTime()-Date.now()));
+}
 </script>
 </body>
 </html>

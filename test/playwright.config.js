@@ -5,12 +5,12 @@ export default defineConfig({
   fullyParallel: false,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://127.0.0.1:5173',
     trace: 'retain-on-failure'
   },
   webServer: {
     command: 'node server.js',
-    url: 'http://localhost:5173/index.html',
+    url: 'http://127.0.0.1:5173/index.html',
     reuseExistingServer: true,
     timeout: 30000
   }

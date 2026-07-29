@@ -214,3 +214,55 @@ test('an unknown stored key falls back to the seed instead of blanking A-4', asy
   await expect(page.locator('#personBody')).toContainText('Ayos naman siya');   // the seed
   expect(errors).toEqual([]);
 });
+
+/* ------------------------------------------------------------------ *
+ * The roster must not drift with the hour                             *
+ *                                                                     *
+ * custody.html seeds "confirmed yesterday" rows as an offset from     *
+ * `now` (20-28 hours). An offset of 20 hours lands before midnight in *
+ * the morning and after it in the evening, so from 20:00 local those  *
+ * rows satisfied updatedToday(), left "Not yet updated" for the       *
+ * collapsed done group, and took the headline with them — 84 of 128   *
+ * at 09:00, 90 of 128 at 20:23. Five tests above locate those rows,   *
+ * so they failed every evening; the demo also showed a judge a        *
+ * different number at 21:00 than at 09:00.                            *
+ * ------------------------------------------------------------------ */
+async function rosterAtHour(page, hour) {
+  // Freeze the page's clock before any of its own script runs.
+  await page.addInitScript(([h]) => {
+    const base = new Date(); base.setHours(h, 30, 0, 0);
+    const fixed = base.getTime(), RealDate = Date;
+    // eslint-disable-next-line no-global-assign
+    Date = class extends RealDate {
+      constructor(...a) { return a.length ? new RealDate(...a) : new RealDate(fixed); }
+      static now() { return fixed; }
+    };
+  }, [hour]);
+  await page.goto('/custody.html');
+  return page.evaluate(() => ({
+    headline: document.getElementById('mA').textContent,
+    done: people.filter(updatedToday).length,
+    look: people.filter(needsLook).length,
+    todo: people.filter(p => !updatedToday(p) && !needsLook(p)).length,
+    stale: people.filter(p => !isFresh(p)).length,
+    rows: document.querySelectorAll('.rrow').length,
+    bridge: !!Array.from(document.querySelectorAll('.rrow'))
+      .find(n => n.textContent.includes('Miguel Andres Reyes'))
+  }));
+}
+
+test('the custody roster reads the same at every hour of the day', async ({ page }) => {
+  const expected = {
+    headline: '84 of 128 updated today',
+    done: 84, look: 2, todo: 42, stale: 30, rows: 44, bridge: true
+  };
+  // Midnight and the 20:00 boundary are the two that used to break.
+  for (const hour of [0, 6, 9, 13, 17, 19, 20, 21, 23]) {
+    const ctx = await page.context().newPage();
+    try {
+      expect(await rosterAtHour(ctx, hour), `roster at ${hour}:30`).toEqual(expected);
+    } finally {
+      await ctx.close();
+    }
+  }
+});

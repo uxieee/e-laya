@@ -22,6 +22,13 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const PORT = 5173;
+// Bind IPv4 explicitly, and let playwright.config.js address us the same way.
+// 5173 is Vite's default port: a Vite dev server from any unrelated project
+// binds [::1]:5173, `localhost` resolves to BOTH ::1 and 127.0.0.1, and
+// Chromium races them — so half the suite silently loads a stranger's app and
+// fails in ways that look like product regressions. Pinning both ends to
+// 127.0.0.1 removes the race.
+const HOST = '127.0.0.1';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -57,7 +64,7 @@ function cannedBodyFor(pathname) {
 }
 
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://localhost:${PORT}`);
+  const url = new URL(req.url, `http://${HOST}:${PORT}`);
 
   if (url.pathname.startsWith('/api/')) {
     // Drain the request body (if any) so the client's fetch always resolves cleanly.
@@ -90,6 +97,6 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`test server listening on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`test server listening on http://${HOST}:${PORT}`);
 });
