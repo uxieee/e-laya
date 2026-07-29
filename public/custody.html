@@ -10,6 +10,7 @@
      Classic scripts, not modules — every surface must still run from file://. -->
 <script src="elaya-cast.js"></script>
 <script src="elaya-store.js"></script>
+<script src="elaya-shell.js" defer></script>
 <style>
 /* ------------------------------------------------------------------
    Additive layout only. New classes for components the shared
@@ -214,6 +215,11 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 
 <script>
 "use strict";
+/* Was a no-op. Return to wherever the reviewer came from, or Home. */
+document.querySelector('[aria-label="Back"]').addEventListener('click', function () {
+  if (history.length > 1) history.back();
+  else location.assign('index.html');
+});
 /* ------------------------------------------------------------------ api */
 async function api(p,b){if(location.protocol==='file:')return null;/* opened as a local file — no server to call */
 try{const r=await fetch(p,b?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}:{});if(!r.ok)throw 0;return await r.json();}catch(e){return null;}}
