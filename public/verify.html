@@ -2100,14 +2100,31 @@ function paintScripts(){
   if($('docLangLbl')) $('docLangLbl').textContent=dL;
 }
 /* ------------------------------------------------------------------- notify */
+/* The message must say what the screen above it says. Cases b and c-1 resolve
+   to "adult, 18 or over" — RA 9344 does not apply to them — so the CICL script
+   is not merely wrong copy there, it is a statutory notification asserting the
+   opposite of the determination the same session is about to record as PDL.
+   Gated on the same test paintV4() uses for its Determination row.
+
+   stationFull already carries the locality ("LSWDO Batangas City", "New
+   Bilibid Prison — Records"), so nothing appends a city to it — doing that
+   printed "Batangas City, Batangas City" for three of the five roles and put
+   the National Bilibid Prison in Batangas for a fourth. publishDetermination()
+   has always used stationFull bare; this now matches it. */
 function smsText(){
   const p=S.person, L=LANGS[S.lang.sms];
   const who=(p&&p.first)?initials(p):'ang taong nasa custody';
   const r=ROLES[S.role];
   const when=clock(S.custody)+', '+filDate(S.custody);
-  if(L==='Cebuano') return 'e-Laya: Si '+who+' naa sa pag-atiman sa '+r.stationFull+', Batangas City sukad '+when+'. Giila siya nga BATA ubos sa RA 9344 — naa siyay katungod sa diversion o interbensyon, ug dili siya prisohon uban sa mga hamtong. Naay social worker nga gitudlo. Libre ang abogado sa PAO. Tawag: 8988-4444.';
-  if(L==='Ilocano') return 'e-Laya: Ni '+who+' ket adda iti aywan ti '+r.stationFull+', Batangas City manipud '+when+'. Nabigbig isuna kas UBING iti RA 9344 — adda karbengan na iti diversion wenno interbension, ken saan a maibalud kadagiti nataengan. Adda naitudingan a social worker. Libre ti abogado ti PAO. Tawagan: 8988-4444.';
-  return 'e-Laya: Si '+who+' ay nasa pangangalaga ng '+r.stationFull+', Batangas City mula '+when+'. Kinilala siya bilang BATA sa ilalim ng RA 9344 — may karapatan siya sa diversion o interbensyon, at hindi siya ikukulong kasama ng matatanda. May nakatalagang social worker. Libre ang abogado ng PAO. Tawagan: 8988-4444.';
+  const adult=(S.caseId==='B'||S.caseId==='C1');
+  if(adult){
+    if(L==='Cebuano') return 'e-Laya: Si '+who+' naa sa pag-atiman sa '+r.stationFull+' sukad '+when+'. Base sa talaan, 18 anyos na siya pataas — dili siya sakop sa RA 9344, ug ang naandang proseso para sa hamtong ang sundon. Naa siyay katungod nga maghilom ug makabaton ug abogado. Libre ang abogado sa PAO. Tawag: 8988-4444.';
+    if(L==='Ilocano') return 'e-Laya: Ni '+who+' ket adda iti aywan ti '+r.stationFull+' manipud '+when+'. Sigun iti listaan, 18 ti tawenna wenno nasursurok — saan a masaklawan ti RA 9344, ket ti gagangay a proseso para kadagiti nataengan ti masurot. Adda karbenganna nga agulimek ken maaddaan iti abogado. Libre ti abogado ti PAO. Tawagan: 8988-4444.';
+    return 'e-Laya: Si '+who+' ay nasa pangangalaga ng '+r.stationFull+' mula '+when+'. Batay sa talaan, siya ay 18 taong gulang pataas — hindi saklaw ng RA 9344 ang kaso niya, at karaniwang proseso para sa nasa hustong gulang ang susundin. May karapatan siyang manatiling tahimik at magkaroon ng abogado. Libre ang abogado ng PAO. Tawagan: 8988-4444.';
+  }
+  if(L==='Cebuano') return 'e-Laya: Si '+who+' naa sa pag-atiman sa '+r.stationFull+' sukad '+when+'. Giila siya nga BATA ubos sa RA 9344 — naa siyay katungod sa diversion o interbensyon, ug dili siya prisohon uban sa mga hamtong. Naay social worker nga gitudlo. Libre ang abogado sa PAO. Tawag: 8988-4444.';
+  if(L==='Ilocano') return 'e-Laya: Ni '+who+' ket adda iti aywan ti '+r.stationFull+' manipud '+when+'. Nabigbig isuna kas UBING iti RA 9344 — adda karbengan na iti diversion wenno interbension, ken saan a maibalud kadagiti nataengan. Adda naitudingan a social worker. Libre ti abogado ti PAO. Tawagan: 8988-4444.';
+  return 'e-Laya: Si '+who+' ay nasa pangangalaga ng '+r.stationFull+' mula '+when+'. Kinilala siya bilang BATA sa ilalim ng RA 9344 — may karapatan siya sa diversion o interbensyon, at hindi siya ikukulong kasama ng matatanda. May nakatalagang social worker. Libre ang abogado ng PAO. Tawagan: 8988-4444.';
 }
 function paintSMS(){
   const t=smsText(), n=t.length<=160?1:Math.ceil(t.length/153);
@@ -2192,8 +2209,10 @@ function publishDetermination(){
     });
     window.Elaya.set('determinations.'+pid,{
       category:d.category, age:d.age, at:new Date().toISOString(),
-      /* stationFull already names the city — see smsText for what happens when
-         it is concatenated with the city a second time. */
+      /* stationFull already names the locality — never concatenate a city
+         onto it. smsText() used to, and printed "Batangas City, Batangas
+         City" for three roles and a Batangas branch of the New Bilibid
+         Prison for a fourth. */
       by:r.stationFull, ref:S.ref
     });
     if(d.guardian) window.Elaya.notify({

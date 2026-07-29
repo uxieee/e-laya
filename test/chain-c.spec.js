@@ -265,6 +265,75 @@ test('a manually entered session does not overwrite a demo scenario', async ({ p
   expect(errors).toEqual([]);
 });
 
+/* ------------------------------------------------------------------ *
+ * The statutory SMS must say what the determination says              *
+ * ------------------------------------------------------------------ */
+
+/** Walk /verify to S-V4 (the notify screen) without sending. */
+async function toNotify(page, key) {
+  await page.goto('/verify.html');
+  await page.waitForFunction(() => typeof window.openCase === 'function');
+  await page.keyboard.press(key);
+  await expect(page.locator('#s-v2')).toHaveClass(/\bon\b/);
+  const yes = page.locator('#idmYes');
+  if (await yes.count()) {
+    await expect(page.locator('#idmBtns')).toHaveClass(/\blive\b/);
+    await yes.click();
+  }
+  await page.locator('#v2foot .btn').click();
+  await expect(page.locator('#s-v4')).toHaveClass(/\bon\b/);
+}
+
+const LANGS = ['Filipino', 'Cebuano', 'Ilocano'];
+
+test('a child determination sends the RA 9344 script', async ({ page }) => {
+  await toNotify(page, '1');                          // case a — child at the incident
+  await expect(page.locator('#recSummary')).toContainText('CICL — child in conflict with the law');
+  for (const lang of LANGS) {
+    await expect(page.locator('#smsMeta')).toContainText(lang);
+    await expect(page.locator('#smsPreview')).toContainText(/BATA|UBING/);
+    await page.locator('#s-v4 button.lnk.sm').click();
+  }
+});
+
+test('an adult determination does not send a message calling the person a child', async ({ page }) => {
+  for (const key of ['2', '4']) {                     // case b, and case c-1 (days after 18)
+    await toNotify(page, key);
+    await expect(page.locator('#recSummary')).toContainText('Identity resolved — adult, 18 or over');
+    for (const lang of LANGS) {
+      await expect(page.locator('#smsMeta')).toContainText(lang);
+      const sms = page.locator('#smsPreview');
+      await expect(sms).not.toContainText(/BATA|UBING/);
+      await expect(sms).not.toContainText(/diversion/i);
+      await expect(sms).toContainText(/RA 9344/);      // named, as the thing that does NOT apply
+      await expect(sms).toContainText(/18/);
+      await expect(sms).toContainText(/PAO/);
+      await page.locator('#s-v4 button.lnk.sm').click();
+    }
+  }
+});
+
+/* stationFull carries its own locality. Appending ", Batangas City" printed
+   the city twice for three roles — and relocated the New Bilibid Prison. */
+test('the SMS names each requesting station once, and correctly', async ({ page }) => {
+  const EXPECT = {
+    LSWDO:            'LSWDO Batangas City',
+    PAO:              'Public Attorney’s Office, Batangas City',
+    'BJMP Records':   'Batangas City District Jail — Records',
+    'BuCor Records':  'New Bilibid Prison — Records',
+    PNP:              'PNP Station 6'
+  };
+  await toNotify(page, '1');
+  for (const [agency, station] of Object.entries(EXPECT)) {
+    await page.locator('#s-v4 .bar .right button').click();     // menu
+    await page.locator('#roleList button', { hasText: agency }).first().click();
+    const sms = page.locator('#smsPreview');
+    await expect(sms).toContainText(station);
+    await expect(sms).not.toContainText(/Batangas City,\s*Batangas City/);
+    await expect(sms).not.toContainText(/New Bilibid Prison[^.]*Batangas/);
+  }
+});
+
 /* linkedPeople() is dynamic where PEOPLE was static, so person() can now come
    back undefined — a Reset demo in another tab while /app sits on a store
    person. renderPerson() throwing inside renderLive's catch is what leaves

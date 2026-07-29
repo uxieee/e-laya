@@ -27,7 +27,7 @@ e-Laya is one idea applied six times: **keep a person visible at the moment the 
 public/          static surfaces — no build step
   elaya-cast.js    the people who appear in more than one surface
   elaya-store.js   shared state, localStorage-backed, syncs across tabs
-  elaya-shell.js   out-of-fiction reviewer navigation (?bare=1 to hide)
+  elaya-shell.js   out-of-fiction reviewer navigation (?bare=1 hides, ?bare=0 restores)
 api/             serverless proxy — every government secret terminates here
   _lib.js        token caching, canonical JSON, SHA-256, eGovPay digest
   sso.js         eGov SSO — identity, role gate, lawful basis

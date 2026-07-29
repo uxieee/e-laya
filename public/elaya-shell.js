@@ -4,11 +4,29 @@
  * jail wall; a control offering "switch to PAO caseload" would be a lie about
  * the product. So this is visibly a review aid: dark, fixed, labelled, and
  * removable with ?bare=1 for filming and screenshots.
+ *
+ * Dismissing it must never be a one-way door. This bar is the only navigation
+ * on the site — no surface links to another — so a reviewer who taps × and
+ * cannot get it back is stranded with nothing but the address bar. Three
+ * independent ways back, none of them requiring devtools:
+ *
+ *   1. ?bare=0 (or ?shell=1) on any surface clears the dismissal — the ×
+ *      button names it in its tooltip, so it is discoverable in-page;
+ *   2. the dismissal lives in sessionStorage, so it dies with the tab rather
+ *      than with the browser profile — reopening the site brings it back;
+ *   3. "Reset demo" clears it too, for the case where it is already showing
+ *      in one tab and stuck hidden in another.
  */
 (function () {
   'use strict';
 
   var HIDDEN_KEY = 'elaya.shell.hidden';
+
+  /* sessionStorage, not localStorage: a dismissal should outlive navigation
+   * (that is the whole point) but not the browsing session. */
+  function store() {
+    try { return window.sessionStorage; } catch (e) { return null; }
+  }
 
   var SURFACES = [
     { href: 'index.html',    label: 'Home' },
@@ -21,7 +39,16 @@
   ];
 
   function hidden() {
-    try { return localStorage.getItem(HIDDEN_KEY) === '1'; } catch (e) { return false; }
+    try { var s = store(); return !!s && s.getItem(HIDDEN_KEY) === '1'; } catch (e) { return false; }
+  }
+
+  /* Undo a dismissal. Must not throw with storage blocked — a reviewer who
+   * cannot reach the bar is the failure this whole path exists to prevent. */
+  function unhide() {
+    try { var s = store(); if (s) s.removeItem(HIDDEN_KEY); } catch (e) { /* ignore */ }
+    // Older builds persisted this in localStorage; clear that too so a
+    // dismissal made before this fix is recoverable by the same route.
+    try { localStorage.removeItem(HIDDEN_KEY); } catch (e) { /* ignore */ }
   }
 
   /* -------------------------------------------------------- space reserve
@@ -156,7 +183,7 @@
   }
 
   function hide() {
-    try { localStorage.setItem(HIDDEN_KEY, '1'); } catch (e) { /* ignore */ }
+    try { var s = store(); if (s) s.setItem(HIDDEN_KEY, '1'); } catch (e) { /* ignore */ }
     var el = document.getElementById('elaya-shell');
     if (el) el.remove();
     try { window.removeEventListener('resize', onResize); } catch (e) { /* ignore */ }
@@ -164,7 +191,12 @@
   }
 
   function build() {
-    if (new URLSearchParams(location.search).get('bare') === '1') return;
+    var q;
+    try { q = new URLSearchParams(location.search); } catch (e) { q = null; }
+    var bare = q && q.get('bare');
+    // Recovery first, so ?bare=0 works on the very surface the bar was hidden on.
+    if (bare === '0' || (q && q.get('shell') === '1')) unhide();
+    if (bare === '1') return;
     if (hidden()) return;
     if (document.getElementById('elaya-shell')) return;
 
@@ -224,6 +256,7 @@
     reset.setAttribute('data-act', 'reset');
     reset.textContent = 'Reset demo';
     reset.addEventListener('click', function () {
+      unhide();
       if (window.Elaya) window.Elaya.reset();
       location.reload();
     });
@@ -231,7 +264,8 @@
 
     var close = document.createElement('button');
     close.setAttribute('data-act', 'hide');
-    close.setAttribute('aria-label', 'Hide reviewer bar');
+    close.setAttribute('aria-label', 'Hide reviewer bar — add ?bare=0 to any address to bring it back');
+    close.setAttribute('title', 'Hide the reviewer bar. Add ?bare=0 to any address to bring it back.');
     close.textContent = '×';
     close.addEventListener('click', hide);
     nav.appendChild(close);

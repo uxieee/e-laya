@@ -30,6 +30,64 @@ test('dismissal persists across navigation', async ({ page }) => {
   await expect(page.locator('#elaya-shell')).toHaveCount(0);
 });
 
+/* Hiding the bar must never be a one-way door. The bar is the only navigation
+   on the site, so a dismissal that cannot be undone without devtools strands
+   a reviewer on whatever surface they were reading. */
+test('a dismissed bar comes back with ?bare=0', async ({ page }) => {
+  await page.goto('/custody.html');
+  await page.locator('#elaya-shell button[data-act="hide"]').click();
+  await expect(page.locator('#elaya-shell')).toHaveCount(0);
+
+  await page.goto('/cases.html?bare=0');
+  await expect(page.locator('#elaya-shell')).toBeVisible();
+  // And it stays back — the recovery clears the flag, it does not just
+  // suppress it for the one page view that carried the parameter.
+  await page.goto('/custody.html');
+  await expect(page.locator('#elaya-shell')).toBeVisible();
+});
+
+test('a dismissed bar comes back on the surface it was hidden on', async ({ page }) => {
+  await page.goto('/verify.html');
+  await page.locator('#elaya-shell button[data-act="hide"]').click();
+  await expect(page.locator('#elaya-shell')).toHaveCount(0);
+  await page.goto('/verify.html?bare=0');
+  await expect(page.locator('#elaya-shell')).toBeVisible();
+});
+
+test('a dismissal does not outlive the tab it was made in', async ({ page, context }) => {
+  await page.goto('/custody.html');
+  await page.locator('#elaya-shell button[data-act="hide"]').click();
+  await expect(page.locator('#elaya-shell')).toHaveCount(0);
+
+  const fresh = await context.newPage();
+  await fresh.goto('/custody.html');
+  await expect(fresh.locator('#elaya-shell')).toBeVisible();
+  await fresh.close();
+});
+
+test('the recovery path does not throw with web storage blocked', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+  await page.addInitScript(() => {
+    const boom = { get() { throw new Error('storage blocked'); } };
+    Object.defineProperty(window, 'localStorage', boom);
+    Object.defineProperty(window, 'sessionStorage', boom);
+  });
+  await page.goto('/custody.html?bare=0');
+  await expect(page.locator('#elaya-shell')).toBeVisible();
+  // And the × still works when it cannot record anything.
+  await page.locator('#elaya-shell button[data-act="hide"]').click();
+  await expect(page.locator('#elaya-shell')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('the hide control says how to bring the bar back', async ({ page }) => {
+  await page.goto('/index.html');
+  const close = page.locator('#elaya-shell button[data-act="hide"]');
+  await expect(close).toHaveAttribute('title', /\?bare=0/);
+  await expect(close).toHaveAttribute('aria-label', /\?bare=0/);
+});
+
 test('the custody Back button leaves the page', async ({ page }) => {
   await page.goto('/index.html');
   await page.goto('/custody.html');
