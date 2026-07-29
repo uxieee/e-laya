@@ -157,9 +157,45 @@
     api.emit('change', { path: '*', value: null });
   };
 
-  /* ---------- events (expanded in Task 3) ---------- */
+  /* ---------- events ---------- */
 
-  api.emit = function () {};
+  var handlers = {};
+
+  api.on = function (event, handler) {
+    (handlers[event] || (handlers[event] = [])).push(handler);
+    return handler;
+  };
+
+  api.off = function (event, handler) {
+    var list = handlers[event];
+    if (!list) return;
+    var i = list.indexOf(handler);
+    if (i > -1) list.splice(i, 1);
+  };
+
+  api.emit = function (event, payload) {
+    var list = (handlers[event] || []).slice();
+    for (var i = 0; i < list.length; i++) {
+      // One bad subscriber must never stop the others, or block a save.
+      try { list[i](payload); } catch (e) { warn(e); }
+    }
+  };
+
+  api.notify = function (n) {
+    var rec = {
+      id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      to: n.to || '',
+      body: n.body || '',
+      surface: n.surface || '',
+      personId: n.personId || null,
+      at: new Date().toISOString()
+    };
+    var list = api.get('notifications', []);
+    list.unshift(rec);
+    api.set('notifications', list);
+    api.emit('notification', rec);
+    return rec;
+  };
 
   api.ready = function (fn) {
     if (state) { try { fn(api); } catch (e) { warn(e); } }
@@ -171,6 +207,19 @@
   state = load();
   save();
   while (readyQueue.length) api.ready(readyQueue.shift());
+
+  /* ---------- cross-tab sync ----------
+     Another tab wrote to localStorage. Re-hydrate and tell this tab's
+     subscribers, so /custody and /app open side by side track each other. */
+  try {
+    window.addEventListener('storage', function (e) {
+      if (e.key !== KEY) return;
+      state = load();
+      api.emit('change', { path: '*', value: null, remote: true });
+    });
+  } catch (e) {
+    warn(e);
+  }
 
   window.Elaya = api;
 })();
