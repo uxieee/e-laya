@@ -182,19 +182,31 @@
   };
 
   api.notify = function (n) {
-    var rec = {
-      id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-      to: n.to || '',
-      body: n.body || '',
-      surface: n.surface || '',
-      personId: n.personId || null,
-      at: new Date().toISOString()
-    };
-    var list = api.get('notifications', []);
-    list.unshift(rec);
-    api.set('notifications', list);
-    api.emit('notification', rec);
-    return rec;
+    try {
+      // n is caller-supplied and may be missing, null, or not an object;
+      // normalise it rather than dereferencing straight into a throw.
+      if (!n || typeof n !== 'object') n = {};
+      var rec = {
+        id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+        to: n.to || '',
+        body: n.body || '',
+        surface: n.surface || '',
+        personId: n.personId || null,
+        at: new Date().toISOString()
+      };
+      var list = api.get('notifications', []);
+      list.unshift(rec);
+      api.set('notifications', list);
+      api.emit('notification', rec);
+      return rec;
+    } catch (e) {
+      warn(e);
+      return {
+        id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+        to: '', body: '', surface: '', personId: null,
+        at: new Date().toISOString()
+      };
+    }
   };
 
   api.ready = function (fn) {

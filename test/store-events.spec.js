@@ -67,6 +67,65 @@ test('notify appends a notification and emits', async ({ page }) => {
   expect(v.seen).toEqual(['Miguel is doing OK']);
 });
 
+test('notify(undefined) does not throw into the caller', async ({ page }) => {
+  await withStore(page);
+  const v = await page.evaluate(() => {
+    const rec = window.Elaya.notify(undefined);
+    return {
+      hasId: typeof rec.id === 'string' && rec.id.length > 0,
+      body: rec.body,
+      degraded: window.Elaya.degraded
+    };
+  });
+  expect(v.hasId).toBe(true);
+  expect(v.body).toBe('');
+});
+
+test('notify(null) does not throw into the caller', async ({ page }) => {
+  await withStore(page);
+  const v = await page.evaluate(() => {
+    const rec = window.Elaya.notify(null);
+    return {
+      hasId: typeof rec.id === 'string' && rec.id.length > 0,
+      body: rec.body
+    };
+  });
+  expect(v.hasId).toBe(true);
+  expect(v.body).toBe('');
+});
+
+test('a well-formed notify still behaves exactly as before', async ({ page }) => {
+  await withStore(page);
+  const v = await page.evaluate(() => {
+    const seen = [];
+    window.Elaya.on('notification', n => seen.push(n.body));
+    const rec = window.Elaya.notify({
+      to: 'Rosa Reyes', body: 'Miguel is doing OK',
+      surface: 'custody', personId: 'miguel'
+    });
+    return {
+      stored: window.Elaya.get('notifications').length,
+      first: window.Elaya.get('notifications')[0].body,
+      body: rec.body,
+      to: rec.to,
+      surface: rec.surface,
+      personId: rec.personId,
+      hasId: typeof rec.id === 'string' && rec.id.length > 0,
+      hasAt: typeof rec.at === 'string' && rec.at.length > 0,
+      seen
+    };
+  });
+  expect(v.stored).toBe(1);
+  expect(v.first).toBe('Miguel is doing OK');
+  expect(v.body).toBe('Miguel is doing OK');
+  expect(v.to).toBe('Rosa Reyes');
+  expect(v.surface).toBe('custody');
+  expect(v.personId).toBe('miguel');
+  expect(v.hasId).toBe(true);
+  expect(v.hasAt).toBe(true);
+  expect(v.seen).toEqual(['Miguel is doing OK']);
+});
+
 test('a write in one tab reaches another tab', async ({ browser }) => {
   const ctx = await browser.newContext();
   const a = await ctx.newPage();
