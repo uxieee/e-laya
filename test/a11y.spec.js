@@ -113,13 +113,25 @@ test('kiosk has no tap target under 32px at its own 1080x1920', async ({ page })
    nothing. What must hold is behavioural: every visible part of the End button
    must actually hit the End button.
 
-   Measured across all nine, #kend's right EDGE and the dot do come within
-   0px (Bikol) and even cross by 3px (Ilokano) — but that strip is the button's
-   own 22px padding, and the label never comes closer than 21px to the dot.
-   That geometry is byte-identical to the pre-Task-9 build (verified against
-   commit e146b6d), so it is pre-existing and is recorded, not silently
-   asserted away. This test pins the part that matters and would fail loudly if
-   the dot were ever inflated back over the label. */
+   The dot used to sit at right:14px (x=1026) and #kend reached x=1029 in
+   Ilokano and 1026 in Bikol, so the End button's right padding belonged to the
+   dot and a tap there fired demoCycle(). It now sits at right:0 (x=1040) and
+   clears #kend in all nine, 11px at worst (Ilokano) and 76px at best.
+
+   Three properties are asserted, because they fail at different times:
+
+     containment — #demodot's left edge is at or right of #railmain's right
+       edge. #railmain is a stretched flex child of a rail padded `0 40px`, so
+       its right edge is x=1040 in every language; the dot fills the gutter
+       beyond it. This is the structural guarantee and is language-independent,
+       so it fires the moment anyone moves the dot back inward.
+     hit test — every visible part of the control resolves to the control.
+       Catches the dot being moved or re-inflated ON TOP of #kend.
+     positive gap — the control keeps real distance from the dot. Catches the
+       opposite direction: a LABEL growing out toward the dot, which the hit
+       test would keep passing right up until the moment it stopped. Ilokano's
+       11px is the whole remaining budget, so this is what stands between a
+       longer translation of nav.done and a silent re-cross. */
 test('every visible part of the kiosk end-session control hits it, in all nine languages', async ({ page }) => {
   await page.setViewportSize({ width: 1080, height: 1920 });
   await page.goto('/kiosk.html');
@@ -141,17 +153,33 @@ test('every visible part of the kiosk end-session control hits it, in all nine l
         const b = el && el.closest('button');
         return b ? (b.id || b.className) : (el ? el.tagName : 'null');
       };
+      const dot = document.getElementById('demodot').getBoundingClientRect();
+      const rail = document.getElementById('railmain').getBoundingClientRect();
       return {
         centre:     at((r.left + r.right) / 2, (r.top + r.bottom) / 2),
         labelRight: at(t.right - 1, (t.top + t.bottom) / 2),
         labelLeft:  at(t.left + 1, (t.top + t.bottom) / 2),
-        gapToLabel: Math.round(document.getElementById('demodot').getBoundingClientRect().left - t.right)
+        /* the whole button, padding included — not just its label */
+        gapToButton: Math.round(dot.left - r.right),
+        gapToLabel:  Math.round(dot.left - t.right),
+        gapToRail:   Math.round(dot.left - rail.right),
+        /* denominator: a zero-width rail would make every gap above vacuous */
+        railWidth:   Math.round(rail.width)
       };
     });
+    /* The rail was actually laid out — otherwise the gaps below mean nothing. */
+    expect(probe.railWidth, `${lang}: #railmain has no box`).toBeGreaterThan(0);
+    /* Structural: the dot lives in the rail's padding gutter, never inside it. */
+    expect(probe.gapToRail,
+      `${lang}: demo dot has moved inside #railmain (${probe.gapToRail}px)`).toBeGreaterThanOrEqual(0);
+    /* Behavioural: every visible part of the control hits the control. */
     expect(probe.centre, `${lang}: #kend centre`).toBe('kend');
     expect(probe.labelRight, `${lang}: #kend label right edge`).toBe('kend');
     expect(probe.labelLeft, `${lang}: #kend label left edge`).toBe('kend');
-    expect(probe.gapToLabel, `${lang}: demo dot is within 8px of the End label`).toBeGreaterThan(8);
+    /* Geometric: the demo dot clears the whole End button, with margin. */
+    expect(probe.gapToButton,
+      `${lang}: demo dot overlaps or crowds #kend (gap ${probe.gapToButton}px)`).toBeGreaterThanOrEqual(8);
+    expect(probe.gapToLabel, `${lang}: demo dot crowds the End label`).toBeGreaterThan(8);
   }
 });
 

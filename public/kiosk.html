@@ -547,13 +547,31 @@ h1,h2,h3,h4,.khead-fil,#k1hero .h1,#doneTitle,.kmodal .mh,#sheet .sh1,.fullres .
 #ktoast .en{color:rgba(255,255,255,.7);font-size:var(--k-desc);margin-left:14px}
 
 /* demo corner control */
-/* 40px, unchanged, and deliberately so. Enlarging its box to clear 32px at a
-   390px viewport would only push it left into #krail, whose row is
-   centre-justified — so #kend ("Tapos na", the end-session control on a shared
-   terminal) sits at a different x in each of the nine languages, and a mistap
-   would fire demoCycle() instead of ending the session. The kiosk runs at
-   1080x1920, where this dot is 40px; a11y.spec.js asserts it there. */
-#demodot{position:absolute;right:14px;bottom:14px;width:40px;height:40px;border-radius:50%;
+/* 40px, unchanged, and deliberately so: enlarging it only pushes it further
+   into #krail. The 14px RIGHT inset is gone, though — this is a position fix.
+
+   #railmain is centre-justified, so #kend ("Tapos na", the end-session control
+   on a shared public terminal) lands at a different x in each of the nine
+   languages. At right:14px the dot's left edge sat at x=1026 while #kend's
+   right edge reached 1029 in Ilokano and 1026 in Bikol, so a tap on the End
+   button's right padding fired demoCycle() instead of askEnd() and left the
+   previous user's session alive. Pre-existing (identical at e146b6d), fixed
+   here.
+
+   right:0 is not a lucky number, it is an alignment. #krail is padded
+   `0 40px`, and #railmain is a stretched flex child of it, so #railmain's box
+   is ALWAYS 1000px wide with its right edge at x=1040 whatever the labels say.
+   A 40px dot at right:0 occupies exactly 1040–1080 — the rail's own right
+   padding gutter — so it cannot overlap a rail control unless that control
+   overflows its container. Measured clearance to #kend is 11px at worst
+   (Ilokano) and 76px at best (English), up from −3px.
+
+   The dot is at the stage's right edge; there is no further room in this
+   corner, and both shrinking it and relocating it were ruled out. So the
+   nine-language assertions in a11y.spec.js carry the guarantee from here:
+   a hit test (the dot must not sit on the control) plus a positive-gap check
+   (the control must not grow into the dot). */
+#demodot{position:absolute;right:0;bottom:14px;width:40px;height:40px;border-radius:50%;
   background:var(--text);opacity:.12;border:none;cursor:pointer;z-index:90}
 #demodot:hover{opacity:.3}
 
