@@ -9,7 +9,7 @@ export default defineConfig({
     trace: 'retain-on-failure'
   },
   webServer: {
-    command: 'python3 -m http.server 5173 --directory ../public',
+    command: 'node server.js',
     url: 'http://localhost:5173/index.html',
     reuseExistingServer: true,
     timeout: 30000
