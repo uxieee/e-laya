@@ -578,6 +578,7 @@ const PEOPLE = [
     gcta:null,
     programme:{
       name:'Diversion Program B', provider:'LSWDO Batangas City', kind:'gov', status:'Aktibo',
+      progId:'pg1',   /* the /sessions roster this programme is logged on */
       schedule:'Tuwing Lunes at Huwebes, 9:00 AM', total:12, attended:4, missed:1,
       next:['Bukas, Hul 23, 9:00 AM','Brgy. Alangilan Hall, Batangas City'],
       contactName:'Ms. Ramos, LSWDO', contactTel:'+63437028988',
@@ -1068,8 +1069,30 @@ function caseTab(p,first){
   return h;
 }
 
-function progTab(p,first){
+/* The attendance the LSWDO social worker logs in /sessions is the same fact
+   this card shows the family. progId names that programme in /sessions' own
+   vocabulary — the two surfaces label it differently (LSWDO's public programme
+   name here, the roster's court-order name there), so the mapping is explicit
+   rather than assumed. A programme with no progId is not logged in /sessions
+   and always renders its seed.
+
+   Read-only, like welfareFor: nothing on this path writes to the store, which
+   is what keeps the change subscriber below from recursing. */
+function attendanceFor(p){
   const pr = p.programme;
+  if(window.Elaya && pr && pr.progId){
+    const a = window.Elaya.get('attendance.'+p.id+'.'+pr.progId, null);
+    if(a && typeof a.done === 'number' && typeof a.of === 'number'){
+      return {attended:a.done, total:a.of,
+              missed:(typeof a.missStreak === 'number') ? a.missStreak : pr.missed,
+              receipt:a.receipt || pr.receipt, live:true};
+    }
+  }
+  return {attended:pr.attended, total:pr.total, missed:pr.missed, receipt:pr.receipt, live:false};
+}
+
+function progTab(p,first){
+  const pr = Object.assign({}, p.programme, attendanceFor(p));
   let dots = '';
   for(let i=0;i<pr.total;i++){
     let c = 'dot';
@@ -1190,10 +1213,15 @@ function allNotifs(){
   const mapped = live.map(function(n){
     const d = new Date(n.at);
     let hr = d.getHours(); const ap = hr<12?'AM':'PM'; hr = hr%12||12;
+    /* An attendance notification is not a welfare notification and must not
+       be labelled as one — /sessions writes here too, as of Chain B. */
+    const sess = n.surface === 'sessions';
     return {id:n.id, day:'NGAYONG ARAW', unread:!liveRead[n.id], live:true, ico:'mail',
       time:hr+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap,
-      fil:'Bagong update sa kalagayan', eng:'New welfare update',
-      body:n.body, src:'Galing sa: '+(n.surface==='custody'?'BJMP · Batangas City District Jail':n.surface),
+      fil: sess ? 'Bagong update sa programa' : 'Bagong update sa kalagayan',
+      eng: sess ? 'New programme update' : 'New welfare update',
+      body:n.body, src:'Galing sa: '+(n.surface==='custody'?'BJMP · Batangas City District Jail'
+        : sess ? 'LSWDO Batangas City' : n.surface),
       sms:'Ipinadala rin kay '+n.to+', '+PROFILE.mobileMasked};
   });
   return mapped.concat(NOTIFS);
@@ -1728,7 +1756,8 @@ if(window.Elaya){
     /* '*' is a reset or a cross-tab re-hydrate; otherwise only the paths this
        surface displays are worth a repaint. */
     const path = e ? String(e.path) : '*';
-    if(path==='*' || path.indexOf('welfare')===0 || path==='notifications') renderLive();
+    if(path==='*' || path.indexOf('welfare')===0 || path.indexOf('attendance')===0
+       || path==='notifications') renderLive();
   });
 }
 

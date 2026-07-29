@@ -554,7 +554,7 @@ h1,h2,h3,h4,.khead-fil,#k1hero .h1,#doneTitle,.kmodal .mh,#sheet .sh1,.fullres .
       <div class="clockT" id="clockT">10:42 AM</div>
     </div>
     <div class="hrow">
-      <div class="f1">BJMP Batangas City Jail · Female Dorm</div>
+      <div class="f1" id="kFacility">BJMP Batangas City Jail · Female Dorm</div>
       <div class="clockD" id="clockD">Miyerkules · 22 Hulyo 2026</div>
     </div>
   </header>
@@ -773,8 +773,11 @@ Maghanap ng programa.</div>
             <div class="v pv">Lunes, 27 Hulyo · 10:00 ng umaga</div>
             <div class="r">Sa loob ng 5 araw · In 5 days</div>
           </div>
-          <div class="attline pv">Nakapunta ka sa <strong>8 sa 12</strong> na sesyon <span class="en">· You attended 8 of 12</span></div>
-          <div class="dots">
+          <!-- Seed figures. Overwritten only when this terminal has been told
+               who is standing at it AND a shared attendance record exists for
+               them — see renderProgAttendance(). -->
+          <div class="attline pv" id="progAtt">Nakapunta ka sa <strong>8 sa 12</strong> na sesyon <span class="en">· You attended 8 of 12</span></div>
+          <div class="dots" id="progDots">
             <span class="adot"></span><span class="adot"></span><span class="adot"></span><span class="adot"></span>
             <span class="adot miss"></span><span class="adot"></span><span class="adot"></span><span class="adot"></span>
             <span class="adot miss"></span><span class="adot next"></span><span class="adot next"></span><span class="adot next"></span>
@@ -1007,7 +1010,10 @@ Maghanap ng programa.</div>
 
 /* ---------- seeds ---------- */
 const SEED = {
-  persona:{ first:'Maria', initial:'S.', phone:'0917 ••• 4567' },
+  /* castId is null for the demo persona: she is this terminal's own walk-in,
+     not one of the people who appear on more than one surface. It is filled in
+     only by bindPersona(), below. */
+  persona:{ first:'Maria', initial:'S.', phone:'0917 ••• 4567', castId:null, progId:'pg1' },
   localities:[
     {code:'ALL', name:'Lahat · All'},
     {code:'041005000', name:'Batangas City'},
@@ -1378,6 +1384,58 @@ function screenText(){
 }
 function speakScreen(){ speak(screenText(), S.lang || 'Filipino', $('railSpeak')); }
 
+/* ================================================================
+   K-4 ATTENDANCE — the count the LSWDO social worker logs in /sessions.
+
+   This terminal identifies whoever is standing at it (eID scan, then face
+   verify) and greets them by name. So it must never put one person's name
+   beside another person's numbers: it reads the shared attendance record ONLY
+   for the person the facility handed this session to, and otherwise leaves its
+   own persona's seeded figures exactly as they are.
+
+   The binding arrives as ?person=<castId> — how a facility terminal is handed
+   a session in this build. Read-only, and no store subscriber: every entry to
+   K-4 goes through go('programs'), which repaints.
+   ================================================================ */
+function bindPersona(){
+  try{
+    const m = /[?&]person=([^&#]+)/.exec(location.search || '');
+    if(!m) return;
+    const cast = window.ELAYA_CAST && window.ELAYA_CAST.people
+      ? window.ELAYA_CAST.people[decodeURIComponent(m[1])] : null;
+    if(!cast) return;
+    const parts = String(cast.full || cast.name).split(' ');
+    SEED.persona = {
+      first: parts[0],
+      initial: (parts[parts.length-1] || '').charAt(0) + '.',
+      phone: cast.guardianPhone || SEED.persona.phone,
+      castId: cast.id, progId: SEED.persona.progId
+    };
+    /* A terminal standing in Bahay Pag-asa must not say "Female Dorm" over a
+       16-year-old boy's session. The masthead moves with the person. */
+    const fac = $('kFacility');
+    if(fac && cast.facility) fac.textContent = cast.agency
+      ? cast.agency + ' · ' + cast.facility : cast.facility;
+  }catch(e){ /* a malformed link must never cost someone their session */ }
+}
+
+function renderProgAttendance(){
+  if(!window.Elaya || !SEED.persona.castId) return;      /* the seed markup stands */
+  const a = window.Elaya.get('attendance.'+SEED.persona.castId+'.'+SEED.persona.progId, null);
+  if(!a || typeof a.done !== 'number' || typeof a.of !== 'number') return;
+  const att = $('progAtt'), dots = $('progDots');
+  if(att) att.innerHTML = 'Nakapunta ka sa <strong>'+a.done+' sa '+a.of+'</strong> na sesyon '
+    + '<span class="en">· You attended '+a.done+' of '+a.of+'</span>';
+  if(dots){
+    const miss = Math.max(0, a.missStreak || 0);
+    let h = '';
+    for(let i=0;i<a.of;i++){
+      h += '<span class="adot'+(i < a.done ? '' : (i < a.done + miss ? ' miss' : ' next'))+'"></span>';
+    }
+    dots.innerHTML = h;
+  }
+}
+
 /* ---------- navigation ---------- */
 function go(id){
   if(id !== 'k1' && !S.session) startSessionShell();
@@ -1399,6 +1457,7 @@ function go(id){
   stopSpeaking();
   if(isK1){ resetToAttract(); } else { stopAttract(); }
   if(id==='find') renderFind();
+  if(id==='programs') renderProgAttendance();
   if(id==='k2v') runFaceVerify();
   if(el) el.scrollTop = 0;
   bump();
@@ -1738,6 +1797,7 @@ function demoCycle(){
 }
 
 /* ---------- init ---------- */
+bindPersona();
 renderK1();
 applyLang('Filipino');
 tickClock();

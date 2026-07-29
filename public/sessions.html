@@ -525,15 +525,21 @@ const PROGRAMS=[
   sessions:[{n:7,at:new Date(2026,6,25,7,30),end:"11:30 AM",state:"upcoming"}]}
 ];
 
-/* roster of Anger management · Group B — 15 enrolled */
+/* roster of Anger management · Group B
+   castId ties a roster row to the shared cast in elaya-cast.js. Only the two
+   people who appear on more than one surface carry one — everyone else is
+   local colour for this screen and stays local. */
 const ROSTER=[
- {id:"r1", name:"Bautista, Renz A.",       age:16,done:5,of:12,missStreak:3,last:new Date(2026,6,3), guardian:"Mrs. Editha Bautista",gno:"0917 445 2210",no:"0917 445 2211",brgy:"Balagtas"},
+ {id:"r1", castId:"renz", name:"Bautista, Renz A.", age:16,done:5,of:12,missStreak:3,last:new Date(2026,6,3), guardian:"Mrs. Editha Bautista",gno:"0917 445 2210",no:"0917 445 2211",brgy:"Balagtas"},
  {id:"r2", name:"Santos, Kyle M.",         age:16,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Rolando Santos", gno:"0918 330 1145",no:"0918 330 1146",brgy:"Kumintang Ibaba",tight:true},
  {id:"r3", name:"Ocampo, Jerome L.",       age:15,done:0,of:12,missStreak:0,never:true,enrolled:new Date(2026,5,12),guardian:"Mrs. Lita Ocampo",gno:"0995 771 0032",no:"0995 771 0033",brgy:"Balagtas"},
  {id:"r4", name:"Dizon, Angelo B.",        age:16,done:6,of:12,missStreak:1,last:new Date(2026,6,8), guardian:"Mrs. Fe Dizon",     gno:"0917 220 8890",no:"0917 220 8891",brgy:"Pallocan West"},
  {id:"r5", name:"Aguinaldo, Paolo M.",     age:17,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Ruel Aguinaldo",gno:"0920 114 5567",no:"",brgy:"Bolbok"},
  {id:"r6", name:"Buenaventura, Rey Mark T.",age:16,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Aida Buenaventura",gno:"0939 887 2201",no:"",brgy:"Kumintang Ibaba"},
- {id:"r7", name:"Castañeda, Jomar L.",     age:15,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Nilo Castañeda",gno:"0917 663 4410",no:"",brgy:"Alangilan"},
+ /* Given name changed from Jomar to Arjay when Jomar Cruz (r16) joined this
+    roster: two boys named Jomar in the same Alangilan group is a mis-selection
+    waiting to happen on a phone. Nothing else about this row moved. */
+ {id:"r7", name:"Castañeda, Arjay L.",     age:15,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Nilo Castañeda",gno:"0917 663 4410",no:"",brgy:"Alangilan"},
  {id:"r8", name:"Dela Peña, Kirby S.",     age:17,done:6,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Susan Dela Peña",gno:"0908 442 7712",no:"",brgy:"Pallocan West"},
  {id:"r9", name:"Escobar, Nino Fritz D.",  age:16,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Fritz Escobar", gno:"0966 200 3388",no:"",brgy:"Kumintang Ibaba"},
  {id:"r10",name:"Gonzales, Aljon P.",      age:15,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Ester Gonzales",gno:"0977 551 9902",no:"",brgy:"Bolbok"},
@@ -541,7 +547,12 @@ const ROSTER=[
  {id:"r12",name:"Lapuz, Christian Jay B.", age:16,done:5,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Rina Lapuz",   gno:"0947 118 2204",no:"",brgy:"Kumintang Ibaba"},
  {id:"r13",name:"Marasigan, Jethro V.",    age:15,done:7,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Elmer Marasigan",gno:"0918 991 0074",no:"",brgy:"Alangilan"},
  {id:"r14",name:"Pagulayan, Ryan Cris M.", age:16,done:8,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mrs. Dolores Pagulayan",gno:"0929 330 1188",no:"",brgy:"Pallocan West"},
- {id:"r15",name:"Ventura, Joshua Emmanuel C.",age:17,done:6,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Jun Ventura",gno:"0917 004 5521",no:"",brgy:"Kumintang Ibaba"}
+ {id:"r15",name:"Ventura, Joshua Emmanuel C.",age:17,done:6,of:12,missStreak:0,last:new Date(2026,6,15),guardian:"Mr. Jun Ventura",gno:"0917 004 5521",no:"",brgy:"Kumintang Ibaba"},
+ /* The same human /app shows the family and /kiosk shows him. His figures are
+    the ones on that card — 4 of 12, one missed — so the number the aunt reads
+    at home and the number the social worker taps here are the same number.
+    (The brief seeded 9 of 24; 24 contradicts this programme's required:12.) */
+ {id:"r16",castId:"jomar", name:"Cruz, Jomar", age:16,done:4,of:12,missStreak:1,last:new Date(2026,6,8), guardian:"Rosa Andres Reyes",gno:"0917 445 4567",no:"",brgy:"Alangilan"}
 ];
 
 /* S-1 caseload — the arithmetic band is computed, never typed */
@@ -704,7 +715,7 @@ function renderS1(){
     h+='<div class="search"><input id="q" type="search" placeholder="Search name or programme" value="'+esc(S.q)+'" autocomplete="off"><span class="mag">⚲</span></div>';
   }
   /* TODAY — a strip, not a card */
-  const venue=esc(p.venue.split(",")[0])+" · 15 enrolled";
+  const venue=esc(p.venue.split(",")[0])+" · "+ROSTER.length+" enrolled";
   if(logged){
     h+='<div class="today"><div class="kick">Ngayon · 2:00 PM</div>'
       +'<div class="pname">'+p.name+" · "+p.group+"</div>"
@@ -778,7 +789,7 @@ function renderS2(){
     +'<div class="ord">Court order '+p.order+" · expires "+fDate(p.expires)+"</div>"
     +'<div class="prog"><span class="bar2"><i style="width:'+Math.round(p.held/p.required*100)+'%"></i></span>'
     +'<span class="pct">'+p.held+" of "+p.required+"</span></div>"
-    +'<div class="tiny" style="margin-top:8px">15 enrolled · '+p.avg+"% average attendance · "+p.sessions.filter(s=>s.state!=="logged").length
+    +'<div class="tiny" style="margin-top:8px">'+ROSTER.length+' enrolled · '+p.avg+"% average attendance · "+p.sessions.filter(s=>s.state!=="logged").length
     +" sessions left on the calendar</div></div>";
 
   if(S.s2tab==="sessions"){
@@ -835,19 +846,19 @@ function renderS3(){
   let h='<div class="counter"><div class="n" aria-live="polite">'+n+' <span>/ '+total+' marked</span></div>'
     +'<div class="cbar"><i style="width:'+(n/total*100)+'%"></i></div></div>';
   if(S.draft)h+='<div class="note amber" style="margin-bottom:12px"><span class="g">⚠</span><span>Draft from '
-    +S.draft.at+" — "+S.draft.n+" of 15 marked. Restored on this phone.</span></div>";
+    +S.draft.at+" — "+S.draft.n+" of "+ROSTER.length+" marked. Restored on this phone.</span></div>";
   if(S.readonly)h+='<div class="note info" style="margin-bottom:12px"><span class="g">ⓘ</span><span>Logged 15 Jul, 4:07 PM by Ms. A. Villanueva. This roster is read-only.</span></div>';
   h+='<div class="bandcard" id="rosterCard">';
   h+='<button class="bulkrow" id="markAll" type="button">'
     +(S.bulkMarked?'<span>✓✓ All marked present</span><span class="x" id="clearAll">Alisin ✕</span>'
-      :'<span>✓✓ Lahat present · Mark all</span><span class="x">1 tap · 15 tao</span>')+"</button>";
+      :'<span>✓✓ Lahat present · Mark all</span><span class="x">1 tap · '+ROSTER.length+' tao</span>')+"</button>";
   ROSTER.forEach(r=>{
     const m=S.marks[r.id];
     const sub=m==="missed"?'<span style="color:var(--text);font-weight:500">Kailangan ng follow-up</span>'
       :m==="late"?"Huli · "+(S.notes[r.id]||"20 min late")
       :m==="excused"?"May dahilan · "+(S.notes[r.id]||"may sakit")
       :m==="left"?"Umalis nang maaga · "+(S.notes[r.id]||"3:10 PM")
-      :(r.never?"0 of 12 · never attended":r.done+" of 12"+(r.missStreak?" · missed last "+r.missStreak:""));
+      :(r.never?"0 of "+r.of+" · never attended":r.done+" of "+r.of+(r.missStreak?" · missed last "+r.missStreak:""));
     const mod=(m==="late"||m==="excused"||m==="left");
     h+='<div class="srow" data-p="'+r.id+'" data-mark="'+(m||"")+'">'
       +'<div class="swbg"><span class="l">✓ Present</span><span class="r">Follow-up —</span></div>'
@@ -882,7 +893,7 @@ function markAll(){
   const before=Object.assign({},S.marks),wasBulk=S.bulkMarked;
   ROSTER.forEach(r=>{S.marks[r.id]="present";});
   S.bulkMarked=true;renderS3();
-  toast("Lahat present · 15 marked present. This is recorded as one deliberate act.","I-BALIK ↺",
+  toast("Lahat present · "+ROSTER.length+" marked present. This is recorded as one deliberate act.","I-BALIK ↺",
     ()=>{S.marks=before;S.bulkMarked=wasBulk;renderS3();toast("Undone — the roster is unmarked again.","",null);});
 }
 
@@ -933,6 +944,50 @@ function nuanceSheet(id){
     +'<button class="opt" data-nu="note" data-p="'+id+'"><span class="g">✚</span><span>Add a note</span></button>');
 }
 
+/* ---- the shared record ----
+   What this screen logs is the same fact /app shows the family, /cases shows
+   the lawyer and /kiosk shows the person themselves. Only the roster rows that
+   carry a castId cross over; everyone else stays local to this screen.
+
+   The store is an enhancement layer, never a dependency: every call is guarded,
+   and this screen's own ROSTER/PROGRAMS model is untouched by all of it. */
+const givenName=n=>{const parts=String(n).split(",");return (parts[1]||parts[0]||"").trim();};
+
+function mirrorToStore(p,receipt){
+  if(!window.Elaya)return null;
+  /* Captured BEFORE the write so the 12-second undo can put it all back —
+     an undone save must not leave the lawyer looking at a phantom miss. */
+  const undo={paths:[],notifs:(window.Elaya.get("notifications",[])||[]).slice()};
+  const at=new Date().toISOString();
+  ROSTER.forEach(r=>{
+    if(!r.castId)return;
+    const mark=S.marks[r.id];
+    if(!mark)return;                         /* unmarked is not a fact about anyone */
+    const missed=mark==="missed";            /* late/excused/left count as attended, as they do above */
+    const path="attendance."+r.castId+"."+p.id;
+    undo.paths.push({path:path,value:window.Elaya.get(path,null)});
+    window.Elaya.update(path,a=>{
+      a=a||{done:r.done,of:r.of,missStreak:r.missStreak||0};
+      return {done:missed?a.done:a.done+1, of:a.of,
+              missStreak:missed?(a.missStreak||0)+1:0, lastAt:at, receipt:receipt};
+    });
+    window.Elaya.notify({
+      /* The guardian is texted about their own child. name is "Surname, Given",
+         so the given name has to be pulled out — "Bautista attended today's
+         session" is not a message you send a mother. */
+      to:r.guardian,
+      body:givenName(r.name)+(missed?" missed today’s session.":" attended today’s session."),
+      surface:"sessions", personId:r.castId
+    });
+  });
+  return undo;
+}
+function restoreStore(undo){
+  if(!undo||!window.Elaya)return;
+  undo.paths.forEach(x=>window.Elaya.set(x.path,x.value));
+  window.Elaya.set("notifications",undo.notifs);
+}
+
 /* ---- save ---- */
 async function saveAttendance(){
   const p=prog("pg1"),s=p.sessions.find(x=>x.n===9);
@@ -959,18 +1014,20 @@ async function saveAttendance(){
     hash:hash,state:S.synced?"synced":"saved",at:fTime(new Date(NOW.getTime()+2*6e4))});
   s.state="logged";s.present=presentCount();s.follow=missedCount();s.hash=hash;
   p.held=p.required-p.sessions.filter(x=>x.state!=="logged").length;
+  const storeUndo=mirrorToStore(p,shortHash(hash));
   renderConfirm();show("s3c");
   commitAfterUndo=()=>{S.committed=true;};
   toast("Naitala na · Attendance saved."+(S.offline?" Nakasave sa telepono.":""),"I-BALIK ↺",()=>{
     /* true local rollback inside the window */
     s.state="today";delete s.present;delete s.follow;delete s.hash;
     S.queue.shift();S.record=null;S.hash=null;
+    restoreStore(storeUndo);
     renderS3();show("s3");renderS1();
     toast("Ibinalik · nothing was saved. Your marks are exactly as you left them.","",null);
   });
   ROSTER.forEach(r=>{if(S.marks[r.id]==="missed"){
     api("/api/sms",{numbers:[r.gno.replace(/\s/g,"")],
-      message:"e-Laya: Hindi po nakadalo si "+r.name.split(",")[1].trim()+" sa sesyon ngayong "+fShort(s.at)
+      message:"e-Laya: Hindi po nakadalo si "+givenName(r.name)+" sa sesyon ngayong "+fShort(s.at)
       +". Makipag-ugnayan po sa LSWDO Batangas City. Salamat."});}});
   renderS1();
 }
@@ -1139,7 +1196,7 @@ $("#s3Close").onclick=function(){
 document.addEventListener("click",function(e){
   if(e.target.closest("#keep")){closeSheet();}
   if(e.target.closest("#draft")){S.draft={n:marked(),at:fTime(NOW)};closeSheet();show("s1");
-    toast("Draft saved on this phone — "+S.draft.n+" of 15 marked.","",null);}
+    toast("Draft saved on this phone — "+S.draft.n+" of "+ROSTER.length+" marked.","",null);}
   if(e.target.closest("#discard")){S.marks={};S.bulkMarked=false;S.draft=null;closeSheet();renderS3();show("s1");
     toast("Marks discarded. Nothing was recorded.","",null);}
 });

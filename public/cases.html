@@ -401,6 +401,9 @@ function mk(o){
     facility:"Batangas City District Jail — Male Dorm",detainedSince:D(3,3),offence:"",
     idle:14,milestone:null,milestoneDays:null,unrecorded:null,unrecordedLabel:"",
     hearing:null,starred:false,vcUnconfirmed:false,prepIncomplete:false,diversionFlag:false,
+    /* castId/progId: set only on a client who also appears on another surface.
+       missStreak is the seed this file already stated in prose. */
+    castId:null,progId:null,missStreak:0,
     history:[],programs:[],docs:[],notes:[],gcta:null,family:{name:"",rel:"",no:""}
   },o));
 }
@@ -452,7 +455,12 @@ mk({name:"Ocampo, Liza R.",age:29,docket:"Crim. Case 2024-10233",court:"MTC Br. 
            {d:new Date(2025,5,14),l:"Commitment order",p:"Source: BJMP intake record"}],
   docs:[{n:"Memorandum for the accused",p:"Counsel filing · 02 Jul 2026"}]});
 
-mk({name:"Bautista, Renz A.",age:16,cicl:true,docket:"Crim. Case 2025-00417",court:"MTC Br. 2",
+/* Renz was already duplicated by hand between sessions.html and cases.html —
+   missStreak:3 was typed there and "3 missed in a row" was typed here, and the
+   two could drift apart without anyone noticing. Same human, one record now:
+   castId points at the shared cast, progId at the /sessions roster he is on. */
+mk({name:"Bautista, Renz A.",age:16,cicl:true,castId:"renz",progId:"pg1",missStreak:3,
+  docket:"Crim. Case 2025-00417",court:"MTC Br. 2",
   courtLong:"Municipal Trial Court in Cities Branch 2, Batangas City",offence:"Theft (diversion)",
   status:"Released to parents",stage:"Diversion",facility:"Bahay Pag-asa, Batangas City (day programme)",
   detainedSince:null,idle:6,diversionFlag:true,prepIncomplete:true,
@@ -639,6 +647,37 @@ function matches(c){
   }
   return true;
 }
+/* ---- the shared attendance record ----
+   The LSWDO social worker logs this client's sessions in /sessions. Where that
+   record exists it IS the record; the figures below it were a hand-copy of the
+   same numbers and could drift. Guarded throughout: with the store absent or
+   silent, every seed here still renders exactly as before.
+
+   Read-only by construction. Elaya.emit has no re-entrancy guard and Elaya.set
+   emits synchronously, so a renderer that wrote back would recurse without
+   bound — nothing on this path writes, and the subscriber at the foot of this
+   file carries the same guarded-flag pattern /app uses. */
+function attFor(c){
+  const out={streak:c.missStreak||0,done:null,of:null,live:false};
+  if(window.Elaya&&c.castId&&c.progId){
+    const a=window.Elaya.get("attendance."+c.castId+"."+c.progId,null);
+    if(a&&typeof a.done==="number"&&typeof a.of==="number"){
+      if(typeof a.missStreak==="number")out.streak=a.missStreak;
+      out.done=a.done;out.of=a.of;out.live=true;
+    }
+  }
+  return out;
+}
+function programsFor(c){
+  if(!c.programs.length)return c.programs;
+  const a=attFor(c);
+  if(!a.live)return c.programs;
+  return [Object.assign({},c.programs[0],{
+    att:a.done+" of "+a.of+" sessions"+(a.streak?" · "+a.streak+" missed in a row":""),
+    flag:a.streak>=1
+  })].concat(c.programs.slice(1));
+}
+
 function chipsFor(c){
   const out=[];
   if(c.unrecorded)out.push(['amber',"Outcome not recorded · "+fDate(c.unrecorded)]);
@@ -648,7 +687,9 @@ function chipsFor(c){
     if(c.vcUnconfirmed)out.push(['amber',"VC link unconfirmed"]);
   }
   if(c.milestoneDays!=null)out.push(['amber',(c.gcta?c.gcta.tier.split(" · ")[0]:"Milestone")+" · "+c.milestoneDays+"d unacted"]);
-  if(c.diversionFlag)out.push(['amber',"Diversion: 3 missed"]);
+  if(c.diversionFlag){const a=attFor(c);
+    out.push(a.streak?['amber',"Diversion: "+a.streak+" missed"]
+                     :['blue',"Diversion: attendance back on track"]);}
   if(!out.length)out.push(['slate',"Last activity "+c.idle+"d ago"]);
   return out;
 }
@@ -818,10 +859,11 @@ function renderC2(){
       +'<button class="linkbtn">Open in Laya Calculator ↗</button>'
     :'<p style="font-size:14px;color:var(--muted)">No GCTA computation on file yet.</p><button class="linkbtn">Add a commitment order</button>');
 
-  h+=acc("programs","Programmes & attendance"+(c.programs.some(p=>p.flag)?" · 3 sessions missed":""),c.programs.some(p=>p.flag),
-    c.programs.length?c.programs.map(p=>'<div class="kv"><span class="k">'+esc(p.n)+'<br><span class="tiny">'+esc(p.prov)+"</span></span>"
+  const progs=programsFor(c),pflag=progs.some(p=>p.flag),pstreak=attFor(c).streak;
+  h+=acc("programs","Programmes & attendance"+(pflag?" · "+pstreak+" sessions missed":""),pflag,
+    progs.length?progs.map(p=>'<div class="kv"><span class="k">'+esc(p.n)+'<br><span class="tiny">'+esc(p.prov)+"</span></span>"
       +'<span class="v">'+esc(p.att)+"</span></div>").join("")
-      +(c.programs.some(p=>p.flag)?'<div class="note amber" style="margin-top:12px"><span class="g">⚠</span><span>The LSWDO raised a follow-up flag on 15 Jul. This is a support trigger, not a breach — the diversion contract is not yet at risk.</span></div>':"")
+      +(pflag?'<div class="note amber" style="margin-top:12px"><span class="g">⚠</span><span>The LSWDO raised a follow-up flag on 15 Jul. This is a support trigger, not a breach — the diversion contract is not yet at risk.</span></div>':"")
       +'<a class="linkbtn" href="sessions.html" style="display:inline-block;text-decoration:none">Open the programme roster ↗</a>'
     :'<p style="font-size:14px;color:var(--muted)">Not enrolled in any programme.</p>');
 
@@ -1207,6 +1249,29 @@ document.addEventListener("keydown",function(e){
     $("#c1Who").textContent="⚖ "+(sso.name||sso.full_name)+" · PAO Batangas City";
   setTimeout(()=>{S.loading=false;renderC1();},520);
 })();
+
+/* Repaint when the LSWDO logs a session in another tab.
+
+   Elaya.emit has no re-entrancy guard and Elaya.set emits synchronously, so a
+   subscriber that ever wrote back would recurse without bound. Nothing on this
+   path writes (attFor/programsFor only read), and the flag keeps it that way
+   even if a future renderer starts writing. Same shape as /app's renderLive. */
+let liveRendering=false;
+function renderLive(){
+  if(liveRendering)return;
+  liveRendering=true;
+  try{
+    renderC1();                                  /* the caseload chip is always in the DOM */
+    if(S.screen==="c2"&&S.sel)renderC2();
+  }catch(e){ /* a render fault must never break the store's other subscribers */ }
+  finally{ liveRendering=false; }
+}
+if(window.Elaya){
+  window.Elaya.on("change",function(e){
+    const path=e?String(e.path):"*";
+    if(path==="*"||path.indexOf("attendance")===0)renderLive();
+  });
+}
 </script>
 </body>
 </html>
