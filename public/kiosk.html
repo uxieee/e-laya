@@ -198,21 +198,22 @@ h1,h2,h3,h4,.khead-fil,#k1hero .h1,#doneTitle,.kmodal .mh,#sheet .sh1,.fullres .
    reader can reach separately. It is now a real sibling <button>, laid over the
    tile by this wrapper. Both stay reachable; the tile looks exactly as before. */
 .langwrap{position:relative;display:grid;min-width:0}
-/* 96px, not 68px. #stage is a fixed 1080x1920 terminal design scaled to fit the
-   window, so on a 390px-wide phone every control is drawn at 0.36x — a 68px
-   circle lands at 25px, under the 32px floor. The BOX is 96; the circle the eye
-   sees is still 68px on exactly the pixel it occupied before. It used to be
-   top:16/right:16 against the TILE, whose 2px border its offsets resolved
-   inside — 18px from the tile's outer edge. Against the border-less wrapper
-   that is (96-68)/2 = 14 of centring plus 4: 4 + 14 = 18. Only the box grew. */
-.spk{position:absolute;top:4px;right:4px;width:96px;height:96px;padding:0;border:none;
-  background:none;display:grid;place-items:center;color:var(--primary);z-index:2}
-.spk .dot{width:68px;height:68px;border-radius:50%;box-sizing:border-box;
-  background:var(--surface);border:var(--k-hair);display:grid;place-items:center;color:inherit}
+/* 68px, unchanged. It used to read top:16/right:16 against the TILE, whose 2px
+   border those offsets resolved inside, putting the circle 18px from the tile's
+   outer edge; the wrapper has no border, so 18px says the same thing.
+   This box is deliberately NOT enlarged for a phone viewport. #stage is a fixed
+   1080x1920 terminal design scaled to fit the window, so at 390px wide every
+   control is drawn at 0.36x and 68px measures 25px — but the kiosk never runs
+   at 390px, and a 96px box here would swallow a 28px band of the language tile,
+   turning a tap that picks a language into one that only reads it aloud.
+   a11y.spec.js asserts these controls at 1080x1920 instead, where they are. */
+.spk{position:absolute;top:18px;right:18px;width:68px;height:68px;border-radius:50%;
+  box-sizing:border-box;padding:0;background:var(--surface);border:var(--k-hair);
+  display:grid;place-items:center;color:var(--primary);z-index:2}
 .spk .kic{width:34px;height:34px}
-.ltile:active ~ .spk .dot,.ltile.picked ~ .spk .dot{background:rgba(255,255,255,.18);
+.ltile:active ~ .spk,.ltile.picked ~ .spk{background:rgba(255,255,255,.18);
   border-color:transparent;color:#fff}
-.spk.speaking .dot{background:var(--primary);border-color:var(--primary);color:#fff;
+.spk.speaking{background:var(--primary);border-color:var(--primary);color:#fff;
   animation:spkpulse 1.1s ease-in-out infinite}
 @keyframes spkpulse{0%,100%{box-shadow:0 0 0 0 rgba(0,64,231,.45)}50%{box-shadow:0 0 0 12px rgba(0,64,231,0)}}
 #k1foot{margin-top:auto;padding-top:32px;display:flex;gap:16px;align-items:flex-start;color:var(--k-sec);font-size:var(--k-meta);line-height:1.5}
@@ -546,17 +547,14 @@ h1,h2,h3,h4,.khead-fil,#k1hero .h1,#doneTitle,.kmodal .mh,#sheet .sh1,.fullres .
 #ktoast .en{color:rgba(255,255,255,.7);font-size:var(--k-desc);margin-left:14px}
 
 /* demo corner control */
-/* Same story as .spk: the stage is drawn at 0.36x on a phone, so a 40px dot
-   lands at 14px. The button's BOX is now 96x96 pinned to the stage corner and
-   the dot it draws is still exactly 40px at 14px from each edge — the visible
-   pixels are unchanged. Growing the box up-and-left is the only direction
-   available; it reaches 15px into #krail's right-hand button, which is that
-   button's outer padding (its label ends 26px short of its own edge), so no
-   label and no icon is covered. */
-#demodot{position:absolute;right:0;bottom:0;width:96px;height:96px;padding:0 14px 14px 0;
-  background:none;border:none;cursor:pointer;z-index:90;opacity:.12;
-  display:grid;place-items:end;box-sizing:border-box}
-#demodot::before{content:"";width:40px;height:40px;border-radius:50%;background:var(--text)}
+/* 40px, unchanged, and deliberately so. Enlarging its box to clear 32px at a
+   390px viewport would only push it left into #krail, whose row is
+   centre-justified — so #kend ("Tapos na", the end-session control on a shared
+   terminal) sits at a different x in each of the nine languages, and a mistap
+   would fire demoCycle() instead of ending the session. The kiosk runs at
+   1080x1920, where this dot is 40px; a11y.spec.js asserts it there. */
+#demodot{position:absolute;right:14px;bottom:14px;width:40px;height:40px;border-radius:50%;
+  background:var(--text);opacity:.12;border:none;cursor:pointer;z-index:90}
 #demodot:hover{opacity:.3}
 
 /* masked (Itago) */
@@ -1307,11 +1305,14 @@ addEventListener('resize', fit);
    into unhandled rejections, which is exactly the console noise we are trying
    not to have.
 
-   The browser still records `net::ERR_ABORTED` for the dropped request. That is
-   a network-layer entry, not a console message: it surfaces on Playwright's
-   page.on('requestfailed') and never on page.on('console') or 'pageerror'
-   (verified). regression.spec.js's zero-console-errors assertion is unaffected,
-   and a11y.spec.js pins that with a route that hangs past every budget. */
+   The browser records `net::ERR_ABORTED` for the dropped request, but nothing
+   reaches the console for it. Note the reason: it is NOT that network-sourced
+   messages bypass the console channel — Blink's "Failed to load resource" entries
+   do reach page.on('console'), which forwards CDP Log.entryAdded. It is that
+   Blink suppresses the log entry for a load the page itself cancelled, so no
+   entry is ever emitted. Measured: page.on('requestfailed') fires,
+   page.on('console') and page.on('pageerror') stay empty. a11y.spec.js pins
+   that with a route that hangs past every budget. */
 async function tryApi(path, opts, ms){
   try{
     const c = new AbortController();
@@ -1646,7 +1647,7 @@ function renderK1(){
         '<span class="ln">'+l.n+'</span><span class="ls">'+l.s+'</span>'+
       '</button>'+
       '<button class="spk tap" type="button" aria-label="Basahin: '+l.n+'" '+
-        'onclick="speak(\''+l.n+'\',\''+l.n+'\',this)"><span class="dot"><span class="kic">'+SPK+'</span></span></button>'+
+        'onclick="speak(\''+l.n+'\',\''+l.n+'\',this)"><span class="kic">'+SPK+'</span></button>'+
     '</div>';
   }).join('');
 }
