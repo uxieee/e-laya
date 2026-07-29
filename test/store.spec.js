@@ -105,3 +105,52 @@ test('ready runs the callback', async ({ page }) => {
   const v = await page.evaluate(() => new Promise(res => window.Elaya.ready(() => res('ran'))));
   expect(v).toBe('ran');
 });
+
+test('a throwing update mutator does not throw into the caller', async ({ page }) => {
+  await withStore(page);
+  const r = await page.evaluate(() => {
+    window.Elaya.set('attendance.jomar.pg1', { done: 9, of: 24 });
+    let threw = false;
+    try {
+      window.Elaya.update('attendance.jomar.pg1', () => { throw new Error('boom'); });
+    } catch (e) {
+      threw = true;
+    }
+    return {
+      threw,
+      degraded: window.Elaya.degraded,
+      value: window.Elaya.get('attendance.jomar.pg1.done')
+    };
+  });
+  expect(r.threw).toBe(false);
+  expect(r.degraded).toBe(true);
+  // the failed mutation must not have corrupted or cleared the prior value
+  expect(r.value).toBe(9);
+});
+
+test('update still applies a non-throwing mutator after a prior throw', async ({ page }) => {
+  await withStore(page);
+  const v = await page.evaluate(() => {
+    window.Elaya.set('attendance.jomar.pg1', { done: 9, of: 24 });
+    try {
+      window.Elaya.update('attendance.jomar.pg1', () => { throw new Error('boom'); });
+    } catch (e) { /* swallow for the test */ }
+    window.Elaya.update('attendance.jomar.pg1', a => ({ ...a, done: a.done + 1 }));
+    return window.Elaya.get('attendance.jomar.pg1.done');
+  });
+  expect(v).toBe(10);
+});
+
+test('set rejects a __proto__ path segment without polluting Object.prototype', async ({ page }) => {
+  await withStore(page);
+  const r = await page.evaluate(() => {
+    window.Elaya.set('__proto__.polluted', 1);
+    window.Elaya.set('welfare.__proto__.polluted', 1);
+    return {
+      direct: ({}).polluted,
+      viaGetFallback: window.Elaya.get('welfare.nobody.polluted', 'MISSING')
+    };
+  });
+  expect(r.direct).toBeUndefined();
+  expect(r.viaGetFallback).toBe('MISSING');
+});

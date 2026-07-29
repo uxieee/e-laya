@@ -90,11 +90,19 @@
     return String(path).split('.').filter(Boolean);
   }
 
+  // Segments that would let a dot-path reach onto Object.prototype (or a
+  // constructor) and corrupt every plain object on the page. Rejected
+  // outright: get/set treat such a path as unreachable, never as an error.
+  function isUnsafe(key) {
+    return key === '__proto__' || key === 'constructor' || key === 'prototype';
+  }
+
   api.get = function (path, fallback) {
     try {
       var node = state;
       var parts = walk(path);
       for (var i = 0; i < parts.length; i++) {
+        if (isUnsafe(parts[i])) return fallback;
         if (node == null || typeof node !== 'object') return fallback;
         node = node[parts[i]];
       }
@@ -109,8 +117,10 @@
     try {
       var parts = walk(path);
       var last = parts.pop();
+      if (isUnsafe(last)) return value;
       var node = state;
       for (var i = 0; i < parts.length; i++) {
+        if (isUnsafe(parts[i])) return value;
         if (typeof node[parts[i]] !== 'object' || node[parts[i]] === null) node[parts[i]] = {};
         node = node[parts[i]];
       }
@@ -125,7 +135,16 @@
   };
 
   api.update = function (path, fn) {
-    return api.set(path, fn(api.get(path)));
+    // fn is caller-supplied and may throw; api.set's own try/catch never
+    // runs in that case because fn(...) is evaluated before set is called.
+    // Guard here so a throwing mutator degrades instead of propagating.
+    try {
+      var next = fn(api.get(path));
+      return api.set(path, next);
+    } catch (e) {
+      warn(e);
+      return api.get(path);
+    }
   };
 
   api.reset = function () {
