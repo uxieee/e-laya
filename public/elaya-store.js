@@ -1,0 +1,157 @@
+/* elaya-store.js — canonical cross-surface state for e-Laya.
+ *
+ * Classic script, not a module: surfaces use inline non-module <script> and
+ * must keep working from file://. Load this BEFORE a surface's inline script.
+ *
+ * Contract: this is an enhancement layer. Every call is total — it logs once
+ * and returns the caller's fallback rather than throwing into a surface. A
+ * surface with the store absent must still render from its own seed data.
+ */
+(function () {
+  'use strict';
+
+  var KEY = 'elaya.v1';
+  var VERSION = 1;
+
+  var state = null;
+  var readyQueue = [];
+  var complained = false;
+
+  var api = {
+    persistent: true,
+    degraded: false
+  };
+
+  function warn(err) {
+    if (complained) return;
+    complained = true;
+    api.degraded = true;
+    if (window.console && console.warn) console.warn('[elaya-store] degraded:', err);
+  }
+
+  /* ---------- storage, defensively ---------- */
+
+  function storage() {
+    try {
+      var ls = window.localStorage;
+      ls.setItem(KEY + '.probe', '1');
+      ls.removeItem(KEY + '.probe');
+      return ls;
+    } catch (e) {
+      api.persistent = false;
+      return null;
+    }
+  }
+
+  function seed() {
+    return {
+      version: VERSION,
+      seededAt: '2026-07-29T00:00:00+08:00',
+      people: (window.ELAYA_CAST && window.ELAYA_CAST.people) || {},
+      welfare: {},
+      attendance: {},
+      determinations: {},
+      notifications: [],
+      updatedAt: null
+    };
+  }
+
+  function load() {
+    var ls = storage();
+    if (!ls) return seed();
+    try {
+      var raw = ls.getItem(KEY);
+      if (!raw) return seed();
+      var parsed = JSON.parse(raw);
+      if (!parsed || parsed.version !== VERSION) return seed();
+      // Re-attach the cast: it lives in code, not in storage, so edits to
+      // elaya-cast.js take effect without anyone clearing their browser.
+      parsed.people = (window.ELAYA_CAST && window.ELAYA_CAST.people) || parsed.people || {};
+      return parsed;
+    } catch (e) {
+      return seed();   // corrupt blob: discard, do not surface an error
+    }
+  }
+
+  function save() {
+    var ls = storage();
+    if (!ls) return;
+    try {
+      state.updatedAt = new Date().toISOString();
+      ls.setItem(KEY, JSON.stringify(state));
+    } catch (e) {
+      warn(e);         // quota or serialisation failure: keep running in memory
+    }
+  }
+
+  /* ---------- dot-path access ---------- */
+
+  function walk(path) {
+    return String(path).split('.').filter(Boolean);
+  }
+
+  api.get = function (path, fallback) {
+    try {
+      var node = state;
+      var parts = walk(path);
+      for (var i = 0; i < parts.length; i++) {
+        if (node == null || typeof node !== 'object') return fallback;
+        node = node[parts[i]];
+      }
+      return node === undefined ? fallback : node;
+    } catch (e) {
+      warn(e);
+      return fallback;
+    }
+  };
+
+  api.set = function (path, value) {
+    try {
+      var parts = walk(path);
+      var last = parts.pop();
+      var node = state;
+      for (var i = 0; i < parts.length; i++) {
+        if (typeof node[parts[i]] !== 'object' || node[parts[i]] === null) node[parts[i]] = {};
+        node = node[parts[i]];
+      }
+      node[last] = value;
+      save();
+      api.emit('change', { path: path, value: value });
+      return value;
+    } catch (e) {
+      warn(e);
+      return value;
+    }
+  };
+
+  api.update = function (path, fn) {
+    return api.set(path, fn(api.get(path)));
+  };
+
+  api.reset = function () {
+    try {
+      var ls = storage();
+      if (ls) ls.removeItem(KEY);
+    } catch (e) { /* ignore */ }
+    state = seed();
+    save();
+    api.emit('change', { path: '*', value: null });
+  };
+
+  /* ---------- events (expanded in Task 3) ---------- */
+
+  api.emit = function () {};
+
+  api.ready = function (fn) {
+    if (state) { try { fn(api); } catch (e) { warn(e); } }
+    else readyQueue.push(fn);
+  };
+
+  /* ---------- boot ---------- */
+
+  state = load();
+  save();
+  while (readyQueue.length) api.ready(readyQueue.shift());
+
+  window.Elaya = api;
+})();
