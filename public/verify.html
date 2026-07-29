@@ -2123,6 +2123,66 @@ function paintV4(){
   $('recSummary').innerHTML=rows.map(function(r){return '<div class="kv"><span class="k">'+esc(r[0])+'</span><span class="v">'+esc(r[1])+'</span></div>';}).join('');
   paintRecords(); paintSMS(); checkNum();
 }
+/* ---------------------------------------------- Chain C · publish the record
+   Sending the three statutory notifications is the moment this session stops
+   being a screen and becomes a record: /cases can open a file for counsel and
+   /app can show the guardian something. Everything below is an enhancement —
+   with elaya-store.js absent, sendAll() behaves exactly as it always did.
+
+   Identity of the record is the SESSION REFERENCE, not the clock. Re-sending
+   the same session overwrites its own person instead of minting another one,
+   so a reviewer running the flow five times gets one person, not five.
+   restartFlow() draws a fresh reference, which is a genuinely new person. */
+function determinationOf(){
+  const p=S.person, c=S.caseId, inc=S.incident;
+  const adult=(c==='B'||c==='C1');
+  const named=!!(p&&p.first&&p.first!=='—');
+  const dated=!!(p&&p.dob)&&['D','E','F'].indexOf(c)<0;
+  return {
+    category: adult?'PDL':'CICL',
+    age: dated?ymd(D(p.dob),inc).y:null,
+    full: named?fullName(p):'Unidentified person · '+S.ref,
+    /* cases.html files people by surname; /app shows the short form. */
+    sortName: named?(p.last+', '+[p.first,p.middle].filter(Boolean).join(' ')):'Unidentified · '+S.ref,
+    name: named?(p.first+' '+p.last.charAt(0)+'.'):'Unidentified · '+S.ref,
+    initials: named?(p.first.charAt(0)+p.last.charAt(0)).toUpperCase():'??',
+    barangay: fact('brgy')||'',
+    guardian: (p&&p.guardian)?p.guardian:'',
+    guardianPhone: ($('gnum')&&$('gnum').value)||''
+  };
+}
+function publishDetermination(){
+  if(!window.Elaya) return;
+  try{
+    const d=determinationOf(), r=ROLES[S.role], child=(d.category==='CICL');
+    const pid='intake-'+String(S.ref).replace(/[^A-Za-z0-9-]/g,'');
+    window.Elaya.set('people.'+pid,{
+      id:pid, full:d.full, name:d.name, sortName:d.sortName, initials:d.initials,
+      age:d.age,
+      facility: child?'Bahay Pag-asa, Batangas City':'Batangas City District Jail',
+      agency:   child?'LSWDO':'BJMP',
+      barangay:d.barangay, guardian:d.guardian, guardianPhone:d.guardianPhone,
+      ref:S.ref
+    });
+    window.Elaya.set('determinations.'+pid,{
+      category:d.category, age:d.age, at:new Date().toISOString(),
+      /* stationFull already names the city — see smsText for what happens when
+         it is concatenated with the city a second time. */
+      by:r.stationFull, ref:S.ref
+    });
+    if(d.guardian) window.Elaya.notify({
+      to:d.guardian,
+      body:'e-Laya: '+d.name+(child
+        ? ' has been assessed as a child in conflict with the law under RA 9344. A social worker has been assigned and PAO counsel is free.'
+        : ' has been recorded at intake, 18 or over.')+' Recorded by '+r.stationFull+', reference '+S.ref+'.',
+      surface:'verify', personId:pid
+    });
+  }catch(e){
+    /* Publishing must never cost the officer the notification they just sent. */
+    if(window.console&&console.warn) console.warn('[e-Laya] determination not published:',e);
+  }
+}
+
 async function sendAll(){
   const btn=$('sendBtn'); btn.disabled=true; btn.textContent='Sending…';
   ['c1','c2','c3'].forEach(function(i){$(i).className='chip';$(i).textContent='Sending…';});
@@ -2137,6 +2197,7 @@ async function sendAll(){
       '<span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">'+esc(r[1])+'</span></span>'+
       '<span class="chip ok">Sent '+t+'</span></div>';}).join('');
   $('doneRef').textContent=S.ref+' · '+longDate(new Date())+', '+t;
+  publishDetermination();
   makeReceipt(); tickCountdown(); go('s-done');
   if(!res) console.info('[e-Laya] eMessage unavailable — chips reflect queued-for-send. Never "Delivered".');
 }

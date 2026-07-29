@@ -615,6 +615,48 @@ function triage(c){
   else band="quiet";
   return {score:Math.round(base+mods),band:band,why:why,dominant:dominant};
 }
+/* ---- people created by a determination in /verify ----
+   An age determination is the moment counsel's client exists. Until a docket
+   number is issued there is nothing else to file this person under, so the
+   case opens with the reference the verifying officer wrote.
+
+   The triage score here is a SEED, not a computation over live store data:
+   these arrive with no hearing, no unrecorded outcome and no attendance, and
+   what makes them urgent is precisely that a determination was recorded and
+   no case file was opened against it. That is a milestone, so it is seeded as
+   one — a fixed 800, identical for every such case, independent of anything
+   /sessions or /custody later writes. No diversion flag is set: the flag is
+   the LSWDO's judgement about attendance and nobody has made it yet.
+
+   Read-only, and it runs once at load — CASES is this file's own array, so
+   nothing here writes to the store and the subscriber at the foot of the file
+   cannot recurse through it. Guarded: with the store absent this is skipped
+   entirely and the seed above renders exactly as before. */
+if(window.Elaya){
+  try{
+    const dets=window.Elaya.get("determinations",{})||{};
+    Object.keys(dets).forEach(pid=>{
+      const p=window.Elaya.get("people."+pid,null), d=dets[pid];
+      if(!p||!d)return;
+      if(CASES.some(c=>c.castId===pid))return;
+      const child=d.category==="CICL";
+      mk({name:p.sortName||p.full,age:d.age,cicl:child,castId:pid,
+        docket:"No docket yet · "+(d.ref||pid),
+        court:child?"LSWDO Batangas City":"BJMP Batangas City",
+        courtLong:child?"City Social Welfare and Development Office, Batangas City"
+                       :"Batangas City District Jail — Records",
+        offence:"Not yet charged",status:"Intake",stage:"Age determination recorded",
+        facility:p.facility||"Batangas City District Jail",detainedSince:null,idle:0,
+        milestone:"Age determination recorded — no case file opened",milestoneDays:0,
+        family:{name:p.guardian||"",rel:"guardian",no:p.guardianPhone||""},
+        history:[{d:new Date(d.at||Date.now()),
+          l:(child?"Determined a child in conflict with the law":"Determined 18 or over")
+            +" — "+(d.age!=null?d.age+" years old":"age not established"),
+          p:"Source: "+(d.by||"verifying officer")+" · reference "+(d.ref||pid),open:true}]});
+    });
+  }catch(e){ /* a malformed record must never cost counsel the caseload */ }
+}
+
 CASES.forEach(c=>{const t=triage(c);c.t=t;});
 
 const BANDS=[
@@ -713,7 +755,7 @@ function rowHTML(c){
   const check=S.bulk?'<span class="pcheck" data-on="'+(S.picked.has(c.id)?1:0)+'">'+(S.picked.has(c.id)?"✓":"")+"</span>":"";
   return '<button class="row pro" type="button" data-case="'+c.id+'" aria-current="'+(S.sel===c.id)+'">'
     +'<span class="rail '+railOf(c)+'"></span>'+check
-    +'<span class="pbody"><span class="pt">'+esc(c.name)+(c.cicl?' <span class="age">· CICL '+c.age+"</span>":"")+"</span>"
+    +'<span class="pbody"><span class="pt">'+esc(c.name)+(c.cicl?' <span class="age">· CICL'+(c.age!=null?" "+c.age:"")+"</span>":"")+"</span>"
     +'<span class="ps">'+esc(c.docket)+" · "+esc(c.court)+(c.status==="Detained"&&c.detainedSince?" · detained "+since(c.detainedSince).split(" ")[0]:"")+"</span>"
     +'<span class="pm">'+cs+extra+"</span></span>"
     +'<span class="pchev">›</span></button>';
@@ -807,7 +849,7 @@ function renderC2(){
     +" · "+esc(c.court)+", Batangas City</span>"
     +'<button class="copy" data-copy="'+esc(c.docket)+'" aria-label="Copy docket number">⧉</button></div>'
     +'<div class="drow"><span class="schip">'+esc(c.status)+'</span><span class="schip">'+esc(c.stage)+"</span>"
-    +(c.cicl?'<span class="schip">CICL · '+c.age+" y/o</span>":"")
+    +(c.cicl?'<span class="schip">CICL'+(c.age!=null?" · "+c.age+" y/o":" · edad hindi pa naitatakda")+"</span>":"")
     +"<span>"+esc(c.facility)+(c.detainedSince?" · "+since(c.detainedSince)+" in custody":"")+"</span></div>"
     +'</div><hr class="hr dh">';
 
@@ -835,9 +877,13 @@ function renderC2(){
   }else if(c.milestoneDays!=null){
     h+='<div class="strip"><div class="stitle">⚠ Milestone reached · Naabot na milestone</div>'
       +'<div class="sdate">'+esc(c.milestone)+"</div>"
-      +'<div class="smeta">Crossed '+c.milestoneDays+" days ago · no action recorded since.</div>"
-      +'<p class="sprose">This ranks higher every day it sits. '+c.milestoneDays
-      +' days &times; 2 points has moved it above tomorrow’s hearings.</p>'
+      +'<div class="smeta">'+(c.milestoneDays?"Crossed "+c.milestoneDays+" days ago · no action recorded since."
+                                              :"Crossed today · no action recorded yet.")+"</div>"
+      /* A milestone crossed today has not out-ranked anything yet — saying it
+         had would be a false claim about this file. */
+      +(c.milestoneDays?'<p class="sprose">This ranks higher every day it sits. '+c.milestoneDays
+        +' days &times; 2 points has moved it above tomorrow’s hearings.</p>'
+        :'<p class="sprose">This ranks higher every day it sits unactioned — 2 points a day on top of the 800 the milestone itself carries.</p>')
       +'<div class="btnrow"><button class="btn" id="motion">Draft the motion</button>'
       +'<button class="btn ghost" id="sms">Notify family (SMS)</button></div></div>';
   }else{

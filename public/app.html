@@ -590,6 +590,59 @@ const PEOPLE = [
   }
 ];
 
+/* ---- people a /verify determination created ----
+   /app is a family app: this list is "ang mga taong pinahintulutan kang
+   makita", and the product's own rule is that a relationship is confirmed
+   before anyone's welfare is shown. So a determination at an LSWDO desk does
+   NOT entitle this reader to a stranger.
+
+   Two things keep that honest. First, scope: a store person appears here only
+   if the determination actually named a guardian — that guardian is the person
+   who was notified, and they are who this card is for. A person nobody claimed
+   stays out of the family app entirely. Second, copy: the card says
+   "Naitala sa intake · hinihintay ang kumpirmasyon" and carries no welfare
+   status, because none has been confirmed. It is a pending link on its face,
+   not a granted one.
+
+   Read-only. Guarded: with the store absent this returns PEOPLE untouched. */
+function linkedPeople(){
+  if(!window.Elaya) return PEOPLE;
+  let list = PEOPLE;
+  try{
+    const stored = window.Elaya.get('people', {}) || {};
+    const dets   = window.Elaya.get('determinations', {}) || {};
+    const extra = Object.keys(dets).filter(id =>
+      stored[id] && stored[id].guardian && !PEOPLE.some(p => p.id === id));
+    if(!extra.length) return PEOPLE;
+    list = PEOPLE.concat(extra.map(id => {
+      const s = stored[id], d = dets[id], child = d.category === 'CICL';
+      return {
+        id:s.id || id, name:s.name || s.full, full:s.full || s.name || 'Walang pangalan',
+        initials:s.initials || '??', pending:true,
+        relation:'Naitala sa intake · hinihintay ang kumpirmasyon',
+        ageLine:(s.age!=null) ? s.age+' taong gulang' : null,
+        facility:s.facility || (child?'Bahay Pag-asa, Batangas City':'Batangas City District Jail'),
+        agency:s.agency || (child?'LSWDO':'BJMP'),
+        officer:'Duty officer',
+        hotline:'(043) 702-8988', hotlineTel:'+63437028988',
+        medical:null, medicalTel:null,
+        visiting:['Sabado, 9:00 AM – 12:00 NN','Saturday, 9:00 AM – 12:00 NN'],
+        ref:s.ref || d.ref || id,
+        /* No welfare has been confirmed by anybody, and the card must say so
+           rather than invent a status. */
+        welfare:{key:'none', ageHours:0, at:'', day:''},
+        caseState:{fil:child?'Naitala bilang batang nasa hidwaan sa batas. Wala pang kaso sa korte.'
+                            :'Naitala sa intake. Wala pang kaso sa korte.',
+                   eng:child?'Recorded as a child in conflict with the law. No court case yet.'
+                            :'Recorded at intake. No court case yet.',
+                   src:d.by || 'LSWDO Batangas City', sync:'kahapon'},
+        hearing:null, gcta:null, programme:null
+      };
+    }));
+  }catch(e){ return PEOPLE; }
+  return list;
+}
+
 const PROGRAMS = [
   {id:'div-b', name:'Diversion Program B', provider:'LSWDO Batangas City', kind:'gov', ini:'DB',
    sched:'Tuwing Lunes at Huwebes, 9:00 AM', sessions:12, brgy:'Brgy. Alangilan Hall', km:'2.1',
@@ -746,6 +799,9 @@ function welfareFor(p){
 /* The freshness ladder, §5.6 — three different kinds of "old", never conflated. */
 function wfAuto(p){
   const w = welfareFor(p), h = w.ageHours, base = {key:w.key, at:w.at, stale:false, aging:null, offline:false, mode:'card'};
+  /* "Wala pang update" has no time to report, and a timestamp of "" would read
+     as "Na-update ngayong araw, " — a status without a time is a rumour. */
+  if(w.key === 'none' || !w.at) return {...base, ts:null};
   if(h < 24)  return {...base, ts:{fil:'Na-update ngayong araw, '+w.at, eng:'Updated today, '+w.at}};
   if(h < 48)  return {...base, ts:{fil:'Na-update kahapon, '+w.at, eng:'Updated yesterday, '+w.at}};
   if(h < 120) return {...base, ts:{fil:'Na-update noong '+w.day+', '+w.at, eng:'Updated '+w.day+', '+w.at},
@@ -932,12 +988,17 @@ function renderList(){
     b.innerHTML = h; return;
   }
 
-  PEOPLE.forEach(p=>{
+  linkedPeople().forEach(p=>{
     const wc = welfareChip(p);
     const next = p.programme && p.programme.next ? p.programme.next[0] : null;
+    /* A person can have neither a hearing nor a programme — someone recorded
+       at intake has nothing scheduled yet. Reaching for p.programme.name here
+       threw, and renderLive's catch would have hidden a blank A-3. */
     const dated = p.hearing
       ? {i:'gavel', t:'Hearing · '+p.hearing.date+', '+p.hearing.time+' · '+p.hearing.court}
-      : {i:'calendar', t:'Session · '+next+' · '+p.programme.name};
+      : (next && p.programme)
+      ? {i:'calendar', t:'Session · '+next+' · '+p.programme.name}
+      : {i:'clock', t:'Wala pang nakatakda · nothing scheduled yet'};
     h += '<button class="card" data-person="'+p.id+'" style="display:block;width:100%;text-align:left;font-family:var(--font);cursor:pointer;min-height:152px" aria-label="Buksan ang detalye ni '+esc(p.full)+'">'
       + '<div style="display:flex;gap:12px;align-items:center">'
       + '<span class="av">'+esc(p.initials)+'</span>'
@@ -979,7 +1040,7 @@ function renderListEmpty(){
 /* ==========================================================================
    A-4 · Person detail — the screen
    ========================================================================== */
-function person(){ return PEOPLE.find(p=>p.id===S.personId); }
+function person(){ return linkedPeople().find(p=>p.id===S.personId); }
 
 function renderPerson(){
   const p = person();
@@ -1080,7 +1141,8 @@ function caseTab(p,first){
    is what keeps the change subscriber below from recursing. */
 function attendanceFor(p){
   const pr = p.programme;
-  if(window.Elaya && pr && pr.progId){
+  if(!pr) return {attended:0, total:0, missed:0, receipt:'', receiptFull:'', live:false};
+  if(window.Elaya && pr.progId){
     const a = window.Elaya.get('attendance.'+p.id+'.'+pr.progId, null);
     if(a && typeof a.done === 'number' && typeof a.of === 'number'){
       return {attended:a.done, total:a.of,
@@ -1105,6 +1167,17 @@ function attendanceFor(p){
 }
 
 function progTab(p,first){
+  /* No programme yet — an intake record has none. The dots, the attendance
+     line and the receipt all read off p.programme, so there is nothing to
+     render here but the honest empty state and the way out of it. */
+  if(!p.programme) return '<div class="card">'
+    + bi('Wala pa siyang programa.','No programme yet.','h2')
+    + '<p class="meta" style="margin-top:6px">Ang LSWDO ang magpapasya kung anong programa ang babagay sa kanya. Ipapakita namin ito rito kapag naitala na.'
+    + '<br><span class="meta dim">The LSWDO decides which programme fits. It will appear here once it is recorded.</span></p></div>'
+    + '<button class="row" data-act="programs" style="min-height:64px">'
+    + '<span class="well" style="width:40px;height:40px">'+ico('search')+'</span>'
+    + '<span class="grow"><span class="t">Maghanap ng programa</span><span class="s">Find a programme near you</span></span>'
+    + '<span class="ic chev" style="width:20px;height:20px;color:var(--primary)" aria-hidden="true"><svg viewBox="0 0 24 24">'+ICONS.chev+'</svg></span></button>';
   const pr = Object.assign({}, p.programme, attendanceFor(p));
   let dots = '';
   for(let i=0;i<pr.total;i++){
@@ -1190,7 +1263,7 @@ function renderPrograms(){
 
 function renderProgDetail(){
   const p = PROGRAMS.find(x=>x.id===S.enrolProgram) || PROGRAMS[0];
-  const who = PEOPLE.find(x=>x.id===S.enrolFor);
+  const who = linkedPeople().find(x=>x.id===S.enrolFor);
   $('t-progdetail').textContent = p.name;
   $('progdetailBody').innerHTML =
       '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px">'
@@ -1229,12 +1302,15 @@ function allNotifs(){
     /* An attendance notification is not a welfare notification and must not
        be labelled as one — /sessions writes here too, as of Chain B. */
     const sess = n.surface === 'sessions';
+    /* Nor is an age determination a welfare update — /verify writes here too,
+       as of Chain C, and that abiso is the first thing a guardian ever hears. */
+    const det  = n.surface === 'verify';
     return {id:n.id, day:'NGAYONG ARAW', unread:!liveRead[n.id], live:true, ico:'mail',
       time:hr+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap,
-      fil: sess ? 'Bagong update sa programa' : 'Bagong update sa kalagayan',
-      eng: sess ? 'New programme update' : 'New welfare update',
+      fil: det ? 'Naitala sa intake' : sess ? 'Bagong update sa programa' : 'Bagong update sa kalagayan',
+      eng: det ? 'Recorded at intake' : sess ? 'New programme update' : 'New welfare update',
       body:n.body, src:'Galing sa: '+(n.surface==='custody'?'BJMP · Batangas City District Jail'
-        : sess ? 'LSWDO Batangas City' : n.surface),
+        : sess ? 'LSWDO Batangas City' : det ? 'LSWDO Batangas City · verification desk' : n.surface),
       sms:'Ipinadala rin kay '+n.to+', '+PROFILE.mobileMasked};
   });
   return mapped.concat(NOTIFS);
@@ -1452,7 +1528,7 @@ async function psgcStep(){
 /* ---- enrolment ---- */
 function sheetEnrol(){
   const p = PROGRAMS.find(x=>x.id===S.enrolProgram);
-  const who = PEOPLE.find(x=>x.id===S.enrolFor).full.split(' ')[0];
+  const who = linkedPeople().find(x=>x.id===S.enrolFor).full.split(' ')[0];
   S.agree = false;
   openSheet('<div class="bi h2" style="margin-bottom:14px"><span class="b-fil">Bago ka mag-enroll</span><span class="b-eng">Before you enrol</span></div>'
     + '<div class="ticklist">'+ico('check')+'<span>Kailangan ng valid ID ni '+esc(who)+' sa unang session.</span></div>'
@@ -1467,7 +1543,7 @@ function sheetEnrol(){
 
 async function doEnrol(){
   const p = PROGRAMS.find(x=>x.id===S.enrolProgram);
-  const who = PEOPLE.find(x=>x.id===S.enrolFor).full.split(' ')[0];
+  const who = linkedPeople().find(x=>x.id===S.enrolFor).full.split(' ')[0];
   closeSheet();
   /* fire-and-forget; only ever to a number a live SSO profile gave us */
   if(PROFILE.mobile){
@@ -1769,7 +1845,11 @@ if(window.Elaya){
     /* '*' is a reset or a cross-tab re-hydrate; otherwise only the paths this
        surface displays are worth a repaint. */
     const path = e ? String(e.path) : '*';
+    /* people/determinations: a /verify determination in another tab adds a
+       pending linked person, and A-3 reads linkedPeople() on every paint. Both
+       are read-only reads, so this stays inside the no-write rule above. */
     if(path==='*' || path.indexOf('welfare')===0 || path.indexOf('attendance')===0
+       || path.indexOf('people')===0 || path.indexOf('determinations')===0
        || path==='notifications') renderLive();
   });
 }

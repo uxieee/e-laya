@@ -56,6 +56,15 @@
     };
   }
 
+  // Later sources win, key by key. Own enumerable keys only, so nothing
+  // reachable through a prototype can be folded in here either.
+  function merge(a, b) {
+    var out = {}, k;
+    for (k in (a || {})) if (Object.prototype.hasOwnProperty.call(a, k) && !isUnsafe(k)) out[k] = a[k];
+    for (k in (b || {})) if (Object.prototype.hasOwnProperty.call(b, k) && !isUnsafe(k)) out[k] = b[k];
+    return out;
+  }
+
   function load() {
     var ls = storage();
     if (!ls) return seed();
@@ -66,7 +75,13 @@
       if (!parsed || parsed.version !== VERSION) return seed();
       // Re-attach the cast: it lives in code, not in storage, so edits to
       // elaya-cast.js take effect without anyone clearing their browser.
-      parsed.people = (window.ELAYA_CAST && window.ELAYA_CAST.people) || parsed.people || {};
+      //
+      // MERGE, do not replace. A /verify determination writes a person that
+      // exists nowhere in code (that is the whole point of it — an unnamed
+      // person entering the record), and a straight replacement erased every
+      // such person on the next page load. The cast still wins on its own
+      // ids, so the original intent holds.
+      parsed.people = merge(parsed.people, (window.ELAYA_CAST && window.ELAYA_CAST.people) || {});
       return parsed;
     } catch (e) {
       return seed();   // corrupt blob: discard, do not surface an error
