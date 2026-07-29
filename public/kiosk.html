@@ -193,11 +193,26 @@ h1,h2,h3,h4,.khead-fil,#k1hero .h1,#doneTitle,.kmodal .mh,#sheet .sh1,.fullres .
 .ltile:active,.ltile.picked{background:var(--primary);border-color:var(--primary)}
 .ltile:active .ln,.ltile.picked .ln{color:#fff}
 .ltile:active .ls,.ltile.picked .ls{color:rgba(255,255,255,.82)}
-.ltile .spk{position:absolute;top:16px;right:16px;width:68px;height:68px;border-radius:50%;
-  background:var(--surface);border:var(--k-hair);display:grid;place-items:center;color:var(--primary)}
-.ltile .spk .kic{width:34px;height:34px}
-.ltile:active .spk,.ltile.picked .spk{background:rgba(255,255,255,.18);border-color:transparent;color:#fff}
-.ltile .spk.speaking{background:var(--primary);border-color:var(--primary);color:#fff;
+/* The read-aloud control used to be a <span role="button"> INSIDE the language
+   <button>: a control nested in a control, which no keyboard and no screen
+   reader can reach separately. It is now a real sibling <button>, laid over the
+   tile by this wrapper. Both stay reachable; the tile looks exactly as before. */
+.langwrap{position:relative;display:grid;min-width:0}
+/* 96px, not 68px. #stage is a fixed 1080x1920 terminal design scaled to fit the
+   window, so on a 390px-wide phone every control is drawn at 0.36x — a 68px
+   circle lands at 25px, under the 32px floor. The BOX is 96; the circle the eye
+   sees is still 68px on exactly the pixel it occupied before. It used to be
+   top:16/right:16 against the TILE, whose 2px border its offsets resolved
+   inside — 18px from the tile's outer edge. Against the border-less wrapper
+   that is (96-68)/2 = 14 of centring plus 4: 4 + 14 = 18. Only the box grew. */
+.spk{position:absolute;top:4px;right:4px;width:96px;height:96px;padding:0;border:none;
+  background:none;display:grid;place-items:center;color:var(--primary);z-index:2}
+.spk .dot{width:68px;height:68px;border-radius:50%;box-sizing:border-box;
+  background:var(--surface);border:var(--k-hair);display:grid;place-items:center;color:inherit}
+.spk .kic{width:34px;height:34px}
+.ltile:active ~ .spk .dot,.ltile.picked ~ .spk .dot{background:rgba(255,255,255,.18);
+  border-color:transparent;color:#fff}
+.spk.speaking .dot{background:var(--primary);border-color:var(--primary);color:#fff;
   animation:spkpulse 1.1s ease-in-out infinite}
 @keyframes spkpulse{0%,100%{box-shadow:0 0 0 0 rgba(0,64,231,.45)}50%{box-shadow:0 0 0 12px rgba(0,64,231,0)}}
 #k1foot{margin-top:auto;padding-top:32px;display:flex;gap:16px;align-items:flex-start;color:var(--k-sec);font-size:var(--k-meta);line-height:1.5}
@@ -531,8 +546,17 @@ h1,h2,h3,h4,.khead-fil,#k1hero .h1,#doneTitle,.kmodal .mh,#sheet .sh1,.fullres .
 #ktoast .en{color:rgba(255,255,255,.7);font-size:var(--k-desc);margin-left:14px}
 
 /* demo corner control */
-#demodot{position:absolute;right:14px;bottom:14px;width:40px;height:40px;border-radius:50%;
-  background:var(--text);opacity:.12;border:none;cursor:pointer;z-index:90}
+/* Same story as .spk: the stage is drawn at 0.36x on a phone, so a 40px dot
+   lands at 14px. The button's BOX is now 96x96 pinned to the stage corner and
+   the dot it draws is still exactly 40px at 14px from each edge — the visible
+   pixels are unchanged. Growing the box up-and-left is the only direction
+   available; it reaches 15px into #krail's right-hand button, which is that
+   button's outer padding (its label ends 26px short of its own edge), so no
+   label and no icon is covered. */
+#demodot{position:absolute;right:0;bottom:0;width:96px;height:96px;padding:0 14px 14px 0;
+  background:none;border:none;cursor:pointer;z-index:90;opacity:.12;
+  display:grid;place-items:end;box-sizing:border-box}
+#demodot::before{content:"";width:40px;height:40px;border-radius:50%;background:var(--text)}
 #demodot:hover{opacity:.3}
 
 /* masked (Itago) */
@@ -545,6 +569,7 @@ h1,h2,h3,h4,.khead-fil,#k1hero .h1,#doneTitle,.kmodal .mh,#sheet .sh1,.fullres .
 </style>
 </head>
 <body>
+<h1 class="vh">e-Laya facility terminal</h1>
 <div id="stage">
 
   <!-- ============ IDENTITY HEADER ============ -->
@@ -579,7 +604,7 @@ Maghanap ng programa.</div>
 
     <!-- ===== K-2 · IDENTIFY ===== -->
     <section class="kscreen" id="s-k2">
-      <h1 class="khead-fil" data-i18n="k2.h">Patunayan na ikaw ito</h1>
+      <h2 class="khead-fil" data-i18n="k2.h">Patunayan na ikaw ito</h2>
       <div class="khead-en" data-i18n-en="k2.h">Confirm it's you</div>
       <div class="ksub-fil" data-i18n="k2.sub">Para walang ibang makakakita ng impormasyon mo.</div>
       <div class="ksub-en" data-i18n-en="k2.sub">So no one else can see your information.</div>
@@ -630,7 +655,7 @@ Maghanap ng programa.</div>
 
     <!-- ===== K-2b · FACE CONSENT ===== -->
     <section class="kscreen" id="s-k2b">
-      <h1 class="khead-fil" data-i18n="k2b.h">Papayag ka bang kunan ka ng larawan?</h1>
+      <h2 class="khead-fil" data-i18n="k2b.h">Papayag ka bang kunan ka ng larawan?</h2>
       <div class="khead-en" data-i18n-en="k2b.h">Is it okay to take your picture?</div>
       <div id="consentBox">
         <span class="fil" style="font-style:normal" data-i18n="k2b.body">Ginagamit lang ito ngayon para malaman kung ikaw nga ito. Hindi ito itinatago. Hindi ito ipinapakita kaninuman. Hindi ito pupunta sa pulis.</span>
@@ -644,7 +669,7 @@ Maghanap ng programa.</div>
 
     <!-- ===== K-2v · FACE VERIFY ===== -->
     <section class="kscreen" id="s-k2v">
-      <h1 class="khead-fil" data-i18n="k2v.h">Tumingin sa camera. Huwag gumalaw.</h1>
+      <h2 class="khead-fil" data-i18n="k2v.h">Tumingin sa camera. Huwag gumalaw.</h2>
       <div class="khead-en" data-i18n-en="k2v.h">Look at the camera. Stay still.</div>
       <div id="ovalWrap">
         <span class="kic facegl"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><path d="M17.5 20h.1M30.5 20h.1"/><path d="M16 29c2 3.2 4.8 5 8 5s6-1.8 8-5"/></svg></span>
@@ -656,7 +681,7 @@ Maghanap ng programa.</div>
 
     <!-- ===== K-2c · STAFF ASSIST ===== -->
     <section class="kscreen" id="s-k2c">
-      <h1 class="khead-fil" data-i18n="k2c.h">Sabihin ang numerong ito sa staff</h1>
+      <h2 class="khead-fil" data-i18n="k2c.h">Sabihin ang numerong ito sa staff</h2>
       <div class="khead-en" data-i18n-en="k2c.h">Give this number to staff</div>
       <div id="staffCode">
         <div class="code">4 8 2 9 1 7</div>
@@ -668,7 +693,7 @@ Maghanap ng programa.</div>
 
     <!-- ===== MENU (K-3 hub) ===== -->
     <section class="kscreen" id="s-menu">
-      <h1 class="khead-fil" data-i18n="menu.h">Ano ang gusto mong gawin?</h1>
+      <h2 class="khead-fil" data-i18n="menu.h">Ano ang gusto mong gawin?</h2>
       <div class="khead-en" data-i18n-en="menu.h">What would you like to do?</div>
       <div id="menugrid">
         <button class="mtile tap" onclick="go('case')">
@@ -700,7 +725,7 @@ Maghanap ng programa.</div>
 
     <!-- ===== K-3 · MY CASE ===== -->
     <section class="kscreen" id="s-case">
-      <h1 class="khead-fil" data-i18n="case.h">Ang kaso mo</h1>
+      <h2 class="khead-fil" data-i18n="case.h">Ang kaso mo</h2>
       <div class="khead-en" data-i18n-en="case.h">Your case</div>
       <div class="stack" style="margin-top:36px">
 
@@ -753,7 +778,7 @@ Maghanap ng programa.</div>
 
     <!-- ===== K-4 · MY PROGRAMS ===== -->
     <section class="kscreen" id="s-programs">
-      <h1 class="khead-fil" data-i18n="prog.h">Mga programa mo</h1>
+      <h2 class="khead-fil" data-i18n="prog.h">Mga programa mo</h2>
       <div class="khead-en" data-i18n-en="prog.h">Your programs</div>
       <div class="stack" style="margin-top:36px">
 
@@ -836,7 +861,7 @@ Maghanap ng programa.</div>
 
     <!-- ===== K-5 · FIND & ENROL ===== -->
     <section class="kscreen" id="s-find">
-      <h1 class="khead-fil" id="findH">Mga programa malapit sa Batangas City</h1>
+      <h2 class="khead-fil" id="findH">Mga programa malapit sa Batangas City</h2>
       <div class="khead-en" id="findHE">Programs near Batangas City · free to join</div>
       <div id="locpills"></div>
       <div id="findList"></div>
@@ -872,7 +897,7 @@ Maghanap ng programa.</div>
 
     <!-- ===== K-6 · MY STATUS ===== -->
     <section class="kscreen" id="s-status">
-      <h1 class="khead-fil" data-i18n="st.h">Ang kalagayan mo</h1>
+      <h2 class="khead-fil" data-i18n="st.h">Ang kalagayan mo</h2>
       <div class="khead-en" data-i18n-en="st.h">Your status</div>
 
       <!-- the status is the point of the screen, so it leads -->
@@ -997,7 +1022,7 @@ Maghanap ng programa.</div>
   </div>
 
   <div id="ktoast"></div>
-  <button id="demodot" title="Demo: cycle screens (keys 1–8, 9 timeout, 0 end)" onclick="demoCycle()"></button>
+  <button id="demodot" type="button" aria-label="Demo: cycle screens" title="Demo: cycle screens (keys 1–8, 9 timeout, 0 end)" onclick="demoCycle()"></button>
 </div>
 
 <script>
@@ -1264,7 +1289,29 @@ function fit(){
 }
 addEventListener('resize', fit);
 
-/* ---------- API with silent fallback ---------- */
+/* ---------- API with silent fallback ----------
+   The abort is DELIBERATE, and it is the point of this helper. A terminal in a
+   jail cannot be allowed to sit on a spinner because a translation endpoint is
+   slow, so every probe carries its own time budget — 1000ms for /api/psgc,
+   1500ms for an /api/ai translation, 1600ms for /api/everify — after which the
+   request is dropped and the caller falls back to what is already on screen
+   (the Filipino source text, the seeded programme list). Every call site is
+   written to tolerate null. That is why the aborts cluster around a screen
+   change: applyLang() -> translateDynamic() fires one /api/ai POST per
+   [data-dyn] node, and against the deployed site an LLM round trip routinely
+   exceeds 1500ms.
+
+   The catch stays a catch-all on purpose. AbortError, a dropped connection, a
+   non-200 and unparseable JSON all mean the same thing here — no answer — and
+   narrowing it to rethrow the others would convert today's silent fallbacks
+   into unhandled rejections, which is exactly the console noise we are trying
+   not to have.
+
+   The browser still records `net::ERR_ABORTED` for the dropped request. That is
+   a network-layer entry, not a console message: it surfaces on Playwright's
+   page.on('requestfailed') and never on page.on('console') or 'pageerror'
+   (verified). regression.spec.js's zero-console-errors assertion is unaffected,
+   and a11y.spec.js pins that with a route that hangs past every budget. */
 async function tryApi(path, opts, ms){
   try{
     const c = new AbortController();
@@ -1474,8 +1521,9 @@ function startSessionShell(){
 function startWithLanguage(lang, tileEl){
   applyLang(lang);
   tileEl.classList.add('picked');
-  /* the tile says its own name, in its own voice */
-  speak(lang, lang, tileEl.querySelector('.spk'));
+  /* the tile says its own name, in its own voice. The speaker button is now a
+     SIBLING of the tile, not a descendant, so reach it through the wrapper. */
+  speak(lang, lang, tileEl.parentElement && tileEl.parentElement.querySelector('.spk'));
   setTimeout(function(){ tileEl.classList.remove('picked'); go('k2'); }, 300);
 }
 function askEnd(){ showOv('endOv'); }
@@ -1590,10 +1638,16 @@ function stillHere(){ clearInterval(S.graceTimer); hideOv('timeoutOv'); bump(); 
 const SPK = '<svg viewBox="0 0 48 48"><path d="M10 19v10h8l10 8V11l-10 8h-8z"/><path d="M33 18a8 8 0 0 1 0 12"/></svg>';
 function renderK1(){
   $('k1grid').innerHTML = SEED.langs.map(function(l){
-    return '<button class="ltile tap" onclick="startWithLanguage(\''+l.n+'\', this)">'+
-      '<span class="spk" onclick="event.stopPropagation();speak(\''+l.n+'\',\''+l.n+'\',this)" role="button" aria-label="Basahin: '+l.n+'"><span class="kic">'+SPK+'</span></span>'+
-      '<span class="ln">'+l.n+'</span><span class="ls">'+l.s+'</span>'+
-    '</button>';
+    /* Two sibling buttons in one wrapper — never a button inside a button.
+       The tile picks the language; the speaker only reads the name aloud, so
+       it no longer needs stopPropagation to keep the tile from firing. */
+    return '<div class="langwrap">'+
+      '<button class="ltile tap" type="button" onclick="startWithLanguage(\''+l.n+'\', this)">'+
+        '<span class="ln">'+l.n+'</span><span class="ls">'+l.s+'</span>'+
+      '</button>'+
+      '<button class="spk tap" type="button" aria-label="Basahin: '+l.n+'" '+
+        'onclick="speak(\''+l.n+'\',\''+l.n+'\',this)"><span class="dot"><span class="kic">'+SPK+'</span></span></button>'+
+    '</div>';
   }).join('');
 }
 const ATTRACT = [

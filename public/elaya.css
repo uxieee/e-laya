@@ -193,14 +193,26 @@ strong{font-weight:500;color:var(--text)}
   display:flex;align-items:center;justify-content:space-between;gap:12px;
   opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
 .toast.on{opacity:1;transform:none;pointer-events:auto}
+/* The toast action ("UNDO", "I-BALIK", "Dismiss") is a 14px text button. Left to
+   its line box it renders 18px tall — under the 32px floor a thumb needs. The
+   min-height and the centring grow only the hit box: the label keeps its size,
+   colour and baseline, and the toast is always taller than 32px anyway because
+   its message wraps, so nothing moves. */
 .toast button{background:none;border:none;color:var(--accent);font-family:var(--font);
-  font-size:14px;font-weight:500;cursor:pointer;flex:none}
+  font-size:14px;font-weight:500;cursor:pointer;flex:none;
+  min-height:32px;display:inline-flex;align-items:center;box-sizing:border-box}
 
 /* ---------- screen switching ---------- */
 .screen{display:none;flex-direction:column;height:100%}
 .screen.on{display:flex}
 
 /* ---------- utility ---------- */
+/* Visually hidden, still read aloud. Every surface needs exactly one <h1> to
+   name itself to a screen reader; on the surfaces whose visible top-of-page
+   type is a per-screen title (which changes as you navigate) that h1 has to be
+   an off-screen constant, not the title of whichever screen happens to be up. */
+.vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .mt0{margin-top:0}.mt1{margin-top:8px}.mt2{margin-top:16px}.mt3{margin-top:24px}
 .mb0{margin-bottom:0}.mb1{margin-bottom:8px}.mb2{margin-bottom:16px}
 .flex{display:flex}.between{justify-content:space-between}.center{align-items:center}
