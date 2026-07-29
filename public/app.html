@@ -1042,6 +1042,21 @@ function renderListEmpty(){
    ========================================================================== */
 function person(){ return linkedPeople().find(p=>p.id===S.personId); }
 
+/* linkedPeople() is dynamic where PEOPLE was static, so person() can now come
+   back undefined: a Reset demo in another tab drops a store-created person
+   while A-4 is still on screen. renderPerson() throwing inside renderLive's
+   catch is what leaves that screen up with its controls still live, so every
+   control that dereferences person() goes through here instead of assuming.
+
+   person() itself stays honest and keeps returning undefined. Falling back to
+   some other person would be far worse than doing nothing — Chain A already
+   had to fix a screen that named the wrong person. */
+function personOrGone(){
+  const p = person();
+  if(!p) toast('Nawala ang taong ito sa listahan mo. Buksan ulit ang pahina.');
+  return p;
+}
+
 function renderPerson(){
   const p = person();
   $('t-person').textContent = p.name;
@@ -1280,8 +1295,15 @@ function renderProgDetail(){
     + (p.about?'<div class="card">'+bi(p.about[0],p.about[1],'b')+'</div>':'')
     + '<div class="card tint">'+bi('Libre ang programa. Walang bayad kahit kanino.','The programme is free. No payment to anyone.','s')+'</div>'
     + '<div class="card">'+src(p.provider,'7:40 AM')+'</div>';
+  /* Same reason as personOrGone: `who` is looked up in a list the store can
+     empty under this screen, and an unnamed button is better than a throw that
+     leaves the footer with no button at all. doEnrol still guards the tap. */
+  const firstName = who ? esc(who.full.split(' ')[0]) : null;
   $('progdetailFoot').innerHTML =
-      '<button class="btn" data-act="enrol">'+(p.slots?'Mag-enroll para kay '+esc(who.full.split(' ')[0]):'Ilagay sa waitlist si '+esc(who.full.split(' ')[0]))+'</button>';
+      '<button class="btn" data-act="enrol">'
+    + (p.slots ? 'Mag-enroll'+(firstName?' para kay '+firstName:'')
+               : 'Ilagay sa waitlist'+(firstName?' si '+firstName:''))
+    + '</button>';
 }
 
 /* ==========================================================================
@@ -1435,7 +1457,8 @@ function openSheet(html,label){
 function closeSheet(){ $('sheet').classList.remove('on'); $('scrim').classList.remove('on'); }
 
 function sheetVisiting(){
-  const p = person();
+  const p = personOrGone();
+  if(!p) return;
   openSheet('<div class="bi h2" style="margin-bottom:12px"><span class="b-fil">Oras ng dalaw</span><span class="b-eng">Visiting hours</span></div>'
     + '<div class="card"><p style="font-size:16px;font-weight:500">'+esc(p.facility)+'</p>'
     + '<p class="meta" style="margin-top:6px">'+esc(p.visiting[0])+'<br><span class="meta dim">'+esc(p.visiting[1])+'</span></p>'
@@ -1728,7 +1751,7 @@ document.addEventListener('click', async e=>{
 
   switch(d.act){
     case 'closesheet': closeSheet(); break;
-    case 'ref': toast('Sanggunian Blg. '+person().ref); break;
+    case 'ref': { const p = personOrGone(); if(p) toast('Sanggunian Blg. '+p.ref); break; }
     case 'request':
       toast('Naipadala. Walang garantiya ng oras — depende sa pasilidad.', 4200); break;
     case 'visit': sheetVisiting(); break;

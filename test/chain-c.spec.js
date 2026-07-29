@@ -267,8 +267,10 @@ test('a manually entered session does not overwrite a demo scenario', async ({ p
 
 /* linkedPeople() is dynamic where PEOPLE was static, so person() can now come
    back undefined — a Reset demo in another tab while /app sits on a store
-   person. renderLive catches that; the enrolment path did not. */
-test('/app does not throw when the person an enrolment is for disappears', async ({ page }) => {
+   person. renderPerson() throwing inside renderLive's catch is what leaves
+   A-4 on screen with its controls still live, so every control that
+   dereferences person() has to survive being tapped in that state. */
+test('/app does not throw when the person on screen disappears', async ({ page }) => {
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
 
@@ -278,20 +280,39 @@ test('/app does not throw when the person an enrolment is for disappears', async
 
   await page.goto('/app.html#/list');
   await page.locator('#listBody [data-person="intake-VF-8241"]').click();
+  // The Programa tab, so the enrolment route is on screen too when the person
+  // vanishes. welfareHTML sits above the tabs, so its chips stay either way.
   await page.locator('[data-ptab="programa"]').click();
   await expect(page.locator('#personBody')).toContainText('Wala pa siyang programa.');
-  await page.locator('#personBody [data-act="programs"]').click();
-  await page.locator('#programsBody [data-prog="div-b"]').click();
 
-  // Another tab hits Reset demo: the person this enrolment is for is gone.
+  // While the person is there, both A-4 controls do their real jobs.
+  await page.locator('#personBody [data-act="visit"]').click();
+  await expect(page.locator('#sheet')).toContainText('Bahay Pag-asa, Batangas City');
+  await page.locator('#sheet [data-act="closesheet"]').click();
+  await page.locator('#personBody [data-act="ref"]').click();
+  await expect(page.locator('#toastMsg')).toHaveText('Sanggunian Blg. VF-8241');
+
+  // Another tab hits Reset demo. A-4 stays up — renderPerson throws into
+  // renderLive's catch — so these two buttons are still on screen and live.
   await page.evaluate(() => window.Elaya.reset());
   expect(await page.evaluate(() =>
     Object.keys(window.Elaya.get('people', {})).some(id => id.indexOf('intake') === 0))).toBe(false);
+  await expect(page.locator('#s-person')).toHaveClass(/\bon\b/);
 
-  await page.locator('#progdetailFoot .btn').click();
-  await expect(page.locator('#toast')).toHaveClass(/\bon\b/);
-  await expect(page.locator('#toastMsg')).toContainText('Nawala ang taong ito sa listahan mo');
+  await page.locator('#personBody [data-act="ref"]').click();
+  await expect(page.locator('#toastMsg')).toHaveText('Nawala ang taong ito sa listahan mo. Buksan ulit ang pahina.');
+
+  await page.locator('#personBody [data-act="visit"]').click();
   await expect(page.locator('#sheet')).not.toHaveClass(/\bon\b/);
+  await expect(page.locator('#toastMsg')).toHaveText('Nawala ang taong ito sa listahan mo. Buksan ulit ang pahina.');
+
+  // And the enrolment path the same person could already have opened.
+  await page.locator('#personBody [data-act="programs"]').click();
+  await page.locator('#programsBody [data-prog="div-b"]').click();
+  await page.locator('#progdetailFoot .btn').click();
+  await expect(page.locator('#sheet')).not.toHaveClass(/\bon\b/);
+  await expect(page.locator('#toastMsg')).toHaveText('Nawala ang taong ito sa listahan mo. Buksan ulit ang pahina.');
+
   expect(errors).toEqual([]);
 });
 
